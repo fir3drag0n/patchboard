@@ -130,15 +130,17 @@ export function pct(n: number): string {
   return `${n < 10 ? dec(n, 1) : Math.round(n)}%`;
 }
 
-/** "13 h 27 m", "14 h", "4 d 2 h", "35 s": a zero part is left off. */
+/** "13 h 27 m", "14 h", "4 d 2 h", "35 s": a zero part is left off. A number
+ *  and its unit never break apart across lines. */
 export function duration(ms: number): string {
+  const u = (n: number, unit: string) => `${n} ${unit}`;
   const s = Math.max(0, Math.round(ms / 1000));
-  if (s < 60) return `${s} s`;
+  if (s < 60) return u(s, 's');
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m} m`;
+  if (m < 60) return u(m, 'm');
   const h = Math.floor(m / 60);
-  if (h < 48) return m % 60 ? `${h} h ${m % 60} m` : `${h} h`;
-  return h % 24 ? `${Math.floor(h / 24)} d ${h % 24} h` : `${Math.floor(h / 24)} d`;
+  if (h < 48) return m % 60 ? `${u(h, 'h')} ${u(m % 60, 'm')}` : u(h, 'h');
+  return h % 24 ? `${u(Math.floor(h / 24), 'd')} ${u(h % 24, 'h')}` : u(Math.floor(h / 24), 'd');
 }
 
 /** "Nov 1" this year, "Nov 1, 2025" otherwise. */

@@ -175,8 +175,7 @@ export function Devices() {
             </form>
           )}
           <p className="settings-note">
-            A device opens its link once and from then on sees the boards, cameras, Server and Monitor, reading and calendar, and switches the lights pinned to a board. It
-            can't update, restart or stop anything, or open Settings, logs or container pages.
+            A device opens its link once. It sees the boards and switches lights, but can't touch containers or open Settings.
           </p>
           {wallBoards.length > 0 && (
             <p className="settings-note wall-boards">
@@ -191,7 +190,7 @@ export function Devices() {
             </p>
           )}
           {auth === 'none' && list.length > 0 && (
-            <p className="settings-note">With sign-in off, a device you remove goes back to full access, like any browser on your network. Turn on a password under Connections if that matters.</p>
+            <p className="settings-note">With sign-in off, a removed device keeps full access, like any browser on your network.</p>
           )}
         </div>
 
@@ -214,7 +213,7 @@ export function Devices() {
           />
         ) : (
           <div className="device-editor device-empty">
-            <p>No devices yet. Name one on the left, like Kitchen tablet, and open the link it makes on that device, or scan its code.</p>
+            <p>No devices yet. Name one, then open its link on that device or scan its code.</p>
           </div>
         )}
       </div>
@@ -330,8 +329,7 @@ function DeviceEditor({
       <section className="device-part" aria-labelledby={`pages-${d.id}`}>
         <h3 id={`pages-${d.id}`}>Pages</h3>
         <p className="settings-note">
-          It opens on the first and a swipe moves down the list. A page can be one widget on its own, filling the screen: set that widget to One number for a small display. Leave the list
-          empty and the device stays on whatever page it last showed.
+          A swipe moves down the list. Empty, the device stays on the page it last showed.
         </p>
         <ol className="device-pages">
           {order.map((p, i) => (
@@ -455,8 +453,7 @@ function DeviceEditor({
         <section className="device-part" aria-labelledby={`link-${d.id}`}>
           <h3 id={`link-${d.id}`}>Link</h3>
           <p className="settings-note">
-            A new link is for a replacement device, or one that lost its link: the old link stops working. An e-paper panel with no browser (TRMNL, Inky, an ESP32) shows a picture
-            from its own address instead.
+            A new link retires the old one. A panel with no browser (TRMNL, Inky, ESP32) shows a picture from its own address.
           </p>
           <div className="device-actions">
             <HoldButton className="button button-quiet" hint="Hold to make a new link. The old one stops working." onConfirm={() => void newLink()}>

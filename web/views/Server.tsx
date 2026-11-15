@@ -218,9 +218,9 @@ function forecast(series: Series | undefined, pool: Pool, now: number): string {
   const rate = `Growing about ${size(perDay * 7)} a week.`;
   if (!target) return `${rate} The pool is past 95%.`;
   const days = ((target / 100) * pool.sizeBytes - pool.usedBytes) / perDay;
-  if (days > 3650) return `${rate} At this rate it won't reach ${target}% for over ten years.`;
+  if (days > 3650) return `${rate} ${target}% is over ten years away.`;
   const when = new Date(now + days * DAY).toLocaleDateString(locale(), { month: 'long', year: 'numeric' });
-  return `${rate} At this rate it reaches ${target}% around ${when}.`;
+  return `${rate} ${target}% around ${when}.`;
 }
 
 function FallbackStorage({ sys, configured, error }: { sys: SystemData | null; configured: boolean; error?: string }) {
@@ -299,21 +299,20 @@ function BackupSet({ title, runs, now }: { title: string; runs: BackupRun[]; now
         <strong>{title}</strong>{' '}
         {failed
           ? <span className="crit-text">{failed} of {last.items.length} failed</span>
-          : `${last.items.length} of ${last.items.length} complete`}
+          : `${last.items.length} of ${last.items.length}`}
         , {dayWord(last.startedAt, now)} at {when}
-        {last.finishedAt && last.finishedAt > last.startedAt ? `, took ${duration(last.finishedAt - last.startedAt)}` : ''}
-        {last.size ? `. ${last.stored} files kept, ${last.size}.` : '.'}
+        {last.finishedAt && last.finishedAt > last.startedAt ? ` in ${duration(last.finishedAt - last.startedAt)}` : ''}
+        {last.size ? `. ${last.stored} files, ${last.size}.` : '.'}
       </p>
       <ul className="backup-grid">
         {labels.map((label) => {
-          // Failures said in words too, not only as red squares.
+          // The squares show failures; the label carries them for a screen reader.
           const fails = recent.filter((r) => r.items.find((i) => i.label === label && !i.ok));
           const dates = fails.map((r) => new Date(r.startedAt).toLocaleDateString(locale(), { month: 'short', day: 'numeric' })).join(', ');
           return (
           <li key={label}>
             <span className="backup-label">
               {label}
-              {fails.length > 0 && <span className="crit-text">, {fails.length} failed</span>}
             </span>
             <span className="squares" role="img" aria-label={`${label}, last ${recent.length} nights${fails.length ? `: ${fails.length} failed, ${dates}` : ', all complete'}`}>
               {recent.map((r) => {
@@ -381,7 +380,7 @@ function Resources({ sys, nas }: { sys: SystemData | null; nas: TruenasData | nu
         <div className="metric">
           <Roll className="metric-num" value={size(used)} />
           <span className="metric-label">
-            Memory in use by apps and the system. {size(m.arc)} is ZFS cache, which the system hands back when needed. {size(Math.max(0, m.available))} free.
+            Memory in use. {size(m.arc)} ZFS cache, {size(Math.max(0, m.available))} free.
           </span>
           <Split
             label="Memory: in use, ZFS cache, free"

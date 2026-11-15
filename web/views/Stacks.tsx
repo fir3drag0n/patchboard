@@ -137,9 +137,9 @@ export function Stacks() {
         <p className="update-notice">The {decodeURIComponent(hash.slice(1))} stack is hidden on this page. Customize shows it again.</p>
       )}
       <p className="page-lede">
-        {plural(groups.size, 'stack')}, {running} of {shownCtrs.length} containers running
-        {stats ? `, using ${pct(totalCpu)} of the CPU and ${size(totalMem)} of memory.` : '.'}
-        {hiddenCount > 0 && ` ${plural(hiddenCount, 'stack')} hidden; Customize shows ${hiddenCount === 1 ? 'it' : 'them'}.`}
+        {running} of {shownCtrs.length} running in {plural(groups.size, 'stack')}
+        {stats ? `, ${pct(totalCpu)} CPU, ${size(totalMem)} memory.` : '.'}
+        {hiddenCount > 0 && ` ${plural(hiddenCount, 'stack')} hidden.`}
       </p>
 
       <div className="stack-cols" aria-hidden>

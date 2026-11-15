@@ -43,7 +43,7 @@ export function Upcoming() {
         <h1 className="page-title">Upcoming</h1>
         {ahead.length > 0 && (
           <span className="section-count">
-            {plural(thisWeek, 'release')} in the next 7 days, {groupDrops(shown).length} in two weeks
+            {plural(thisWeek, 'release')} this week, {groupDrops(shown).length} in two weeks
           </span>
         )}
       </div>

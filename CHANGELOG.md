@@ -18,7 +18,12 @@
   the UPS charge, or "On battery, 23 min left" when the power is out.
 - **Less text where a picture already says it:** captions and settings notes
   no longer explain colors, bars or dots, and E-ink's notes never mention a
-  color.
+  color. Settings, Server, Stacks and Upcoming say what they show in fewer
+  words, and with E-ink on, Look leaves out Theme and Accent.
+- **Tidier screens:** the Server header's five readings shrink to keep their
+  gap on a tablet, a phone's board links line up on the left, a day not yet
+  watched keeps its outline on e-ink, and a long action wraps instead of
+  running off a phone.
 - **No zoom on a phone:** pages scroll and never zoom, by pinch, double tap
   or tapping into a search box. Density in Settings, Look still makes
   everything bigger.

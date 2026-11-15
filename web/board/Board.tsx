@@ -1625,7 +1625,7 @@ function SettingsDrawer({
           {HA_WIDGETS[w.type] && <HaPicker type={w.type} value={cfg.entities} onChange={(v) => set('entities', v)} />}
           {w.type === 'apps' && (
             <p className="settings-note">
-              <Link to="/apps?arrange=1">Edit apps</Link> reorders, regroups, renames, hides and adds apps. Save this board first; Edit apps saves on its own.
+              Save this board, then <Link to="/apps?arrange=1">Edit apps</Link> to change the apps themselves.
             </p>
           )}
         </div>

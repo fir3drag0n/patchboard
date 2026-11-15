@@ -55,7 +55,6 @@ export function NameForm() {
 export function BrandName() {
   return (
     <Section title="Name" count="every device" className="span-all">
-      <p className="settings-note">What the header and the browser tab call this dashboard, on every device.</p>
       <NameForm />
     </Section>
   );

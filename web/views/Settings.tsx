@@ -57,11 +57,11 @@ const PARTS: [Part, string][] = [
   ['backup', 'Backup'],
 ];
 const TABS: [Tab, string, string][] = [
-  ['look', 'Look', 'For this browser, so a phone and a desktop can differ. A new browser starts from the last look you saved.'],
-  ['home', 'Home', "Home's header and app style in this browser only. The widgets on a board are shared: Customize on the board changes them for everyone."],
-  ['devices', 'Devices', 'Wall tablets, e-ink panels and family phones: the pages each one shows and how it looks, set from here. A device follows within a second.'],
+  ['look', 'Look', 'This browser only. A new browser starts from the last look you saved.'],
+  ['home', 'Home', "This browser only. A board's widgets are shared."],
+  ['devices', 'Devices', 'Wall tablets, e-ink panels and family phones, set up from here.'],
   ['alerts', 'Alerts', 'When storage, drives and links count as trouble. Shared by every device.'],
-  ['connections', 'Connections', 'Integrations, sign-in, keys, the app catalog and setup backups. Shared by every device.'],
+  ['connections', 'Connections', 'Shared by every device.'],
   ['activity', 'Activity', 'Who changed what, newest first.'],
 ];
 
@@ -109,6 +109,7 @@ export function Settings() {
       <>
       <BrandName />
 
+      {!a.eink && (
       <Section title="Theme" count={`${THEMES.length + 1} themes`} className="span-all">
         <div className="theme-grid">
           {THEMES.map((t) => (
@@ -118,6 +119,7 @@ export function Settings() {
         </div>
         {a.theme === 'custom' && <CustomBuilder />}
       </Section>
+      )}
 
       <Section title="Mode">
         <div className="choice-row">
@@ -157,6 +159,7 @@ export function Settings() {
         </p>
       </Section>
 
+      {!a.eink && (
       <Section title="Accent">
         <div className="choice-row swatches">
           <button type="button" className="swatch swatch-theme" aria-pressed={a.accent === 'default'} title="The theme's own" aria-label="The theme's own accent" onClick={() => setAppearance({ accent: 'default' })} />
@@ -170,6 +173,7 @@ export function Settings() {
         </div>
         <p className="settings-note">For links, the current page, focus and charts.</p>
       </Section>
+      )}
 
       <Section title="Type">
         <div className="choice-row">
@@ -246,7 +250,7 @@ export function Settings() {
           ])}
         </div>
         <p className="settings-note">
-          Here: {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 })}, {num(1234567.89, 2)}, {money(1234.5, currency(), 2)}. Deutsch, Español, Français, Italiano, Nederlands and Português cover the boards, the wall screens and the Monitor so far; Settings stays in English.
+          Here: {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 })}, {num(1234567.89, 2)}, {money(1234.5, currency(), 2)}. Settings stays in English.
         </p>
       </Section>
 
@@ -263,7 +267,7 @@ export function Settings() {
           <input type="checkbox" checked={a.keys} onChange={(e) => setAppearance({ keys: e.target.checked })} />
           Single-key shortcuts
         </label>
-        <p className="settings-note">/ opens Jump to, ? lists the shortcuts, g then a letter goes to a page, and j and k move through Reading. Turn them off if you use speech input. Ctrl K always works.</p>
+        <p className="settings-note">? lists them. Turn them off for speech input; Ctrl K always works.</p>
       </Section>
 
       <ShowcaseSettings />
@@ -273,14 +277,13 @@ export function Settings() {
       {tab === 'home' && (
       <>
       <Section title="Home header" id="home-header" className="span-all">
-        <p className="settings-note">The default header shows status, server graphs, and time above weather. These controls change this device only.</p>
         <div className="header-switches">
           <label className="check"><input type="checkbox" checked={a.homeStatusSize !== 'hidden'} onChange={(e) => setAppearance({ homeStatusSize: e.target.checked ? 'medium' : 'hidden' })} />Show status</label>
           <label className="check"><input type="checkbox" checked={a.homeServer !== 'hidden'} onChange={(e) => setAppearance({ homeServer: e.target.checked ? 'card' : 'hidden' })} />Show server details</label>
           <label className="check"><input type="checkbox" checked={a.homeClockSize !== 'hidden'} onChange={(e) => setAppearance({ homeClockSize: e.target.checked ? 'small' : 'hidden' })} />Show time and date</label>
           <label className="check"><input type="checkbox" checked={a.homeWeather !== 'hidden'} onChange={(e) => setAppearance({ homeWeather: e.target.checked ? 'current' : 'hidden' })} />Show weather</label>
         </div>
-        <p className="settings-note">Server details includes CPU history, memory, storage and uptime. Its Details link opens Server. With status off, the Needs attention widget appears on the board. A Weather widget on the board takes the place of header weather.</p>
+        <p className="settings-note">With status off, Needs attention moves onto the board.</p>
         <details className="header-options-details">
           <summary>Sizes and forecast details</summary>
           <div className="header-options">
@@ -300,7 +303,7 @@ export function Settings() {
           ])}
         </div>
         <p className="settings-note">
-          Used when an Apps widget follows this default. <strong>Arrange board → Apps settings</strong> can give a widget its own look. Widget placement is shared across devices.
+          An Apps widget can set its own in Arrange board.
         </p>
       </Section>
 
@@ -999,8 +1002,8 @@ function Integrations() {
   return (
     <Section title="Integrations" count={`${on.length} of ${rows.length} on`} className="span-all" id="integrations">
       <p className="settings-note">
-        Press Set up, paste the address and key, test and save. Keys are encrypted on this server and never sent back to a browser, not even
-        this one. Keeping config in git? A variable in your environment file works too, wins over this page, and shows here as locked.
+        Keys stay encrypted on this server and never reach a browser. A variable in your environment wins over this page and shows here as
+        locked.
       </p>
       {!setup?.demo && !snap.readOnly && envOnly.length > 0 && (
         <div className="adopt">
@@ -1115,7 +1118,7 @@ function SetupFile() {
   return (
     <Section title="Setup file">
       <p className="settings-note">
-        Your boards, apps, page settings, notes, alert thresholds and name in one file, for a backup or a new server. Integration settings, keys and uploaded icons stay on this server; add them again after a move.
+        Boards, apps, settings, notes and thresholds in one file, for a backup or a new server. Integrations, keys and uploaded icons stay behind.
       </p>
       <div className="choice-row">
         <a className="button button-quiet" href="/api/setup" download>
@@ -1263,8 +1266,7 @@ function ShowcaseSettings() {
         Showcase mode
       </label>
       <p className="settings-note">
-        On this device, addresses, domain names, email and MAC addresses become made-up ones, the words below get stand-ins, and camera pictures blur, so a screenshot is safe
-        to post. Fields you type in keep their real values. Turning it off draws the page again.
+        On this device, addresses, email, the words below and camera pictures get stand-ins, so a screenshot is safe to post.
       </p>
       <textarea
         className="field mono showcase-words"
@@ -1276,7 +1278,7 @@ function ShowcaseSettings() {
         onChange={(e) => setWords(e.target.value)}
         onBlur={() => words !== sc.words && setShowcase({ words })}
       />
-      <p className="settings-note">One per line: your server's name, family names, your town. Write Nicholas = Rivera to pick the stand-in.</p>
+      <p className="settings-note">One per line. Nicholas = Rivera picks the stand-in.</p>
     </Section>
   );
 }

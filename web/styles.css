@@ -2260,11 +2260,6 @@ input[type='checkbox'] {
     flex-wrap: wrap;
   }
 
-  /* The board's links sit at the page's edge like everything above them. */
-  .board-foot {
-    flex-wrap: wrap;
-    justify-content: flex-start;
-  }
 
   .page-head .field {
     width: 100%;
@@ -9807,7 +9802,7 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
 
 /* A phone: the version gets its own line above the three actions. */
 @media (max-width: 600px) {
-  .board-foot { flex-wrap: wrap; row-gap: 8px; }
+  .board-foot { flex-wrap: wrap; row-gap: 8px; justify-content: flex-start; }
   .version-line { flex-basis: 100%; text-align: left; }
 }
 
@@ -13738,4 +13733,32 @@ html[data-eink] .room-strip i {
 
 .miner-nums .crit-text {
   color: var(--crit);
+}
+
+/* E-ink drops shadows, so a day not yet watched keeps its outline as a
+   border; without it the strip looks shifted right. */
+html[data-eink] .sq-none {
+  border: 1px solid var(--line);
+  opacity: 1;
+}
+
+/* A ledger's action wraps like its text instead of running off a phone. */
+.ledger dd .text-button {
+  white-space: normal;
+  text-align: left;
+}
+
+/* Five readings (with a UPS) in the header card: a step smaller, so the
+   numbers keep their gap. */
+.header-board-vitals .vw-grid:has(> .vw:nth-child(5)) {
+  container-type: inline-size;
+}
+
+.header-board-vitals .vw-grid:has(> .vw:nth-child(5)) .vw-num {
+  font-size: clamp(16px, 3.8cqi, 24px);
+}
+
+/* A line that may wrap between its parts but never inside one. */
+.keep-together {
+  white-space: nowrap;
 }
