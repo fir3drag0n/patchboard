@@ -257,6 +257,11 @@ export function viewsOf(type: WidgetType): [WidgetView, string][] {
   return out.length > 1 ? out : [];
 }
 
+/** Home always shows what's broken; another board can leave Needs attention off. */
+export function withAttention(b: Board): Board {
+  return b.widgets.some((w) => w.type === 'attention') ? b : { ...b, widgets: [{ id: 'attention', type: 'attention', size: 'm' }, ...b.widgets] };
+}
+
 /** Needs attention sits in Home's header unless the board asks for a card. */
 export const attentionInHeader = (b: Board | null | undefined): boolean => !b?.widgets.some((w) => w.type === 'attention' && w.config?.style === 'card');
 
@@ -284,7 +289,7 @@ const WIDE: WidgetSize[] = ['m', 'l', 'w', 'xl'];
 export const WIDGET_INFO: Record<WidgetType, Info> = {
   attention: {
     name: 'Needs attention',
-    about: 'Everything broken or about to be. Always on Home: in the header under the status line, or as a card on the board.',
+    about: 'Everything broken or about to be, in the header under the status line or as a card. Home always keeps it.',
     size: 'm',
     sizes: ANY,
     removable: false,
@@ -490,8 +495,6 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
     const column = Number.isInteger(w.column) && (w.column as number) >= 1 && (w.column as number) <= 6 ? w.column : undefined;
     widgets.push({ ...(column ? { column } : {}), id: w.id, type: w.type as WidgetType, size, ...(span ? { span } : {}), ...(config ? { config } : {}) });
   }
-  // Needs attention is part of what Patchboard is; it can move but not leave.
-  if (!widgets.some((w) => w.type === 'attention')) widgets.unshift({ id: 'attention', type: 'attention', size: 'm' });
   const columns = Number.isInteger(raw.columns) && (raw.columns as number) >= 2 && (raw.columns as number) <= 6 ? (raw.columns as number) : undefined;
   const name = cleanBoardName((raw as { name?: unknown }).name);
   const fit = (raw as { fit?: unknown }).fit === true;

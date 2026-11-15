@@ -2,7 +2,7 @@
 // older setup keeps working; the boards added after it live under `boards`,
 // in the order their tabs show.
 
-import { type Board, type BoardRef, BOARD_ID, DEFAULT_BOARD, HOME_ID, MAX_BOARDS, validateBoard } from '../shared/board.ts';
+import { type Board, type BoardRef, BOARD_ID, DEFAULT_BOARD, HOME_ID, MAX_BOARDS, validateBoard, withAttention } from '../shared/board.ts';
 import { kvGet, kvSet } from './db.ts';
 import { sealBoard } from './sealwidgets.ts';
 
@@ -29,7 +29,8 @@ function extras(): Stored[] {
 
 /** Home's board as saved, or null while it is still the default. */
 export function savedHome(): Board | null {
-  return valid(kvGet<unknown>('board'));
+  const home = valid(kvGet<unknown>('board'));
+  return home && withAttention(home);
 }
 
 /** One board, or null for an address that has none. Home is never missing. */
@@ -62,7 +63,7 @@ export function putBoard(id: string, input: Board): { board: Board } | { error: 
   const all = extras();
   const at = all.findIndex((s) => s.id === id);
   if (id !== HOME_ID && at < 0 && all.length + 1 >= MAX_BOARDS) return { error: `At most ${MAX_BOARDS} boards` };
-  const board = sealBoard(id, input);
+  const board = sealBoard(id, id === HOME_ID ? withAttention(input) : input);
   if (id === HOME_ID) {
     kvSet('board', board);
     return { board };
@@ -126,5 +127,5 @@ export function saveExtras(boards: Stored[]): void {
 
 /** Home from a setup file, or back to the default with null. */
 export function saveHome(board: Board | null): void {
-  kvSet('board', board ? sealBoard(HOME_ID, board) : null);
+  kvSet('board', board ? sealBoard(HOME_ID, withAttention(board)) : null);
 }

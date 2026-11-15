@@ -1,33 +1,29 @@
 # Changelog
 
-## Unreleased
+## 1.14.0 (2026-11-15)
 
-- **Edge is the beta:** releases now come about weekly, and `edge` carries
-  every change in between. An edge image's version names its commit
-  (1.13.0, edge 4f2c1a9), so Settings shows exactly which build runs and wall
-  tablets reload onto each new one.
+- **Needs attention can leave a board:** any board but Home can remove it, so
+  a board of media stats holds only media. In Arrange board, remove the card
+  like any widget, or use Tools when it sits in the header. That board's
+  status line still counts problems and leads to Home's list. Home always
+  keeps it. Asked for by @smoofus in #16.
+- **The UPS beside the server:** with NUT connected, the Server header shows
+  the UPS charge, or "On battery, 23 min left" when the power is out.
+- **Wall boards stay on the wall:** Home's tabs leave out boards set For a
+  wall screen. Settings, Devices lists them, each a link to edit.
 - **A black-and-white app icon:** with E-ink on, the home-screen icon, the
   install manifest and the tab icon go black and white from the first paint,
   and the phone's status bar goes white. Dark becomes a white P on black,
   Light a black P on white, each with a gray leg. White on black and Black on
   white are App icon choices of their own too. A phone keeps the icon it was
   added with, so remove and add it again to switch.
-- **Wall boards stay on the wall:** Home's tabs leave out boards set For a
-  wall screen. Settings, Devices lists them, each a link to edit.
-- **The UPS beside the server:** with NUT connected, the Server header shows
-  the UPS charge, or "On battery, 23 min left" when the power is out.
-- **Less text where a picture already says it:** captions and settings notes
-  no longer explain colors, bars or dots, and E-ink's notes never mention a
-  color. Settings, Server, Stacks and Upcoming say what they show in fewer
-  words, and with E-ink on, Look leaves out Theme and Accent.
-- **Tidier screens:** the Server header's five readings shrink to keep their
-  gap on a tablet, a phone's board links line up on the left, a day not yet
-  watched keeps its outline on e-ink, and a long action wraps instead of
-  running off a phone.
 - **No zoom on a phone:** pages scroll and never zoom, by pinch, double tap
   or tapping into a search box. Density in Settings, Look still makes
   everything bigger.
-- **Phone polish, from a week on e-ink:**
+- **Phone and e-ink polish, from a week on e-ink:**
+  - **Less to read:** captions and settings notes no longer explain colors,
+    bars or dots. Settings, Server, Stacks and Upcoming say what they show in
+    fewer words, and with E-ink on, Look leaves out Theme and Accent.
   - **Alerts:** the why behind an alert folds away on a phone; tap a line
     without a link to read it. A long title wraps beside its light instead
     of under it, and a low-tire alert reads "sudo ./drive's tires are low"
@@ -40,15 +36,22 @@
     their shading, so Home, Upcoming and the app rack line up with every
     other page. Reading sits on the same edge, and section headings share
     one size on a phone.
-  - **Quieter:** opening a page no longer draws a box around its title, a
-    title only makes room for Customize where there is one, This week lays
-    out without the nested grids Safari stalled on, and a few lines lost
-    their repeats: Reading's count shows once, and an idle torrent client
-    says "qBittorrent is seeding 218, nothing downloading" in one line.
-- **E-ink, finished:** playback bars lose their brand colors for ink, the top
-  bar and the phone's tab bar are solid paper with no blur, pale app icons
-  are darkened until they read, an empty poster is a gray card, and a chosen
-  tab or chip is a filled black block everywhere.
+  - **Tidier:** the Server header's five readings shrink to keep their gap
+    on a tablet, a phone's board links line up on the left, and a long
+    action wraps instead of running off a phone. Opening a page no longer
+    draws a box around its title, and This week lays out without the nested
+    grids Safari stalled on.
+  - **Fewer repeats:** Reading's count shows once, and an idle torrent
+    client says "qBittorrent is seeding 218, nothing downloading" in one
+    line.
+  - **Ink only:** playback bars lose their brand colors, the top bar and the
+    phone's tab bar are solid paper with no blur, pale app icons darken until
+    they read, an empty poster or unwatched day keeps a gray outline, and a
+    chosen tab or chip is a filled black block everywhere.
+- **Edge is the beta:** releases now come about weekly, and `edge` carries
+  every change in between. An edge image's version names its commit
+  (1.14.0, edge 4f2c1a9), so Settings shows exactly which build runs and wall
+  tablets reload onto each new one.
 
 ## 1.13.0 (2026-11-12)
 

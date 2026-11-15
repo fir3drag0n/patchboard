@@ -46,7 +46,9 @@ the status line, worst first. Three show, and the rest wait in a panel a
 click away, so the board never moves. To keep it as a card on the board
 instead, open Arrange board, then Tools, then Needs attention settings,
 and pick A card on the board. Hiding header status also shows this widget
-as a card on this device, without changing its saved setting.
+as a card on this device, without changing its saved setting. Home always
+keeps it; another board, say one just for media, can remove it, and its
+status line then leads back to Home's list.
 
 ## Pages
 

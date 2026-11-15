@@ -72,9 +72,13 @@ const NONE: Widget[] = [];
 // a blank frame.
 const boardCache = new Map<string, { board: BoardData; custom: boolean }>();
 
-/** What the page around a board needs to know of it: its widget types, and '@wall' for a wall board. */
+/** What the page around a board needs to know of it: its widget types, '@wall' for a wall board, '@no-attention' for one without Needs attention. */
 export function widgetTypes(board: BoardData, homeStatusSize: string): string[] {
-  return [...board.widgets.map((w) => (w.type === 'attention' && (w.config?.style === 'card' || homeStatusSize === 'hidden') ? 'attention-card' : w.type)), ...(board.wall ? ['@wall'] : [])];
+  return [
+    ...board.widgets.map((w) => (w.type === 'attention' && (w.config?.style === 'card' || homeStatusSize === 'hidden') ? 'attention-card' : w.type)),
+    ...(board.wall ? ['@wall'] : []),
+    ...(board.widgets.some((w) => w.type === 'attention') ? [] : ['@no-attention']),
+  ];
 }
 
 /** The same, from a board fetched ahead, before it has drawn. */
@@ -537,7 +541,14 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               Add widget
             </button>
             {draft.widgets.filter((w) => w.type === 'attention' && w.config?.style !== 'card' && homeStatusSize !== 'hidden').map((w) => (
-              <button key={w.id} type="button" className="button button-quiet" onClick={() => setSetting(w.id)}>Needs attention settings</button>
+              <Fragment key={w.id}>
+                <button type="button" className="button button-quiet" onClick={() => setSetting(w.id)}>Needs attention settings</button>
+                {!home && (
+                  <button type="button" className="button button-quiet" onClick={() => (update((ws) => ws.filter((x) => x.id !== w.id)), setSaid('Needs attention removed.'))}>
+                    Remove Needs attention
+                  </button>
+                )}
+              </Fragment>
             ))}
             <span className="board-cols" role="group" aria-label="Columns">
               <span>Columns</span>
@@ -658,6 +669,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               setSaid(`${w.config?.title || WIDGET_INFO[w.type].name} removed.`);
               setTimeout(() => (next ? document.getElementById(`w-${next.id}`)?.querySelector<HTMLButtonElement>('.cell-btn') : document.querySelector<HTMLButtonElement>('.board-bar button'))?.focus(), 30);
             }}
+            removable={w.type === 'attention' && !home}
             onConfigure={() => (w.type === 'json' ? setJsonEdit(w.id) : setSetting(w.id))}
             onQuick={snap?.readOnly || editing || w.type === 'json' || !board ? undefined : () => (setError(''), setNotice(''), setDraft(structuredClone(board)), setQuick(true), setSetting(w.id))}
             bind={editing ? sort.bind(w.id) : undefined}
@@ -765,6 +777,8 @@ function Cell(props: {
   onMove: (from: number, to: number) => void;
   onSpan: (n: number) => void;
   onRemove: () => void;
+  /** Needs attention can leave any board but Home. */
+  removable?: boolean;
   onConfigure?: () => void;
   /** Settings from the widget itself, outside Arrange. */
   onQuick?: () => void;
@@ -846,7 +860,7 @@ function Cell(props: {
                 Settings
               </button>
             )}
-            {info.removable && (
+            {(info.removable || props.removable) && (
               <button type="button" className="cell-btn cell-remove" onClick={props.onRemove} aria-label={`Remove ${info.name}`}>
                 ×
               </button>

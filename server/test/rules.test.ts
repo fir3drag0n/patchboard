@@ -223,12 +223,12 @@ test('labels: join a YAML group by name, start new groups after, never shadow YA
   assert.equal(m.groups[1].services[0].check, false);
 });
 
-test('board: the default is valid, and Needs attention can never be removed', () => {
+test('board: the default is valid, and a board may leave Needs attention off', () => {
   const ok = validateBoard(DEFAULT_BOARD);
   assert.ok('board' in ok);
   const v = validateBoard({ widgets: [{ id: 'feeds', type: 'feeds', size: 'l' }] });
   assert.ok('board' in v);
-  if ('board' in v) assert.deepEqual(v.board.widgets.map((w) => w.type), ['attention', 'feeds']);
+  if ('board' in v) assert.deepEqual(v.board.widgets.map((w) => w.type), ['feeds']);
 });
 
 test('board: rejects unknown types, duplicates, bad container names; fixes bad sizes', () => {

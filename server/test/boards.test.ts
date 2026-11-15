@@ -148,3 +148,13 @@ test('the UPS in one reading: the one in trouble first, its words in the page la
   assert.equal(upsLevel(out), 'crit');
   assert.equal(upsLevel(mains), 'ok');
 });
+
+test('Home always keeps Needs attention; another board can drop it', () => {
+  const media: Board = { version: 1, name: 'Media', widgets: [{ id: 'now', type: 'now', size: 'm' }] };
+  putBoard('media', media);
+  assert.deepEqual(getBoard('media')?.board.widgets.map((w) => w.type), ['now']);
+  putBoard('home', media);
+  assert.deepEqual(getBoard('home')?.board.widgets.map((w) => w.type), ['attention', 'now']);
+  removeBoard('media');
+  removeBoard('home');
+});

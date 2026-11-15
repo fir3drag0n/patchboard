@@ -75,7 +75,7 @@ export function Home() {
       <h1 className="sr-only">
         {snap.brand?.name || 'Patchboard'}, {board === HOME_ID ? 'Home' : (snap.boards?.find((b) => b.id === board)?.name ?? 'board')}
       </h1>
-      <Masthead now={now} weatherOnBoard={widgets.includes('weather')} attentionCard={widgets.includes('attention-card')} slim={wall} />
+      <Masthead now={now} weatherOnBoard={widgets.includes('weather')} attentionCard={widgets.includes('attention-card')} attentionOff={widgets.includes('@no-attention')} slim={wall} />
       {board === HOME_ID && <Welcome />}
       {!wall && <BoardTabs />}
       <Board key={board} id={board} now={now} onWidgets={setWidgets} />
@@ -109,7 +109,7 @@ function HomeSkeleton() {
   );
 }
 
-function Masthead({ now, weatherOnBoard, attentionCard, slim }: { now: number; weatherOnBoard: boolean; attentionCard: boolean; slim?: boolean }) {
+function Masthead({ now, weatherOnBoard, attentionCard, attentionOff, slim }: { now: number; weatherOnBoard: boolean; attentionCard: boolean; attentionOff: boolean; slim?: boolean }) {
   const { snap } = useStore();
   const { data: weather } = useSource<WeatherData>('weather');
   const { clock24, temp: unit, homeClockSize, homeStatusSize, homeWeather, homeServer } = useAppearance();
@@ -143,7 +143,7 @@ function Masthead({ now, weatherOnBoard, attentionCard, slim }: { now: number; w
     return (
       <header className={`wall-status tone-${status.tone}`}>
         <span className="status-line">{status.text}</span>
-        {!attentionCard && <HeaderAlerts alerts={snap!.alerts} now={now} />}
+        {!attentionCard && !attentionOff && <HeaderAlerts alerts={snap!.alerts} now={now} />}
       </header>
     );
   }
@@ -155,6 +155,9 @@ function Masthead({ now, weatherOnBoard, attentionCard, slim }: { now: number; w
         <div className="status-copy">
           {!attentionCard && !alerts.length ? (
             <Link className="status-line is-quiet" to={quietTo}>{status.text}</Link>
+          ) : attentionOff ? (
+            // This board left Needs attention off: the line leads to Home's list.
+            <Link className="status-line" to="/" state={{ attention: true }}>{status.text}</Link>
           ) : attentionCard || !alerts.length ? (
             <a className="status-line" href={alerts.length ? '#w-attention' : quietTo} onClick={(e) => {
               if (!alerts.length) return;
@@ -164,7 +167,7 @@ function Masthead({ now, weatherOnBoard, attentionCard, slim }: { now: number; w
           ) : (
             <h2 className="status-line">{status.text}</h2>
           )}
-          {!attentionCard && <HeaderAlerts alerts={snap!.alerts} now={now} />}
+          {!attentionCard && !attentionOff && <HeaderAlerts alerts={snap!.alerts} now={now} />}
           <Overnight now={now} />
         </div>
       </div>}
