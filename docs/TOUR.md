@@ -237,6 +237,16 @@ is open.
 
 ![Downloads](screenshots/downloads.webp)
 
+**Library:** Sonarr's shows and Radarr's films, each with its poster, how
+many episodes are on disk, its size and whether it's monitored. Filter by
+name, switch monitoring, or search for what's missing. Missing lists every
+monitored episode or film without a file, to search one at a time or all
+at once. Queue has the whole queue, with Try another release and Remove.
+Add finds a show or film by name and adds it with the quality and folder
+you pick.
+
+![Library](screenshots/library.webp)
+
 **Logs:** live from Docker, each line stamped in your own time, whatever
 zone the container runs in.
 

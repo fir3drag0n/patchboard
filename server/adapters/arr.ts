@@ -22,7 +22,8 @@ interface QueueRecord {
 const QUEUE_ORDER: Record<ArrQueueItem['state'], number> = { failed: 0, warning: 1, importing: 2, downloading: 3, queued: 4, paused: 5 };
 
 /** Queue records as rows: stuck first, each with what it's doing and why it's stuck. */
-export function toQueue(records: QueueRecord[]): ArrQueueItem[] {
+export type { QueueRecord };
+export function toQueue(records: QueueRecord[], limit = 20): ArrQueueItem[] {
   return records
     .map((r): ArrQueueItem => {
       const status = (r.status ?? '').toLowerCase();
@@ -43,7 +44,7 @@ export function toQueue(records: QueueRecord[]): ArrQueueItem[] {
       return { id: r.id, title: r.title, progress: r.size ? Math.max(0, Math.min(1, 1 - (r.sizeleft ?? 0) / r.size)) : 0, state, ...(message ? { message } : {}) };
     })
     .sort((a, b) => QUEUE_ORDER[a.state] - QUEUE_ORDER[b.state])
-    .slice(0, 20);
+    .slice(0, limit);
 }
 
 /** Acting on Sonarr or Radarr: try another release for a stuck download, or search. */

@@ -52,15 +52,15 @@ async function tvmaze(tvdb: string): Promise<{ type: string; body: Uint8Array<Ar
   }
 }
 
-/** A poster for sonarr/<seriesId>, radarr/<movieId> or tvmaze/<tvdbId>, or null. */
+/** A poster for sonarr/<seriesId>, radarr/<movieId>, tvmaze/<tvdbId>, or a show or film just looked up (tvdb/<id>, tmdb/<id>), or null. */
 export async function poster(src: string, id: string): Promise<{ type: string; body: Uint8Array<ArrayBuffer> } | null> {
-  if (!/^\d{1,9}$/.test(id) || !['sonarr', 'radarr', 'tvmaze', 'seerr', 'book'].includes(src)) return null;
+  if (!/^\d{1,9}$/.test(id) || !['sonarr', 'radarr', 'tvmaze', 'seerr', 'book', 'tvdb', 'tmdb'].includes(src)) return null;
   const key = `${src}:${id}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < ('miss' in hit ? 3_600_000 : 86_400_000)) return 'miss' in hit ? null : hit;
   let got: { type: string; body: Uint8Array<ArrayBuffer> } | null = null;
   if (src === 'tvmaze') got = shows.has(id) ? await tvmaze(id) : null;
-  else if (src === 'seerr' || src === 'book') {
+  else if (src === 'seerr' || src === 'book' || src === 'tvdb' || src === 'tmdb') {
     const url = remote.get(key);
     if (url) got = await image(url, {}, true);
   }

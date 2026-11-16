@@ -419,6 +419,67 @@ export interface ArrData {
   health: { level: 'warning' | 'error' | 'notice'; message: string }[];
 }
 
+export type ArrApp = 'sonarr' | 'radarr';
+
+/** A show in Sonarr or a film in Radarr. */
+export interface LibraryItem {
+  id: number;
+  title: string;
+  year?: number;
+  monitored: boolean;
+  /** Shows: still airing, ended or not started. Films: out, or not out yet. */
+  status: 'airing' | 'ended' | 'upcoming' | 'out';
+  /** Episodes on disk, or 1 when a film is. */
+  have: number;
+  /** Episodes aired so far, or 1 for a film. */
+  total: number;
+  /** Bytes on disk. */
+  size: number;
+  /** Network or studio. */
+  by?: string;
+  /** Milliseconds. */
+  added?: number;
+  art?: string;
+  /** Its page in Sonarr or Radarr. */
+  url: string;
+}
+
+/** A monitored episode or film with no file. */
+export interface WantedItem {
+  /** The episode or film id, which a search takes. */
+  id: number;
+  title: string;
+  /** S01E02 and its name, for an episode. */
+  subtitle?: string;
+  /** When it aired or came out, ISO. */
+  when?: string;
+  art?: string;
+}
+
+export interface WantedList {
+  total: number;
+  items: WantedItem[];
+}
+
+/** A show or film found by name, to add. */
+export interface FoundItem {
+  /** TVDB id for a show, TMDB id for a film. */
+  key: number;
+  title: string;
+  year?: number;
+  overview?: string;
+  by?: string;
+  seasons?: number;
+  art?: string;
+  /** Already in the library. */
+  have: boolean;
+}
+
+export interface ArrOptions {
+  profiles: { id: number; name: string }[];
+  folders: { path: string; free?: number }[];
+}
+
 export interface Stream {
   /** The library item, when the source can open its own title. */
   itemId?: string;

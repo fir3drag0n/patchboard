@@ -10,9 +10,8 @@ logged in Activity; read-only and household devices only look.
 
 - [ ] Downloads, next: a torrent's files, priority, category and its own
   speed limits
-- [ ] Sonarr and Radarr: the library with search; add a show or movie with
-  its quality and folder; monitor, search, the queue with retry and
-  blocklist, missing, history and the calendar
+- [ ] Library, next: a show's seasons and episodes, Sonarr and Radarr
+  history, and the calendar with search
 - [ ] Requests (Seerr): approve, decline, and ask for something new
 - [ ] Plex and Jellyfin: who's watching, stop a stream, scan a library
 - [ ] Pi-hole and AdGuard: the query log, allow or block a domain, pause

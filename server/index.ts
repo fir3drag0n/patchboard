@@ -8,7 +8,7 @@ import { getJson, request } from './http.ts';
 import { join } from 'node:path';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { Hono } from 'hono';
+import { type Context, Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import type { Adapter } from './adapters/adapter.ts';
 import type { ArrData, ContainerDetail, HaEntity, ProxmoxData, QbitData } from '../shared/types.ts';
@@ -62,7 +62,9 @@ import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
 import { mediaImage, mediaServerAdapter } from './adapters/mediaserver.ts';
 import { delugeClient, DOWNLOAD_CLIENTS, type DownloadControl, type DownloadManager, type ItemAction, type NewDownload, nzbgetClient, sabnzbdClient, transmissionClient } from './adapters/downloads.ts';
-import type { DownloadClientId, DownloadList, EntryAction } from '../shared/types.ts';
+import type { ArrApp, ArrOptions, ArrQueueItem, DownloadClientId, DownloadList, EntryAction, LibraryItem, WantedList } from '../shared/types.ts';
+import { arrLibrary, type ArrLibrary } from './adapters/library.ts';
+import { demoLibrary } from './demo-library.ts';
 import { traktAdapter } from './adapters/trakt.ts';
 import { truenasAdapter } from './adapters/truenas.ts';
 import { backupsAdapter } from './adapters/backups.ts';
@@ -914,6 +916,120 @@ app.post('/api/arr/:id/:action/:item?', async (c) => {
   }
   recordAudit(who(c), `arr.${action}`, id, what);
   void hub.pollNow(id);
+  return c.json({ ok: true });
+});
+
+// The Library page: every show or film, what's missing, the whole queue,
+// and adding something. Read straight from Sonarr or Radarr while the page
+// is open. Anything acted on must be in what the page was last sent.
+const libraryOf = (app: string): ArrLibrary | undefined =>
+  app !== 'sonarr' && app !== 'radarr' ? undefined : config.demo ? demoLibrary(app) : config[app] ? arrLibrary(app) : undefined;
+const libSeen = new Map<string, { at: number; ids: Map<number, string> }>();
+const appName = (app: string) => (app === 'sonarr' ? 'Sonarr' : 'Radarr');
+const libFail = (c: Context, err: unknown) => c.json({ error: (err as Error).message }, 502);
+
+async function libRead<T>(c: Context, part: 'items' | 'wanted' | 'queue' | 'options', names?: (got: T) => [number, string][]) {
+  const app = c.req.param('app')!;
+  const lib = libraryOf(app);
+  if (!lib) return c.json({ error: `${appName(app)} is not set up` }, 404);
+  try {
+    const got = (await lib[part]()) as T;
+    if (names) libSeen.set(`${app}:${part}`, { at: Date.now(), ids: new Map(names(got)) });
+    return c.json(got);
+  } catch (err) {
+    return libFail(c, err);
+  }
+}
+
+app.get('/api/library/:app/items', (c) => libRead<LibraryItem[]>(c, 'items', (l) => l.map((i) => [i.id, i.title])));
+app.get('/api/library/:app/wanted', (c) => libRead<WantedList>(c, 'wanted', (w) => w.items.map((i) => [i.id, `${i.title} ${i.subtitle ?? ''}`.trim()])));
+app.get('/api/library/:app/queue', (c) => libRead<ArrQueueItem[]>(c, 'queue', (q) => q.map((i) => [i.id, i.title])));
+app.get('/api/library/:app/options', (c) => libRead<ArrOptions>(c, 'options'));
+app.get('/api/library/:app/find', async (c) => {
+  const app = c.req.param('app');
+  const lib = libraryOf(app);
+  if (!lib) return c.json({ error: `${appName(app)} is not set up` }, 404);
+  const term = (c.req.query('q') ?? '').trim().slice(0, 100);
+  if (!term) return c.json([]);
+  try {
+    const found = await lib.find(term);
+    libSeen.set(`${app}:found`, { at: Date.now(), ids: new Map(found.map((f) => [f.key, f.title])) });
+    return c.json(found);
+  } catch (err) {
+    return libFail(c, err);
+  }
+});
+
+/** The name of something the page was sent in the last 10 minutes, or undefined. */
+const libName = (app: string, part: string, id: number) => {
+  const seen = libSeen.get(`${app}:${part}`);
+  return seen && Date.now() - seen.at < 600_000 ? seen.ids.get(id) : undefined;
+};
+
+const LIB_ACTIONS: Record<string, { part: string; run: (lib: ArrLibrary, id: number, body: Record<string, unknown>) => Promise<unknown> }> = {
+  'items:monitor': { part: 'items', run: (lib, id, b) => lib.monitor(id, b.on === true) },
+  'items:search': { part: 'items', run: (lib, id) => lib.searchItem(id) },
+  'wanted:search': { part: 'wanted', run: (lib, id) => lib.searchWanted(id) },
+  'queue:retry': { part: 'queue', run: (lib, id) => lib.retry(id) },
+  'queue:remove': { part: 'queue', run: (lib, id) => lib.remove(id) },
+};
+
+app.post('/api/library/:app/:part/:id/:action', async (c) => {
+  const { app: name, part, action } = c.req.param();
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const lib = libraryOf(name);
+  if (!lib) return c.json({ error: `${appName(name)} is not set up` }, 404);
+  const step = LIB_ACTIONS[`${part}:${action}`];
+  if (!step) return c.json({ error: 'Unknown action' }, 400);
+  const id = Number(c.req.param('id'));
+  const what = libName(name, step.part, id);
+  if (!what) return c.json({ error: 'That is no longer on the list. Reload and try again.' }, 404);
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  try {
+    await step.run(lib, id, body);
+  } catch (err) {
+    return libFail(c, err);
+  }
+  recordAudit(who(c), `library.${part}.${action}${action === 'monitor' ? (body.on === true ? '.on' : '.off') : ''}`, name, what);
+  if (part === 'queue') void hub.pollNow(name as ArrApp);
+  return c.json({ ok: true });
+});
+
+app.post('/api/library/:app/search-all', async (c) => {
+  const name = c.req.param('app');
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const lib = libraryOf(name);
+  if (!lib) return c.json({ error: `${appName(name)} is not set up` }, 404);
+  try {
+    await lib.searchAll();
+  } catch (err) {
+    return libFail(c, err);
+  }
+  recordAudit(who(c), 'library.search-all', name);
+  return c.json({ ok: true });
+});
+
+// Add a show or film found by name, with a quality profile and folder that
+// Sonarr or Radarr offered.
+app.post('/api/library/:app/add', async (c) => {
+  const name = c.req.param('app');
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const lib = libraryOf(name);
+  if (!lib) return c.json({ error: `${appName(name)} is not set up` }, 404);
+  const b = (await c.req.json().catch(() => ({}))) as { key?: unknown; profile?: unknown; folder?: unknown; search?: unknown };
+  const key = Number(b.key);
+  if (!libName(name, 'found', key)) return c.json({ error: 'Search for it again, then add it.' }, 404);
+  try {
+    const options = await lib.options();
+    const profile = options.profiles.find((p) => p.id === Number(b.profile));
+    const folder = options.folders.find((f) => f.path === b.folder);
+    if (!profile || !folder) return c.json({ error: 'Pick a quality and a folder.' }, 400);
+    const title = await lib.add({ key, profile: profile.id, folder: folder.path, search: b.search !== false });
+    recordAudit(who(c), 'library.add', name, title);
+  } catch (err) {
+    return libFail(c, err);
+  }
+  void hub.pollNow(name as ArrApp);
   return c.json({ ok: true });
 });
 

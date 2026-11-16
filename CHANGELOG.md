@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **A Library page for Sonarr and Radarr:** every show and film with its
+  poster, episodes on disk, size and monitoring. Switch monitoring or
+  search from the row. Missing lists each monitored episode or film without
+  a file, to search one by one or all at once. Queue has the whole queue
+  with Try another release and Remove. Add finds a show or film by name and
+  adds it with the quality profile and folder you pick. When Sonarr or
+  Radarr refuses, you see its reason.
 - **A Downloads page:** every torrent and NZB in qBittorrent, Transmission,
   Deluge, SABnzbd and NZBGet on one list, finished and failed ones too,
   with progress, speed, time left, size, ratio, category and tracker.

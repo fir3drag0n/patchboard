@@ -37,6 +37,7 @@ const NAV = [
   { to: '/logs', label: 'Logs', desktop: true },
   { to: '/apps', label: 'Apps', desktop: true },
   { to: '/downloads', label: 'Downloads', desktop: true },
+  { to: '/library', label: 'Library', desktop: true },
 ];
 
 // "g" then a letter, as in Gmail and GitHub.
@@ -53,7 +54,7 @@ const GO: Record<string, [string, string]> = {
 
 // Pages for whoever runs the server. A household device doesn't see them;
 // it does see Server, which only shows how things stand.
-const ADMIN = ['/stacks', '/logs', '/apps', '/settings', '/c', '/downloads'];
+const ADMIN = ['/stacks', '/logs', '/apps', '/settings', '/c', '/downloads', '/library'];
 export const adminPage = (path: string) => ADMIN.some((a) => path === a || path.startsWith(`${a}/`));
 
 const isTyping = (el: EventTarget | null) =>
@@ -239,7 +240,9 @@ export function Shell() {
   const phoneTabs = household ? ['/', '/upcoming', reading ? '/reading' : '/weather'] : ['/', '/server', '/stacks', reading ? '/reading' : '/upcoming'];
   // Downloads only once a download client is set up.
   const hasDownloads = ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget'].some((id) => snap?.sources[id as 'qbit']);
-  const nav = NAV.filter((n) => !(household && adminPage(n.to)) && (n.to !== '/downloads' || hasDownloads));
+  // Library once Sonarr or Radarr is.
+  const hasLibrary = !!(snap?.sources.sonarr || snap?.sources.radarr);
+  const nav = NAV.filter((n) => !(household && adminPage(n.to)) && (n.to !== '/downloads' || hasDownloads) && (n.to !== '/library' || hasLibrary));
   const more: { to: string; label: string }[] = [...nav.filter((n) => !phoneTabs.includes(n.to)), { to: '/weather', label: 'Weather' }, { to: '/settings', label: 'Settings' }].filter(
     (m) => !phoneTabs.includes(m.to) && !(household && adminPage(m.to)),
   );

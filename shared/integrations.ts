@@ -76,7 +76,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'sonarr',
     name: 'Sonarr',
-    adds: 'Episodes on the calendar, the queue, stuck imports and health warnings. Try another release for a stuck download, Search for an episode that aired without arriving, or search for everything missing.',
+    adds: 'Episodes on the calendar, the queue, stuck imports and health warnings. Try another release for a stuck download, Search for an episode that aired without arriving, or search for everything missing. The Library page lists every show, what’s missing and the whole queue, and adds new ones.',
     env: ['SONARR_URL', 'SONARR_KEY'],
     where: 'Sonarr: Settings, General, API Key.',
     source: true,
@@ -84,7 +84,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'radarr',
     name: 'Radarr',
-    adds: 'Films on the calendar (cinema, digital, physical), the queue, stuck imports and health warnings. Try another release for a stuck download, Search for a film that is out without arriving, or search for everything missing.',
+    adds: 'Films on the calendar (cinema, digital, physical), the queue, stuck imports and health warnings. Try another release for a stuck download, Search for a film that is out without arriving, or search for everything missing. The Library page lists every film, what’s missing and the whole queue, and adds new ones.',
     env: ['RADARR_URL', 'RADARR_KEY'],
     where: 'Radarr: Settings, General, API Key.',
     source: true,
