@@ -11,6 +11,7 @@ import type { UpdateJob } from '../../shared/types.ts';
 import { agoLong, duration } from '../lib/format.ts';
 import { useNow, useStore } from '../lib/store.tsx';
 import { Section } from './ui.tsx';
+import { msg, t as tr, tx } from '../lib/i18n.ts';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 
@@ -101,9 +102,9 @@ export function UpdateUndo({ job, onRollback }: { job: UpdateJob | null; onRollb
   if (!undoable(job) || job.status !== 'done' || snap?.readOnly) return null;
   return (
     <p className="update-notice">
-      Updated {agoLong(job.finishedAt ?? job.startedAt, now)} from <code>{job.from}</code>
-      <HoldButton className="text-button" hint="Hold to roll back" label={`Roll back to ${job.from}`} onConfirm={() => onRollback(job.id)}>
-        Roll back
+      {tx('Updated {when} from {image}', { when: agoLong(job.finishedAt ?? job.startedAt, now), image: <code>{job.from}</code> })}{' '}
+      <HoldButton className="text-button" hint={tr('Hold to roll back')} label={tr('Roll back to {image}', { image: job.from ?? '' })} onConfirm={() => onRollback(job.id)}>
+        {tr('Roll back')}
       </HoldButton>
     </p>
   );
@@ -113,8 +114,8 @@ export function UpdateUndo({ job, onRollback }: { job: UpdateJob | null; onRollb
 /** `busy`: this update is running. `locked`: something else is (a start, a stop), so it waits without claiming to update. */
 export function UpdateButton({ busy, busyLabel = 'Updating...', locked = false, onStart, waiting = false }: { name: string; busy: boolean; busyLabel?: string; locked?: boolean; onStart: () => void; waiting?: boolean }) {
   return (
-    <HoldButton className={waiting ? 'button board-save' : 'button button-quiet'} disabled={busy || locked} hint="Hold to update" onConfirm={onStart}>
-      {busy ? busyLabel : 'Update'}
+    <HoldButton className={waiting ? 'button board-save' : 'button button-quiet'} disabled={busy || locked} hint={tr('Hold to update')} onConfirm={onStart}>
+      {busy ? tr(busyLabel) : tr('Update')}
     </HoldButton>
   );
 }
@@ -125,14 +126,14 @@ export function UpdateNotice({ name, stale, busy = false }: { name: string; stal
   const now = useNow(60_000);
   const u = snap?.updates[name];
   const ro = !!snap?.readOnly;
-  if (stale) return <p className="update-notice">A newer copy is downloaded and this container still runs the old one.{!ro && ' Update switches it over.'}</p>;
+  if (stale) return <p className="update-notice">{tr('A newer copy is downloaded and this container still runs the old one.')}{!ro && ` ${tr('Update switches it over.')}`}</p>;
   if (!u) return null;
   return (
     <p className="update-notice">
-      Update available, found {agoLong(u.at, now)}.
+      {tr('Update available, found {when}.', { when: agoLong(u.at, now) })}
       {u.link && u.link !== '#' && (
         <a href={u.link} target="_blank" rel="noreferrer">
-          What changed
+          {tr('What changed')}
         </a>
       )}
       {/* Not while an update runs: it would clear the mark mid-way. */}
@@ -140,10 +141,10 @@ export function UpdateNotice({ name, stale, busy = false }: { name: string; stal
         <button
           type="button"
           className="text-button"
-          title="Clear the mark if you already run the newest image"
+          title={tr('Clear the mark if you already run the newest image')}
           onClick={() => void fetch(`/api/updates/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } })}
         >
-          Dismiss
+          {tr('Dismiss')}
         </button>
       )}
     </p>
@@ -154,19 +155,19 @@ export function UpdateNotice({ name, stale, busy = false }: { name: string; stal
 export function RowUpdate({ name }: { name: string }) {
   const u = useUpdateJob(name);
   const j = u.job;
-  if (j?.status === 'running') return <span className="row-update-note">{j.steps.find((s) => s.status === 'running')?.label ?? 'Updating'}...</span>;
-  if (j?.status === 'done') return <span className="row-update-note ok-text">Updated</span>;
+  if (j?.status === 'running') return <span className="row-update-note">{j.steps.find((s) => s.status === 'running')?.label ?? tr('Updating')}...</span>;
+  if (j?.status === 'done') return <span className="row-update-note ok-text">{tr('Updated')}</span>;
   if (j?.status === 'failed')
     return (
       <Link to={`/c/${encodeURIComponent(name)}`} className="row-update-note crit-text">
-        Failed. Open it
+        {tr('Failed. Open it')}
       </Link>
     );
   return (
     <>
       {u.error && (
         <Link to={`/c/${encodeURIComponent(name)}`} className="row-update-note crit-text" title={u.error}>
-          Can't update here
+          {tr('Can\'t update here')}
         </Link>
       )}
       <UpdateButton name={name} busy={false} waiting onStart={() => void u.start()} />
@@ -185,16 +186,23 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
       </Section>
     );
   }
-  const title = job.kind === 'rollback' ? 'Rollback' : 'Update';
+  const title = job.kind === 'rollback' ? msg('Rollback') : msg('Update');
   const took = job.finishedAt ? duration(job.finishedAt - job.startedAt) : '';
+  const rollback = job.kind === 'rollback';
   const summary =
     job.status === 'running'
-      ? `${job.kind === 'rollback' ? 'Rolling back' : 'Updating'}...`
+      ? rollback
+        ? tr('Rolling back...')
+        : tr('Updating...')
       : job.status === 'done'
         ? job.from === job.to
-          ? `Already up to date. Checked in ${took}.`
-          : `${job.kind === 'rollback' ? 'Rolled back' : 'Updated'} in ${took}.`
-        : `${title} failed: ${job.error ?? 'unknown error'}`;
+          ? tr('Already up to date. Checked in {time}.', { time: took })
+          : rollback
+            ? tr('Rolled back in {time}.', { time: took })
+            : tr('Updated in {time}.', { time: took })
+        : rollback
+          ? tr('Rollback failed: {error}', { error: job.error ?? tr('unknown error') })
+          : tr('Update failed: {error}', { error: job.error ?? tr('unknown error') });
 
   return (
     <Section title={title} className={`update-panel is-${job.status}`} count={job.from && job.to && job.from !== job.to ? `${job.from} → ${job.to}` : undefined}>
@@ -212,7 +220,7 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
       </ol>
       {job.log.length > 0 && (
         <details className="update-log" open={job.status === 'failed'}>
-          <summary>Output</summary>
+          <summary>{tr('Output')}</summary>
           <div className="logs-out wrap">
             {job.log.map((l, i) => (
               <div key={i} className="ll">
@@ -226,13 +234,13 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
         {/* Only once the container was recreated: a failed pull changed nothing.
             After a good update it's the quiet choice; after a failed one, the first. */}
         {undoable(job) && (
-          <HoldButton className={job.status === 'failed' ? 'button' : 'button button-quiet'} hint="Hold to roll back" onConfirm={() => onRollback(job.id)}>
-            {`Roll back to ${job.from}`}
+          <HoldButton className={job.status === 'failed' ? 'button' : 'button button-quiet'} hint={tr('Hold to roll back')} onConfirm={() => onRollback(job.id)}>
+            {tr('Roll back to {image}', { image: job.from ?? '' })}
           </HoldButton>
         )}
         {job.status !== 'running' && (
           <button type="button" className="text-button" onClick={onDismiss}>
-            Dismiss
+            {tr('Dismiss')}
           </button>
         )}
         {error && <span className="crit-text">{error}</span>}
@@ -266,20 +274,20 @@ export function SelfUpdate({ name, waiting }: { name: string; waiting: boolean }
       <span role="status">
         {slow ? (
           <>
-            Still restarting after two minutes.{' '}
+            {tr('Still restarting after two minutes.')}{' '}
             <button type="button" className="text-button" onClick={() => location.reload()}>
-              Reload
+              {tr('Reload')}
             </button>
           </>
         ) : (
-          'Restarting on the new image. This page reloads when it is back.'
+          tr('Restarting on the new image. This page reloads when it is back.')
         )}
       </span>
     );
-  if (j?.status === 'running') return <span>{j.steps.find((s) => s.status === 'running')?.label ?? 'Updating'}...</span>;
+  if (j?.status === 'running') return <span>{j.steps.find((s) => s.status === 'running')?.label ?? tr('Updating')}...</span>;
   if (j?.status === 'done' && j.to && j.from !== j.to) return <span>Updated.</span>;
-  if (j?.status === 'failed') return <Link to={`/c/${encodeURIComponent(name)}`} className="crit-text">Update failed. Open it</Link>;
-  if (j?.status === 'done' && j.steps.find((s) => s.key === 'pull')?.note === 'Already the newest image') return <span>Already the newest image.</span>;
+  if (j?.status === 'failed') return <Link to={`/c/${encodeURIComponent(name)}`} className="crit-text">{tr('Update failed. Open it')}</Link>;
+  if (j?.status === 'done' && j.steps.find((s) => s.key === 'pull')?.note === 'Already the newest image') return <span>{tr('Already the newest image.')}</span>;
   return (
     <>
       <UpdateButton name={name} busy={false} waiting={waiting} onStart={() => void u.start()} />

@@ -12,6 +12,9 @@
   it opens nothing else and changes nothing. `/api/v1/mcp` lets Claude and
   other MCP clients ask "is Plex running?" directly. docs/API.md has the
   endpoints and setup lines.
+- **Settings in your language:** Settings and the problem titles the server
+  writes now come in German, Spanish, French, Italian, Dutch and Brazilian
+  Portuguese too. Notifications and the API stay in English.
 
 ## 1.14.0 (2026-11-15)
 

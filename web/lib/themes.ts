@@ -7,6 +7,9 @@
 // `crit` must stay clearly apart from `accent`, and `ink3` must stay readable
 // on `bg` (aim for 5:1 or better).
 
+/** Marks a note for the translation catalogs; Settings translates it where it shows. (i18n.ts imports this file, so not its msg.) */
+const msg = (english: string): string => english;
+
 /** Playback brands identify the source. Warnings keep their own text and status colors. */
 export const MEDIA_COLORS = {
   plex: { dark: '#e5a00d', light: '#986800' },
@@ -50,7 +53,7 @@ export const THEMES: ThemeDef[] = [
   {
     id: 'graphite',
     name: 'Graphite',
-    note: 'Neutral dark, one accent.',
+    note: msg('Neutral dark, one accent.'),
     fonts: 'geist',
     dark: {
       bg: '#0b0c0e', raised: '#141619', surface: '#1d2024', line: '#2f3338', lineSoft: '#22252a',
@@ -66,7 +69,7 @@ export const THEMES: ThemeDef[] = [
   {
     id: 'midnight',
     name: 'Midnight',
-    note: 'Deep navy, cool blue.',
+    note: msg('Deep navy, cool blue.'),
     fonts: 'geist',
     dark: {
       bg: '#0a0e17', raised: '#101624', surface: '#172033', line: '#28344d', lineSoft: '#1b2539',
@@ -82,7 +85,7 @@ export const THEMES: ThemeDef[] = [
   {
     id: 'forest',
     name: 'Forest',
-    note: 'Green-black, moss accent.',
+    note: msg('Green-black, moss accent.'),
     fonts: 'geist',
     dark: {
       bg: '#0a0f0c', raised: '#111813', surface: '#18211b', line: '#29362d', lineSoft: '#1c271f',
@@ -98,7 +101,7 @@ export const THEMES: ThemeDef[] = [
   {
     id: 'dusk',
     name: 'Dusk',
-    note: 'Violet-black, lavender accent.',
+    note: msg('Violet-black, lavender accent.'),
     fonts: 'geist',
     dark: {
       bg: '#0e0b14', raised: '#15111d', surface: '#1d1828', line: '#312a42', lineSoft: '#221c2f',
@@ -114,7 +117,7 @@ export const THEMES: ThemeDef[] = [
   {
     id: 'paper',
     name: 'Paper',
-    note: 'Warm neutrals, serif titles.',
+    note: msg('Warm neutrals, serif titles.'),
     fonts: 'dm',
     dark: {
       bg: '#121110', raised: '#1a1917', surface: '#23211e', line: '#36322e', lineSoft: '#282522',

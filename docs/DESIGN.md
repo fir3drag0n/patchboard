@@ -148,6 +148,13 @@ The English is the key: `t('Today')` shows "Today" until a catalog in
 `web/i18n` says otherwise, so nothing goes blank while a translation is under
 way. `tn(n, one, many)` picks the form by the language's own plural rule.
 Section titles and their links go through `t()` in one place, `Section`.
+A sentence with a link or code in it uses `tx()`, which fills each `{name}`
+with an element wherever the language puts it. English kept in a list and
+translated where it shows is marked `msg()`, so the catalog check finds it.
+
+The server writes problem titles in English, for notifications and the API,
+and sends each one's template and values beside it (`say()` in
+`server/alerts.ts`). A browser in another language says the title from those.
 
 To add a language, copy `web/i18n/fr.json` to the new code, translate each
 value, keep every `{value}` its English has, and add the code to `LANGUAGES`

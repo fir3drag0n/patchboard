@@ -8,6 +8,7 @@ import { HELP } from '../lib/docs.ts';
 import { useStore } from '../lib/store.tsx';
 import { HoldButton } from './Hold.tsx';
 import { Section } from './ui.tsx';
+import { t as tr, tx } from '../lib/i18n.ts';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 
@@ -27,7 +28,7 @@ function Copyable({ text, label }: { text: string; label: string }) {
           )
         }
       >
-        {copied ? 'Copied' : 'Copy'}
+        {copied ? tr('Copied') : tr('Copy')}
       </button>
     </div>
   );
@@ -65,19 +66,19 @@ export function ApiKeys() {
   return (
     <Section title="API keys" count={list.length ? String(list.length) : undefined}>
       <p className="settings-note">
-        For scripts and AI tools: a key reads what needs you, the containers, the server and any widget&apos;s number, and changes nothing.{' '}
+        {tr("For scripts and AI tools: a key reads what needs you, the containers, the server and any widget's number, and changes nothing.")}{' '}
         <a href={HELP.api} target="_blank" rel="noreferrer">
-          The API and MCP
+          {tr('The API and MCP')}
         </a>
       </p>
       {made && (
         <div className="api-key-made" role="status">
           <p>
-            The key for <strong>{made.name}</strong>. Patchboard shows it only now.
+            {tx('The key for {name}. Patchboard shows it only now.', { name: <strong>{made.name}</strong> })}
           </p>
-          <Copyable text={made.key} label={`API key for ${made.name}`} />
-          <p className="settings-note">Claude Code, as an MCP server:</p>
-          <Copyable text={`claude mcp add --transport http patchboard ${mcp} --header "Authorization: Bearer ${made.key}"`} label="Command to add Patchboard to Claude Code" />
+          <Copyable text={made.key} label={tr('API key for {name}', { name: made.name })} />
+          <p className="settings-note">{tr('Claude Code, as an MCP server:')}</p>
+          <Copyable text={`claude mcp add --transport http patchboard ${mcp} --header "Authorization: Bearer ${made.key}"`} label={tr('Command to add Patchboard to Claude Code')} />
         </div>
       )}
       {list.length > 0 && (
@@ -85,10 +86,10 @@ export function ApiKeys() {
           {list.map((k) => (
             <li key={k.id}>
               <span>{k.name}</span>
-              <time>{k.lastUsed ? `Used ${agoLong(k.lastUsed)}` : 'Not used yet'}</time>
+              <time>{k.lastUsed ? tr('Used {when}', { when: agoLong(k.lastUsed) }) : tr('Not used yet')}</time>
               {!readOnly && (
-                <HoldButton className="text-button" danger hint="Hold to revoke. Anything using it stops working." onConfirm={() => void revoke(k.id)}>
-                  Revoke
+                <HoldButton className="text-button" danger hint={tr('Hold to revoke. Anything using it stops working.')} onConfirm={() => void revoke(k.id)}>
+                  {tr('Revoke')}
                 </HoldButton>
               )}
             </li>
@@ -103,9 +104,9 @@ export function ApiKeys() {
             void add();
           }}
         >
-          <input className="field" value={name} maxLength={40} placeholder="What will use it" aria-label="API key name" onChange={(e) => setName(e.target.value)} />
+          <input className="field" value={name} maxLength={40} placeholder={tr('What will use it')} aria-label={tr('API key name')} onChange={(e) => setName(e.target.value)} />
           <button type="submit" className="button button-quiet" disabled={!name.trim()}>
-            Make a key
+            {tr('Make a key')}
           </button>
           {err && (
             <span className="crit-text" role="alert">

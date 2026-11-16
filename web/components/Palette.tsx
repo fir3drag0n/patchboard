@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import type { FastmailData, MinifluxData } from '../../shared/types.ts';
 import { setAppearance, THEMES } from '../lib/appearance.ts';
 import { useStore } from '../lib/store.tsx';
-import { needsYou } from '../lib/attention.ts';
+import { alertTitle, needsYou } from '../lib/attention.ts';
 import { containerMap, isExternal } from '../lib/services.ts';
 import { Icon, Led } from './ui.tsx';
 
@@ -215,7 +215,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
           const to = a.href ?? (a.subject && ctrs.has(a.subject) ? `/c/${encodeURIComponent(a.subject)}` : '/');
           return {
             id: `al-${a.id}`,
-            label: a.title,
+            label: alertTitle(a),
             hint: a.level === 'critical' ? 'Down' : 'Warning',
             group: 'Needs attention',
             led: a.level === 'critical' ? 'crit' : 'warn',

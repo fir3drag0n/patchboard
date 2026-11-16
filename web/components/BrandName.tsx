@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store.tsx';
 import { Section } from './ui.tsx';
+import { t as tr } from '../lib/i18n.ts';
 
 /** The dashboard name, saved on Enter or Save. */
 export function NameForm() {
@@ -36,15 +37,15 @@ export function NameForm() {
       <input
         className="field"
         value={name ?? brand.name ?? ''}
-        placeholder="Patchboard"
+        placeholder={tr('Patchboard')}
         maxLength={40}
-        aria-label="Name"
+        aria-label={tr('Name')}
         disabled={readOnly}
         onChange={(e) => setName(e.target.value)}
       />
       {name !== null && (
         <button type="submit" className="button button-quiet">
-          Save
+          {tr('Save')}
         </button>
       )}
       {err && <span className="crit-text">{err}</span>}
@@ -54,7 +55,7 @@ export function NameForm() {
 
 export function BrandName() {
   return (
-    <Section title="Name" count="every device" className="span-all">
+    <Section title="Name" count={tr('every device')} className="span-all">
       <NameForm />
     </Section>
   );

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { type AppIcon as Choice, setAppearance, useAppearance } from '../lib/appearance.ts';
 import { useStore } from '../lib/store.tsx';
 import { Section } from './ui.tsx';
+import { msg, t as tr } from '../lib/i18n.ts';
 
 const SIZES = [64, 180, 192, 512] as const;
 
@@ -73,7 +74,7 @@ function square(img: HTMLImageElement, size: number, mono: boolean): string {
 
 async function upload(file: File): Promise<string | null> {
   const img = await load(file).catch(() => null);
-  if (!img) return "This browser can't open that file as an image.";
+  if (!img) return tr("This browser can't open that file as an image.");
   const body = { color: {} as Record<number, string>, mono: {} as Record<number, string> };
   for (const s of SIZES) {
     body.color[s] = square(img, s, false);
@@ -95,16 +96,16 @@ export function AppIconSection() {
   // With your own icon, a device chooses only between color and black and white.
   const choices: [Choice, string, string, boolean][] = own
     ? [
-        ['dark', 'In color', `/icon-192.png?v=${own}`, !mono],
-        ['mono', 'Black and white', `/icon-mono-192.png?v=${own}`, mono],
+        ['dark', msg('In color'), `/icon-192.png?v=${own}`, !mono],
+        ['mono', msg('Black and white'), `/icon-mono-192.png?v=${own}`, mono],
       ]
     : (
         [
-          ['dark', 'Dark', '/icon-192.png'],
-          ['light', 'Light', '/icon-light-192.png'],
-          ['auto', 'Match the mode', darkNow ? '/icon-192.png' : '/icon-light-192.png'],
-          ['mono-dark', 'White on black', '/icon-mono-dark-192.png'],
-          ['mono', 'Black on white', '/icon-mono-192.png'],
+          ['dark', msg('Dark'), '/icon-192.png'],
+          ['light', msg('Light'), '/icon-light-192.png'],
+          ['auto', msg('Match the mode'), darkNow ? '/icon-192.png' : '/icon-light-192.png'],
+          ['mono-dark', msg('White on black'), '/icon-mono-dark-192.png'],
+          ['mono', msg('Black on white'), '/icon-mono-192.png'],
         ] as const
       ).map(([v, label, src]): [Choice, string, string, boolean] => [v, label, src, a.appIcon === v]);
 
@@ -128,27 +129,26 @@ export function AppIconSection() {
         {choices.map(([v, label, src, on]) => (
           <button key={v} type="button" className="icon-choice" aria-pressed={on} onClick={() => setAppearance({ appIcon: v })}>
             <img src={src} alt="" width={44} height={44} />
-            <span>{label}</span>
+            <span>{tr(label)}</span>
           </button>
         ))}
       </div>
       {!readOnly && (
         <div className="app-icon-own">
           <label className="button button-quiet" aria-disabled={busy || undefined}>
-            {busy ? 'Uploading' : own ? 'Upload another' : 'Upload your own'}
+            {busy ? tr('Uploading') : own ? tr('Upload another') : tr('Upload your own')}
             <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" className="sr-only" disabled={busy} onChange={(e) => void pick(e.currentTarget)} />
           </label>
           {own && (
             <button type="button" className="text-button" onClick={() => void reset()}>
-              Use the P
+              {tr('Use the P')}
             </button>
           )}
           {err && <span className="crit-text">{err}</span>}
         </div>
       )}
       <p className="settings-note">
-        {own ? 'Your icon shows on every device. ' : ''}For Add to Home Screen or Install on this device. A phone keeps the icon it had when you
-        added it: to change it, remove the app and add it again.{own ? '' : ' With dark home-screen icons on an iPhone, pick a dark one.'}
+        {own ? `${tr('Your icon shows on every device.')} ` : ''}{tr('For Add to Home Screen or Install on this device. A phone keeps the icon it had when you added it: to change it, remove the app and add it again.')}{own ? '' : ' With dark home-screen icons on an iPhone, pick a dark one.'}
       </p>
     </Section>
   );

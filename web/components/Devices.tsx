@@ -12,7 +12,7 @@ import { NUMBERS, type Widget, type WidgetType, WIDGET_INFO } from '../../shared
 import { DIM_HOURS, dimLabel, MAX_PAGES, ROTATE_SECONDS } from '../../shared/wall.ts';
 import { THEMES } from '../lib/appearance.ts';
 import { agoLong } from '../lib/format.ts';
-import { LANGUAGES } from '../lib/i18n.ts';
+import { LANGUAGES, msg, t as tr, tn, tx } from '../lib/i18n.ts';
 import { CURRENCIES, REGIONS } from '../lib/region.ts';
 import { useStore } from '../lib/store.tsx';
 import { HoldButton } from './Hold.tsx';
@@ -25,7 +25,7 @@ type Patch = { name?: string; opens?: string; pages?: string[]; rotate?: number;
 const ACTION = { 'X-Patchboard': 'action', 'Content-Type': 'application/json' };
 // A device counts as on when it asked for anything this recently (it checks in every ten minutes).
 const ON_MS = 15 * 60_000;
-const KEEP = 'As the device has it';
+const KEEP = msg('As the device has it');
 
 /** A page a device can show: its address, its name, and whether it's one widget on its own. */
 type Place = [string, string, boolean?, WidgetType?];
@@ -46,18 +46,18 @@ function usePlaces(): Place[] {
         const body = r?.ok ? ((await r.json()) as { board?: { widgets: Widget[] } }) : null;
         return (body?.board?.widgets ?? [])
           .filter((w) => w.type !== 'attention' || w.config?.style === 'card')
-          .map((w) => [`/w/${b.id}/${w.id}`, `${w.config?.title || WIDGET_INFO[w.type]?.name || w.type}, from ${b.name}`, true, w.type] as Place);
+          .map((w) => [`/w/${b.id}/${w.id}`, tr('{widget}, from {board}', { widget: w.config?.title || tr(WIDGET_INFO[w.type]?.name ?? w.type), board: b.name }), true, w.type] as Place);
       }),
     ).then((lists) => setWidgets(lists.flat()));
   }, [key]);
   return [
-    ['/', 'Home'],
+    ['/', msg('Home')],
     ...boards.filter((b) => b.id !== 'home').map((b) => [`/b/${b.id}`, b.name] as Place),
-    ['/monitor', 'Monitor'],
-    ['/server', 'Server'],
-    ['/upcoming', 'Upcoming'],
-    ['/reading', 'Reading'],
-    ['/weather', 'Weather'],
+    ['/monitor', msg('Monitor')],
+    ['/server', msg('Server')],
+    ['/upcoming', msg('Upcoming')],
+    ['/reading', msg('Reading')],
+    ['/weather', msg('Weather')],
     ...widgets,
   ];
 }
@@ -66,30 +66,30 @@ function usePlaces(): Place[] {
 function PlaceOptions({ places }: { places: Place[] }) {
   const opt = ([v, l]: Place) => (
     <option key={v} value={v}>
-      {l}
+      {tr(l)}
     </option>
   );
   const alone = places.filter((p) => p[2]);
   return (
     <>
       {places.filter((p) => !p[2]).map(opt)}
-      {alone.length > 0 && <optgroup label="One widget, full screen">{alone.map(opt)}</optgroup>}
+      {alone.length > 0 && <optgroup label={tr('One widget, full screen')}>{alone.map(opt)}</optgroup>}
     </>
   );
 }
 
 /** "Monitor, then 2 more pages", for the list. */
 function summary(d: Listed, name: (p: string) => string): string {
-  if (!d.opens) return 'Stays on the last page it showed';
+  if (!d.opens) return tr('Stays on the last page it showed');
   const more = d.pages?.length ?? 0;
-  return more ? `${name(d.opens)}, then ${more} more ${more === 1 ? 'page' : 'pages'}` : name(d.opens);
+  return more ? tn(more, '{page}, then {n} more page', '{page}, then {n} more pages', { page: name(d.opens) }) : name(d.opens);
 }
 
 export function Devices() {
   const { snap } = useStore();
   const readOnly = !!snap?.readOnly;
   const places = usePlaces();
-  const placeName = (p: string) => places.find(([v]) => v === p)?.[1] ?? p;
+  const placeName = (p: string) => tr(places.find(([v]) => v === p)?.[1] ?? p);
   const [list, setList] = useState<Listed[] | null>(null);
   const [auth, setAuth] = useState('none');
   const [params, setParams] = useSearchParams();
@@ -139,7 +139,7 @@ export function Devices() {
       <div className="devices">
         <div className="device-list">
           {list.length > 0 && (
-            <ul aria-label="Devices">
+            <ul aria-label={tr('Devices')}>
               {list.map((d) => {
                 const on = !!d.seen && Date.now() - d.seen < ON_MS;
                 return (
@@ -150,7 +150,7 @@ export function Devices() {
                         {d.name}
                       </span>
                       <span className="device-pick-what">{summary(d, placeName)}</span>
-                      <span className="device-pick-seen">{d.seen ? (on ? 'On now' : `Last on ${agoLong(d.seen)}`) : 'Link not opened yet'}</span>
+                      <span className="device-pick-seen">{d.seen ? (on ? tr('On now') : tr('Last on {when}', { when: agoLong(d.seen) })) : tr('Link not opened yet')}</span>
                     </button>
                   </li>
                 );
@@ -165,21 +165,21 @@ export function Devices() {
                 if (name.trim()) void add();
               }}
             >
-              <label htmlFor="device-name">{list.length ? 'Add another device' : 'Add a device'}</label>
+              <label htmlFor="device-name">{list.length ? tr('Add another device') : tr('Add a device')}</label>
               <div>
-                <input id="device-name" className="field" value={name} maxLength={40} placeholder="Kitchen tablet" onChange={(e) => setName(e.target.value)} />
+                <input id="device-name" className="field" value={name} maxLength={40} placeholder={tr('Kitchen tablet')} onChange={(e) => setName(e.target.value)} />
                 <button type="submit" className="button button-quiet" disabled={!name.trim()}>
-                  Make a link
+                  {tr('Make a link')}
                 </button>
               </div>
             </form>
           )}
           <p className="settings-note">
-            A device opens its link once. It sees the boards and switches lights, but can't touch containers or open Settings.
+            {tr('A device opens its link once. It sees the boards and switches lights, but can\'t touch containers or open Settings.')}
           </p>
           {wallBoards.length > 0 && (
             <p className="settings-note wall-boards">
-              Wall boards stay off Home's tabs. Edit one:{' '}
+              {tr("Wall boards stay off Home's tabs. Edit one:")}{' '}
               {wallBoards.map((b, i) => (
                 <span key={b.id}>
                   {i > 0 && ', '}
@@ -190,7 +190,7 @@ export function Devices() {
             </p>
           )}
           {auth === 'none' && list.length > 0 && (
-            <p className="settings-note">With sign-in off, a removed device keeps full access, like any browser on your network.</p>
+            <p className="settings-note">{tr('With sign-in off, a removed device keeps full access, like any browser on your network.')}</p>
           )}
         </div>
 
@@ -213,7 +213,7 @@ export function Devices() {
           />
         ) : (
           <div className="device-editor device-empty">
-            <p>No devices yet. Name one, then open its link on that device or scan its code.</p>
+            <p>{tr('No devices yet. Name one, then open its link on that device or scan its code.')}</p>
           </div>
         )}
       </div>
@@ -255,12 +255,12 @@ function DeviceEditor({
   const setLook = (k: keyof DeviceLook, v: string | boolean | undefined) => onSave({ look: { ...look, [k]: v === '' ? undefined : v } });
   const lookSelect = (k: keyof DeviceLook, label: string, options: [string, string][]) => (
     <label>
-      <span>{label}</span>
+      <span>{tr(label)}</span>
       <select className="field" disabled={readOnly} value={look[k] === undefined ? '' : String(look[k])} onChange={(e) => setLook(k, k === 'clock24' ? (e.target.value === '' ? '' : e.target.value === 'true') : e.target.value)}>
-        <option value="">{KEEP}</option>
+        <option value="">{tr(KEEP)}</option>
         {options.map(([v, l]) => (
           <option key={v} value={v}>
-            {l}
+            {tr(l)}
           </option>
         ))}
       </select>
@@ -293,7 +293,7 @@ function DeviceEditor({
       <div className="device-head">
         <input
           className="field device-name"
-          aria-label="Device name"
+          aria-label={tr('Device name')}
           value={name}
           maxLength={40}
           disabled={readOnly}
@@ -301,7 +301,7 @@ function DeviceEditor({
           onBlur={() => name.trim() && name.trim() !== d.name && onSave({ name: name.trim() })}
           onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
         />
-        <span className="settings-note">{d.seen ? `Last checked in ${agoLong(d.seen)}` : 'Link not opened yet'}. Changes reach it within a second.</span>
+        <span className="settings-note">{d.seen ? tr('Last checked in {when}.', { when: agoLong(d.seen) }) : tr('Link not opened yet.')} {tr('Changes reach it within a second.')}</span>
       </div>
       {err && (
         <p className="crit-text" role="alert">
@@ -311,15 +311,15 @@ function DeviceEditor({
 
       {link?.url && (
         <div className="device-made" role="status">
-          <Qr text={link.url} label={`QR code of the link for ${d.name}`} />
+          <Qr text={link.url} label={tr('QR code of the link for {name}', { name: d.name })} />
           <div>
             <p>
-              Open this link on <strong>{d.name}</strong>, or scan the code with it. Patchboard shows it only now, and anyone with it gets the same view.
+              {tx('Open this link on {name}, or scan the code with it. Patchboard shows it only now, and anyone with it gets the same view.', { name: <strong>{d.name}</strong> })}
             </p>
             <div className="device-copy">
-              <input className="field mono" readOnly value={link.url} aria-label={`Link for ${d.name}`} onFocus={(e) => e.currentTarget.select()} />
+              <input className="field mono" readOnly value={link.url} aria-label={tr('Link for {name}', { name: d.name })} onFocus={(e) => e.currentTarget.select()} />
               <button type="button" className="button button-quiet" onClick={() => void copy(link.url)}>
-                {copied ? 'Copied' : 'Copy link'}
+                {copied ? tr('Copied') : tr('Copy link')}
               </button>
             </div>
           </div>
@@ -327,51 +327,51 @@ function DeviceEditor({
       )}
 
       <section className="device-part" aria-labelledby={`pages-${d.id}`}>
-        <h3 id={`pages-${d.id}`}>Pages</h3>
+        <h3 id={`pages-${d.id}`}>{tr('Pages')}</h3>
         <p className="settings-note">
-          A swipe moves down the list. Empty, the device stays on the page it last showed.
+          {tr('A swipe moves down the list. Empty, the device stays on the page it last showed.')}
         </p>
         <ol className="device-pages">
           {order.map((p, i) => (
             <li key={p}>
-              <span className="device-page-num">{i === 0 ? 'Opens on' : `Page ${i + 1}`}</span>
-              <select className="field" value={p} disabled={readOnly} aria-label={i === 0 ? 'Opens on' : `Page ${i + 1}`} onChange={(e) => setOrder(order.map((x, j) => (j === i ? e.target.value : x)))}>
+              <span className="device-page-num">{i === 0 ? tr('Opens on') : tr('Page {n}', { n: i + 1 })}</span>
+              <select className="field" value={p} disabled={readOnly} aria-label={i === 0 ? tr('Opens on') : tr('Page {n}', { n: i + 1 })} onChange={(e) => setOrder(order.map((x, j) => (j === i ? e.target.value : x)))}>
                 <PlaceOptions places={places.filter(([v]) => v === p || !order.includes(v))} />
               </select>
               {!readOnly && (
                 <span className="device-page-tools">
-                  <button type="button" className="device-move" disabled={i === 0} aria-label={`Move ${placeName(p)} up`} onClick={() => move(i, -1)}>
+                  <button type="button" className="device-move" disabled={i === 0} aria-label={tr('Move {name} up', { name: placeName(p) })} onClick={() => move(i, -1)}>
                     ↑
                   </button>
-                  <button type="button" className="device-move" disabled={i === order.length - 1} aria-label={`Move ${placeName(p)} down`} onClick={() => move(i, 1)}>
+                  <button type="button" className="device-move" disabled={i === order.length - 1} aria-label={tr('Move {name} down', { name: placeName(p) })} onClick={() => move(i, 1)}>
                     ↓
                   </button>
-                  <button type="button" className="device-move" aria-label={`Remove ${placeName(p)}`} onClick={() => setOrder(order.filter((x) => x !== p))}>
+                  <button type="button" className="device-move" aria-label={tr('Remove {name}', { name: placeName(p) })} onClick={() => setOrder(order.filter((x) => x !== p))}>
                     ×
                   </button>
                 </span>
               )}
               {boardOf(p) && (
                 <Link className="text-button" to={`${boardOf(p)}?arrange=1`}>
-                  {p.startsWith('/w/') ? 'Edit widget' : 'Edit board'}
+                  {p.startsWith('/w/') ? tr('Edit widget') : tr('Edit board')}
                 </Link>
               )}
             </li>
           ))}
         </ol>
         {!readOnly && order.length < MAX_PAGES && (
-          <select className="field device-page-add" aria-label="Add a page" value="" onChange={(e) => e.target.value && setOrder([...order, e.target.value])}>
-            <option value="">{order.length ? 'Add a page' : 'Pick the page it opens on'}</option>
+          <select className="field device-page-add" aria-label={tr('Add a page')} value="" onChange={(e) => e.target.value && setOrder([...order, e.target.value])}>
+            <option value="">{order.length ? tr('Add a page') : tr('Pick the page it opens on')}</option>
             <PlaceOptions places={places.filter(([v]) => !order.includes(v))} />
           </select>
         )}
         {order.length > 1 && (
           <label className="device-inline">
-            <span>Turns pages</span>
+            <span>{tr('Turns pages')}</span>
             <select className="field" value={d.rotate ?? 0} disabled={readOnly} onChange={(e) => onSave({ rotate: Number(e.target.value) })}>
               {ROTATE_SECONDS.map((s) => (
                 <option key={s} value={s}>
-                  {s === 0 ? 'Only when swiped' : s < 60 ? `Every ${s} seconds` : s === 60 ? 'Every minute' : `Every ${s / 60} minutes`}
+                  {s === 0 ? tr('Only when swiped') : s < 60 ? tr('Every {n} seconds', { n: s }) : s === 60 ? tr('Every minute') : tr('Every {n} minutes', { n: s / 60 })}
                 </option>
               ))}
             </select>
@@ -380,19 +380,19 @@ function DeviceEditor({
       </section>
 
       <section className="device-part" aria-labelledby={`screen-${d.id}`}>
-        <h3 id={`screen-${d.id}`}>Screen</h3>
+        <h3 id={`screen-${d.id}`}>{tr('Screen')}</h3>
         <div className="device-grid">
           <label>
-            <span>Kind of screen</span>
+            <span>{tr('Kind of screen')}</span>
             <select className="field" value={d.screen ?? ''} disabled={readOnly} onChange={(e) => onSave({ screen: e.target.value })}>
-              <option value="">Color</option>
+              <option value="">{tr('Color')}</option>
               <option value="eink">E-ink</option>
             </select>
           </label>
           <label>
-            <span>Dims at night</span>
+            <span>{tr('Dims at night')}</span>
             <select className="field" value={d.dim ?? ''} disabled={readOnly} onChange={(e) => onSave({ dim: e.target.value })}>
-              <option value="">Never</option>
+              <option value="">{tr('Never')}</option>
               {DIM_HOURS.map((h) => (
                 <option key={h} value={h}>
                   {dimLabel(h)}
@@ -401,49 +401,49 @@ function DeviceEditor({
             </select>
           </label>
           <label>
-            <span>Monitor colors</span>
+            <span>{tr('Monitor colors')}</span>
             <select className="field" value={d.tint ?? 'gray'} disabled={readOnly} onChange={(e) => onSave({ tint: e.target.value })}>
-              <option value="gray">Gray</option>
-              <option value="blue">Blue</option>
-              <option value="color">Full color</option>
+              <option value="gray">{tr('Gray')}</option>
+              <option value="blue">{tr('Blue')}</option>
+              <option value="color">{tr('Full color')}</option>
             </select>
           </label>
         </div>
       </section>
 
       <section className="device-part" aria-labelledby={`look-${d.id}`}>
-        <h3 id={`look-${d.id}`}>Look</h3>
-        <p className="settings-note">{KEEP} keeps whatever was set on the device itself.</p>
+        <h3 id={`look-${d.id}`}>{tr('Look')}</h3>
+        <p className="settings-note">{tr('As the device has it keeps whatever was set on the device itself.')}</p>
         <div className="device-grid">
           {lookSelect(
             'theme',
-            'Theme',
+            msg('Theme'),
             THEMES.map((t) => [t.id, t.name]),
           )}
-          {lookSelect('scheme', 'Mode', [
-            ['dark', 'Dark'],
-            ['light', 'Light'],
-            ['auto', 'Match the system'],
+          {lookSelect('scheme', msg('Mode'), [
+            ['dark', msg('Dark')],
+            ['light', msg('Light')],
+            ['auto', msg('Match the system')],
           ])}
-          {lookSelect('density', 'Density', [
-            ['compact', 'Compact'],
-            ['comfortable', 'Comfortable'],
-            ['large', 'Large'],
+          {lookSelect('density', msg('Density'), [
+            ['compact', msg('Compact')],
+            ['comfortable', msg('Comfortable')],
+            ['large', msg('Large')],
           ])}
-          {lookSelect('clock24', 'Time', [
-            ['false', '12-hour'],
-            ['true', '24-hour'],
+          {lookSelect('clock24', msg('Time'), [
+            ['false', msg('12-hour')],
+            ['true', msg('24-hour')],
           ])}
-          {lookSelect('temp', 'Temperature', [
+          {lookSelect('temp', msg('Temperature'), [
             ['f', '°F'],
             ['c', '°C'],
-            ['both', 'Both'],
+            ['both', msg('Both')],
           ])}
-          {lookSelect('lang', 'Language', LANGUAGES)}
-          {lookSelect('locale', 'Dates and numbers', REGIONS)}
+          {lookSelect('lang', msg('Language'), LANGUAGES)}
+          {lookSelect('locale', msg('Dates and numbers'), REGIONS)}
           {lookSelect(
             'currency',
-            'Prices in',
+            msg('Prices in'),
             CURRENCIES.map((c) => [c, c]),
           )}
         </div>
@@ -451,27 +451,27 @@ function DeviceEditor({
 
       {!readOnly && (
         <section className="device-part" aria-labelledby={`link-${d.id}`}>
-          <h3 id={`link-${d.id}`}>Link</h3>
+          <h3 id={`link-${d.id}`}>{tr('Link')}</h3>
           <p className="settings-note">
-            A new link retires the old one. A panel with no browser (TRMNL, Inky, ESP32) shows a picture from its own address.
+            {tr('A new link retires the old one. A panel with no browser (TRMNL, Inky, ESP32) shows a picture from its own address.')}
           </p>
           <div className="device-actions">
-            <HoldButton className="button button-quiet" hint="Hold to make a new link. The old one stops working." onConfirm={() => void newLink()}>
-              New link
+            <HoldButton className="button button-quiet" hint={tr('Hold to make a new link. The old one stops working.')} onConfirm={() => void newLink()}>
+              {tr('New link')}
             </HoldButton>
             <button type="button" className="button button-quiet" onClick={() => void newPanel()}>
-              New panel address
+              {tr('New panel address')}
             </button>
-            <HoldButton className="text-button" danger hint="Hold to remove. The device stops working as a household device." onConfirm={() => void onRemove()}>
-              Remove device
+            <HoldButton className="text-button" danger hint={tr('Hold to remove. The device stops working as a household device.')} onConfirm={() => void onRemove()}>
+              {tr('Remove device')}
             </HoldButton>
           </div>
           {link?.panel && (
             <>
               <label className="device-inline">
-                <span>Panel shows</span>
+                <span>{tr('Panel shows')}</span>
                 <select className="field" value={panelShows} onChange={(e) => setPanelShows(e.target.value)}>
-                  <option value="">The server: status, weather and gauges</option>
+                  <option value="">{tr('The server: status, weather and gauges')}</option>
                   {/* Any widget with a number of its own, as one big number. */}
                   {places
                     .filter((p) => p[2] && p[3] && (NUMBERS[p[3]] || p[3] === 'markets'))
@@ -482,9 +482,14 @@ function DeviceEditor({
                     ))}
                 </select>
               </label>
-              <input className="field mono" readOnly value={`${link.panel}${panelShows ? `?widget=${panelShows}` : ''}`} aria-label={`Panel picture for ${d.name}`} onFocus={(e) => e.currentTarget.select()} />
+              <input className="field mono" readOnly value={`${link.panel}${panelShows ? `?widget=${panelShows}` : ''}`} aria-label={tr('Panel picture for {name}', { name: d.name })} onFocus={(e) => e.currentTarget.select()} />
               <p className="settings-note">
-                Add <code>w=</code> and <code>h=</code> for the panel's size, or use <code>.bmp</code> in place of <code>.png</code>. A widget shows the number its One number setting picks. A new address retires the last.
+                {tx("Add {w} and {h} for the panel's size, or use {bmp} in place of {png}. A widget shows the number its One number setting picks. A new address retires the last.", {
+                  w: <code>w=</code>,
+                  h: <code>h=</code>,
+                  bmp: <code>.bmp</code>,
+                  png: <code>.png</code>,
+                })}
               </p>
             </>
           )}

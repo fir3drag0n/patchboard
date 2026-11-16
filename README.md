@@ -121,9 +121,9 @@ doors stay read-only for everyone.
 ![Shopping list, thermostat, shades, people and chores on one board](docs/screenshots/family.webp)
 
 **Your language and region.** Dates, times, numbers and prices follow your
-part of the world, from 28 regions. The boards, wall screens and Monitor
-speak German, Spanish, French, Italian, Dutch and Brazilian Portuguese as
-well as English, and another language is one file.
+part of the world, from 28 regions. Patchboard speaks German, Spanish,
+French, Italian, Dutch and Brazilian Portuguese as well as English, Settings
+and problem titles included, and another language is one file.
 
 **Playback.** Hover, focus or tap a playback row for its artwork, details and
 a link to its app, with time left when the service reports it.

@@ -35,7 +35,7 @@ import { useNow, useStore } from '../lib/store.tsx';
 import { agoLong } from '../lib/format.ts';
 import { SelfUpdate } from '../components/Updater.tsx';
 import { CURRENCIES, currency, locale, money, num, REGIONS } from '../lib/region.ts';
-import { LANGUAGES } from '../lib/i18n.ts';
+import { LANGUAGES, msg, t as tr, tn, tx } from '../lib/i18n.ts';
 import { Devices } from '../components/Devices.tsx';
 
 type Tab = 'look' | 'home' | 'devices' | 'alerts' | 'connections' | 'activity';
@@ -53,18 +53,18 @@ function tabKeys(e: React.KeyboardEvent<HTMLDivElement>) {
 }
 type Part = 'integrations' | 'access' | 'apps' | 'backup';
 const PARTS: [Part, string][] = [
-  ['integrations', 'Integrations'],
-  ['access', 'Sign-in and keys'],
-  ['apps', 'App catalog'],
-  ['backup', 'Backup'],
+  ['integrations', msg('Integrations')],
+  ['access', msg('Sign-in and keys')],
+  ['apps', msg('App catalog')],
+  ['backup', msg('Backup')],
 ];
 const TABS: [Tab, string, string][] = [
-  ['look', 'Look', 'This browser only. A new browser starts from the last look you saved.'],
-  ['home', 'Home', "This browser only. A board's widgets are shared."],
-  ['devices', 'Devices', 'Wall tablets, e-ink panels and family phones, set up from here.'],
-  ['alerts', 'Alerts', 'When storage, drives and links count as trouble. Shared by every device.'],
-  ['connections', 'Connections', 'Shared by every device.'],
-  ['activity', 'Activity', 'Who changed what, newest first.'],
+  ['look', msg('Look'), msg('This browser only. A new browser starts from the last look you saved.')],
+  ['home', msg('Home'), msg("This browser only. A board's widgets are shared.")],
+  ['devices', msg('Devices'), msg('Wall tablets, e-ink panels and family phones, set up from here.')],
+  ['alerts', msg('Alerts'), msg('When storage, drives and links count as trouble. Shared by every device.')],
+  ['connections', msg('Connections'), msg('Shared by every device.')],
+  ['activity', msg('Activity'), msg('Who changed what, newest first.')],
 ];
 
 export function Settings() {
@@ -81,12 +81,12 @@ export function Settings() {
     if (hash === '#catalog' && tab !== 'connections') setTab('connections');
   }, [hash]);
   useLanding(!!useStore().snap && (tab === 'connections' || tab === 'home'));
-  const groupLabels: Partial<Record<keyof Appearance, string>> = { homeStatusSize: 'Status size', homeClockSize: 'Clock size', homeWeather: 'Weather view', homeApps: 'App appearance', clock24: 'Time format', temp: 'Temperature units', scheme: 'Color mode', icons: 'Service icons', appIcon: 'App icon', font: 'Typeface', density: 'Density' };
+  const groupLabels: Partial<Record<keyof Appearance, string>> = { homeStatusSize: msg('Status size'), homeClockSize: msg('Clock size'), homeWeather: msg('Weather view'), homeApps: msg('App appearance'), clock24: msg('Time format'), temp: msg('Temperature units'), scheme: msg('Color mode'), icons: msg('Service icons'), appIcon: msg('App icon'), font: msg('Typeface'), density: msg('Density') };
   const seg = <K extends keyof Appearance>(key: K, options: [Appearance[K], string][], disabled = false) => (
-    <div className="seg" role="group" aria-label={groupLabels[key]}>
+    <div className="seg" role="group" aria-label={tr(groupLabels[key] ?? '')}>
       {options.map(([v, label]) => (
         <button key={String(v)} type="button" disabled={disabled} aria-pressed={a[key] === v} onClick={() => setAppearance({ [key]: v } as Partial<Appearance>)}>
-          {label}
+          {tr(label)}
         </button>
       ))}
     </div>
@@ -95,16 +95,16 @@ export function Settings() {
   return (
     <div className="page settings">
       <div className="page-head">
-        <h1 className="page-title">Settings</h1>
+        <h1 className="page-title">{tr('Settings')}</h1>
       </div>
-      <div className="seg settings-tabs" role="tablist" aria-label="Settings" onKeyDown={tabKeys}>
+      <div className="seg settings-tabs" role="tablist" aria-label={tr('Settings')} onKeyDown={tabKeys}>
         {TABS.map(([v, label]) => (
           <button key={v} type="button" role="tab" tabIndex={tab === v ? 0 : -1} aria-selected={tab === v} onClick={() => setTab(v)}>
-            {label}
+            {tr(label)}
           </button>
         ))}
       </div>
-      <p className="page-lede">{TABS.find((t) => t[0] === tab)![2]}</p>
+      <p className="page-lede">{tr(TABS.find((t) => t[0] === tab)![2])}</p>
 
       <div className="settings-grid">
       {tab === 'look' && (
@@ -112,12 +112,12 @@ export function Settings() {
       <BrandName />
 
       {!a.eink && (
-      <Section title="Theme" count={`${THEMES.length + 1} themes`} className="span-all">
+      <Section title="Theme" count={tr('{n} themes', { n: THEMES.length + 1 })} className="span-all">
         <div className="theme-grid">
           {THEMES.map((t) => (
             <ThemeCard key={t.id} id={t.id} name={t.name} note={t.note} active={a.theme === t.id} />
           ))}
-          <ThemeCard id="custom" name="Custom" note="Your background, text and accent." active={a.theme === 'custom'} />
+          <ThemeCard id="custom" name={tr('Custom')} note={msg('Your background, text and accent.')} active={a.theme === 'custom'} />
         </div>
         {a.theme === 'custom' && <CustomBuilder />}
       </Section>
@@ -128,14 +128,14 @@ export function Settings() {
           {seg(
             'scheme',
             [
-              ['auto', 'Match the system'],
-              ['dark', 'Dark'],
-              ['light', 'Light'],
+              ['auto', msg('Match the system')],
+              ['dark', msg('Dark')],
+              ['light', msg('Light')],
             ],
             a.theme === 'custom',
           )}
         </div>
-        {a.theme === 'custom' && <p className="settings-note">A custom theme turns light or dark with its background color.</p>}
+        {a.theme === 'custom' && <p className="settings-note">{tr('A custom theme turns light or dark with its background color.')}</p>}
       </Section>
 
       <AppIconSection />
@@ -143,23 +143,23 @@ export function Settings() {
       {!a.eink && (
       <Section title="Accent">
         <div className="choice-row swatches">
-          <button type="button" className="swatch swatch-theme" aria-pressed={a.accent === 'default'} title="The theme's own" aria-label="The theme's own accent" onClick={() => setAppearance({ accent: 'default' })} />
+          <button type="button" className="swatch swatch-theme" aria-pressed={a.accent === 'default'} title={tr('The theme\'s own')} aria-label={tr('The theme\'s own accent')} onClick={() => setAppearance({ accent: 'default' })} />
           {ACCENTS.map((c) => (
             <button key={c.id} type="button" className="swatch" style={{ background: c.dark }} aria-pressed={a.accent === c.id} aria-label={c.name} title={c.name} onClick={() => setAppearance({ accent: c.id })} />
           ))}
-          <label className={`swatch swatch-pick ${a.accent === 'custom' ? 'is-on' : ''}`} title="Any color" style={a.accent === 'custom' ? { background: a.accentHex } : undefined}>
-            <input type="color" value={a.accentHex} onChange={(e) => setAppearance({ accent: 'custom', accentHex: e.target.value })} aria-label="Pick any accent color" />
+          <label className={`swatch swatch-pick ${a.accent === 'custom' ? 'is-on' : ''}`} title={tr('Any color')} style={a.accent === 'custom' ? { background: a.accentHex } : undefined}>
+            <input type="color" value={a.accentHex} onChange={(e) => setAppearance({ accent: 'custom', accentHex: e.target.value })} aria-label={tr('Pick any accent color')} />
             <span aria-hidden>+</span>
           </label>
         </div>
-        <p className="settings-note">For links, the current page, focus and charts.</p>
+        <p className="settings-note">{tr('For links, the current page, focus and charts.')}</p>
       </Section>
       )}
 
       <Section title="Type">
         <div className="choice-row">
           {seg('font', [
-            ['theme', "Theme's own"],
+            ['theme', msg("Theme's own")],
             ...(Object.entries(FONTS) as [FontSet, (typeof FONTS)[FontSet]][]).map(([k, f]) => [k, f.label] as [Appearance['font'], string]),
           ])}
         </div>
@@ -168,9 +168,9 @@ export function Settings() {
       <Section title="Density">
         <div className="choice-row">
           {seg('density', [
-            ['compact', 'Compact'],
-            ['comfortable', 'Comfortable'],
-            ['large', 'Large'],
+            ['compact', msg('Compact')],
+            ['comfortable', msg('Comfortable')],
+            ['large', msg('Large')],
           ])}
         </div>
       </Section>
@@ -178,7 +178,7 @@ export function Settings() {
       <Section title="Language and region">
         <div className="region-picks">
           <label>
-            <span>Language</span>
+            <span>{tr('Language')}</span>
             <select
               className="field"
               value={a.lang}
@@ -188,7 +188,7 @@ export function Settings() {
                 location.reload();
               }}
             >
-              <option value="">Match this browser</option>
+              <option value="">{tr('Match this browser')}</option>
               {LANGUAGES.map(([code, name]) => (
                 <option key={code} value={code}>
                   {name}
@@ -197,9 +197,9 @@ export function Settings() {
             </select>
           </label>
           <label>
-            <span>Dates and numbers</span>
+            <span>{tr('Dates and numbers')}</span>
             <select className="field" value={a.locale} onChange={(e) => setAppearance({ locale: e.target.value })}>
-              <option value="">Match this browser</option>
+              <option value="">{tr('Match this browser')}</option>
               {REGIONS.map(([tag, name]) => (
                 <option key={tag} value={tag}>
                   {name}
@@ -208,9 +208,9 @@ export function Settings() {
             </select>
           </label>
           <label>
-            <span>Prices in</span>
+            <span>{tr('Prices in')}</span>
             <select className="field" value={a.currency} onChange={(e) => setAppearance({ currency: e.target.value })}>
-              <option value="">The region's own ({currency()})</option>
+              <option value="">{tr("The region's own ({currency})", { currency: currency() })}</option>
               {CURRENCIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -221,17 +221,24 @@ export function Settings() {
         </div>
         <div className="choice-row">
           {seg('clock24', [
-            [false, '12-hour'],
-            [true, '24-hour'],
+            [false, msg('12-hour')],
+            [true, msg('24-hour')],
           ])}
           {seg('temp', [
             ['f', '°F'],
             ['c', '°C'],
-            ['both', 'Both'],
+            ['both', msg('Both')],
           ])}
         </div>
         <p className="settings-note">
-          Here: {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 })}, {num(1234567.89, 2)}, {money(1234.5, currency(), 2)}. Settings stays in English.
+          {tr('Here: {sample}.', {
+            sample: [
+              new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+              new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 }),
+              num(1234567.89, 2),
+              money(1234.5, currency(), 2),
+            ].join(', '),
+          })}
         </p>
       </Section>
 
@@ -240,15 +247,15 @@ export function Settings() {
           <input type="checkbox" checked={a.eink} onChange={(e) => setAppearance({ eink: e.target.checked })} />
           E-ink
         </label>
-        <p className="settings-note">For an e-ink reader or panel: no motion, and one redraw a minute. A wall device is set from Devices.</p>
+        <p className="settings-note">{tr('For an e-ink reader or panel: no motion, and one redraw a minute. A wall device is set from Devices.')}</p>
       </Section>
 
       <Section title="Keyboard">
         <label className="check">
           <input type="checkbox" checked={a.keys} onChange={(e) => setAppearance({ keys: e.target.checked })} />
-          Single-key shortcuts
+          {tr('Single-key shortcuts')}
         </label>
-        <p className="settings-note">? lists them. Turn them off for speech input; Ctrl K always works.</p>
+        <p className="settings-note">{tr('? lists them. Turn them off for speech input; Ctrl K always works.')}</p>
       </Section>
 
       <ShowcaseSettings />
@@ -259,32 +266,32 @@ export function Settings() {
       <>
       <Section title="Home header" id="home-header" className="span-all">
         <div className="header-switches">
-          <label className="check"><input type="checkbox" checked={a.homeStatusSize !== 'hidden'} onChange={(e) => setAppearance({ homeStatusSize: e.target.checked ? 'medium' : 'hidden' })} />Show status</label>
-          <label className="check"><input type="checkbox" checked={a.homeServer !== 'hidden'} onChange={(e) => setAppearance({ homeServer: e.target.checked ? 'card' : 'hidden' })} />Show server details</label>
-          <label className="check"><input type="checkbox" checked={a.homeClockSize !== 'hidden'} onChange={(e) => setAppearance({ homeClockSize: e.target.checked ? 'small' : 'hidden' })} />Show time and date</label>
-          <label className="check"><input type="checkbox" checked={a.homeWeather !== 'hidden'} onChange={(e) => setAppearance({ homeWeather: e.target.checked ? 'current' : 'hidden' })} />Show weather</label>
+          <label className="check"><input type="checkbox" checked={a.homeStatusSize !== 'hidden'} onChange={(e) => setAppearance({ homeStatusSize: e.target.checked ? 'medium' : 'hidden' })} />{tr('Show status')}</label>
+          <label className="check"><input type="checkbox" checked={a.homeServer !== 'hidden'} onChange={(e) => setAppearance({ homeServer: e.target.checked ? 'card' : 'hidden' })} />{tr('Show server details')}</label>
+          <label className="check"><input type="checkbox" checked={a.homeClockSize !== 'hidden'} onChange={(e) => setAppearance({ homeClockSize: e.target.checked ? 'small' : 'hidden' })} />{tr('Show time and date')}</label>
+          <label className="check"><input type="checkbox" checked={a.homeWeather !== 'hidden'} onChange={(e) => setAppearance({ homeWeather: e.target.checked ? 'current' : 'hidden' })} />{tr('Show weather')}</label>
         </div>
-        <p className="settings-note">With status off, Needs attention moves onto the board.</p>
+        <p className="settings-note">{tr('With status off, Needs attention moves onto the board.')}</p>
         <details className="header-options-details">
-          <summary>Sizes and forecast details</summary>
+          <summary>{tr('Sizes and forecast details')}</summary>
           <div className="header-options">
-            <div><span>Status size</span>{seg('homeStatusSize', [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']], a.homeStatusSize === 'hidden')}</div>
-            <div><span>Clock size</span>{seg('homeClockSize', [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']], a.homeClockSize === 'hidden')}</div>
-            <div><span>Weather view</span>{seg('homeWeather', [['current', 'Current'], ['summary', 'Forecast'], ['hourly', 'Hourly chart']], a.homeWeather === 'hidden')}</div>
+            <div><span>{tr('Status size')}</span>{seg('homeStatusSize', [['small', msg('Small')], ['medium', msg('Medium')], ['large', msg('Large')]], a.homeStatusSize === 'hidden')}</div>
+            <div><span>{tr('Clock size')}</span>{seg('homeClockSize', [['small', msg('Small')], ['medium', msg('Medium')], ['large', msg('Large')]], a.homeClockSize === 'hidden')}</div>
+            <div><span>{tr('Weather view')}</span>{seg('homeWeather', [['current', msg('Current')], ['summary', msg('Forecast')], ['hourly', msg('Hourly chart')]], a.homeWeather === 'hidden')}</div>
           </div>
         </details>
-        <button type="button" className="button button-quiet" onClick={() => setAppearance({ homeStatusSize: 'medium', homeServer: 'card', homeWeather: 'current', homeClockSize: 'small' })}>Restore default header</button>
+        <button type="button" className="button button-quiet" onClick={() => setAppearance({ homeStatusSize: 'medium', homeServer: 'card', homeWeather: 'current', homeClockSize: 'small' })}>{tr('Restore default header')}</button>
       </Section>
 
       <Section title="Default app appearance">
         <div className="choice-row">
           {seg('homeApps', [
-            ['tiles', 'Tiles with a live number'],
-            ['patchbay', 'Icons'],
+            ['tiles', msg('Tiles with a live number')],
+            ['patchbay', msg('Icons')],
           ])}
         </div>
         <p className="settings-note">
-          An Apps widget can set its own in Arrange board.
+          {tr('An Apps widget can set its own in Arrange board.')}
         </p>
       </Section>
 
@@ -294,8 +301,8 @@ export function Settings() {
       <Section title="Service icons">
         <div className="choice-row">
           {seg('icons', [
-            ['mono', 'Grayscale'],
-            ['color', 'Full color'],
+            ['mono', msg('Grayscale')],
+            ['color', msg('Full color')],
           ])}
         </div>
       </Section>
@@ -303,10 +310,10 @@ export function Settings() {
       {tab === 'look' && <Portability />}
       {tab === 'connections' && (
         <>
-          <div className="seg settings-tabs settings-parts span-all" role="tablist" aria-label="Connections" onKeyDown={tabKeys}>
+          <div className="seg settings-tabs settings-parts span-all" role="tablist" aria-label={tr('Connections')} onKeyDown={tabKeys}>
             {PARTS.map(([v, label]) => (
               <button key={v} type="button" role="tab" tabIndex={part === v ? 0 : -1} aria-selected={part === v} onClick={() => setPart(v)}>
-                {label}
+                {tr(label)}
               </button>
             ))}
           </div>
@@ -348,12 +355,12 @@ function AppVersion() {
   const newer = !!(me.container && snap.updates[me.container]);
   const ro = !!snap.readOnly;
   const status = newer
-    ? 'A newer image is out.'
+    ? tr('A newer image is out.')
     : c?.state === 'current'
-      ? `Up to date, checked ${agoLong(c.at, now)}.`
+      ? tr('Up to date, checked {when}.', { when: agoLong(c.at, now) })
       : c?.state === 'unknown'
-        ? `Can't check for updates. ${c.reason ?? ''}`
-        : 'Not checked yet.';
+        ? `${tr("Can't check for updates.")} ${c.reason ?? ''}`
+        : tr('Not checked yet.');
   const checkNow = async () => {
     setBusy(true);
     const res = await fetch('/api/self/check', { method: 'POST', headers: { 'X-Patchboard': 'action' } }).catch(() => null);
@@ -367,23 +374,23 @@ function AppVersion() {
       <span className={newer ? 'warn-text' : undefined}>{status}</span>
       {!ro && (
         <button type="button" className="text-button" aria-disabled={busy || undefined} onClick={() => !busy && void checkNow()}>
-          {busy ? 'Checking...' : 'Check now'}
+          {busy ? tr('Checking...') : tr('Check now')}
         </button>
       )}
       {/* Update shows when there is one, or when Patchboard can't tell; never beside "Up to date". */}
       {!ro && me.container && snap.features?.includes('updates') && (newer || c?.state !== 'current') && <SelfUpdate name={me.container} waiting={newer} />}
       <span className="app-help">
-        Help:{' '}
+        {tr('Help:')}{' '}
         <a href={HELP.tour} target="_blank" rel="noreferrer">
-          tour
+          {tr('tour')}
         </a>
         ,{' '}
         <a href={HELP.integrations} target="_blank" rel="noreferrer">
-          integrations
+          {tr('integrations')}
         </a>
         ,{' '}
         <a href={HELP.configuration} target="_blank" rel="noreferrer">
-          configuration
+          {tr('configuration')}
         </a>
       </span>
     </div>
@@ -414,7 +421,7 @@ function ThemeCard({ id, name, note, active }: { id: string; name: string; note:
         </span>
       </span>
       <strong>{name}</strong>
-      <span>{note}</span>
+      <span>{tr(note)}</span>
     </button>
   );
 }
@@ -432,12 +439,13 @@ function CustomBuilder() {
   );
   return (
     <div className="custom-builder">
-      {pick('bg', 'Background')}
-      {pick('ink', 'Text')}
-      {pick('accent', 'Accent')}
+      {pick('bg', tr('Background'))}
+      {pick('ink', tr('Text'))}
+      {pick('accent', tr('Accent'))}
       <p className={`settings-note ${ratio < 4.5 ? 'warn-text' : ''}`}>
-        Quiet text contrast {ratio.toFixed(1)}:1
-        {ratio < 4.5 ? '. Below 4.5:1, small labels get hard to read; move the text and background further apart.' : ', readable.'}
+        {ratio < 4.5
+          ? tr('Quiet text contrast {ratio}:1. Below 4.5:1, small labels get hard to read; move the text and background further apart.', { ratio: ratio.toFixed(1) })
+          : tr('Quiet text contrast {ratio}:1, readable.', { ratio: ratio.toFixed(1) })}
       </p>
     </div>
   );
@@ -455,35 +463,35 @@ function Portability() {
           className="button button-quiet"
           onClick={async () => {
             await navigator.clipboard.writeText(exportAppearance());
-            setMsg('Copied. Paste it into Settings on the other device.');
+            setMsg(tr('Copied. Paste it into Settings on the other device.'));
           }}
         >
-          Copy settings
+          {tr('Copy settings')}
         </button>
         <button
           type="button"
           className="button button-quiet"
           onClick={() => {
             resetAppearance();
-            setMsg('Back to the defaults.');
+            setMsg(tr('Back to the defaults.'));
           }}
         >
-          Reset to defaults
+          {tr('Reset to defaults')}
         </button>
       </div>
       <div className="import-row">
-        <input className="field" placeholder="Paste settings from another device" value={text} onChange={(e) => setText(e.target.value)} />
+        <input className="field" placeholder={tr('Paste settings from another device')} value={text} onChange={(e) => setText(e.target.value)} />
         <button
           type="button"
           className="button button-quiet"
           disabled={!text.trim()}
           onClick={() => {
             const ok = importAppearance(text);
-            setMsg(ok ? 'Applied.' : "That isn't a Patchboard settings string. Use Copy settings on the other device.");
+            setMsg(ok ? tr('Applied.') : tr("That isn't a Patchboard settings string. Use Copy settings on the other device."));
             if (ok) setText('');
           }}
         >
-          Apply
+          {tr('Apply')}
         </button>
       </div>
       {msg && <p className="settings-note">{msg}</p>}
@@ -523,7 +531,7 @@ function Connections() {
     setErr('');
     const res = await fetch('/api/trakt/connect', { method: 'POST', headers: ACTION });
     const body = (await res.json()) as { error?: string };
-    if (!res.ok) setErr(body.error ?? "Couldn't start the Trakt sign-in. Try again.");
+    if (!res.ok) setErr(body.error ?? tr("Couldn't start the Trakt sign-in. Try again."));
     await load();
   };
   const disconnect = async () => {
@@ -540,33 +548,38 @@ function Connections() {
           <dd>
             {!s.configured ? (
               <span className="ledger-aside">
-                Patchboard can't see TRAKT_CLIENT_ID. Add it to the environment, then recreate the container (a restart doesn't reload it).
+                {tr('Patchboard can\'t see TRAKT_CLIENT_ID. Add it to the environment, then recreate the container (a restart doesn\'t reload it).')}
               </span>
             ) : s.pending ? (
               <span className="trakt-code">
-                Go to{' '}
-                <a href={s.pending.verifyUrl} target="_blank" rel="noreferrer">
-                  {s.pending.verifyUrl.replace(/^https?:\/\//, '')}
-                </a>{' '}
-                and enter <code className="big-code">{s.pending.userCode}</code>
-                <span className="ledger-aside">Waiting. The code works for {Math.max(0, Math.round((s.pending.expiresAt - Date.now()) / 60_000))} more minutes.</span>
+                {tx('Go to {link} and enter {code}', {
+                  link: (
+                    <a href={s.pending.verifyUrl} target="_blank" rel="noreferrer">
+                      {s.pending.verifyUrl.replace(/^https?:\/\//, '')}
+                    </a>
+                  ),
+                  code: <code className="big-code">{s.pending.userCode}</code>,
+                })}
+                <span className="ledger-aside">
+                  {tn(Math.max(0, Math.round((s.pending.expiresAt - Date.now()) / 60_000)), 'Waiting. The code works for {n} more minute.', 'Waiting. The code works for {n} more minutes.')}
+                </span>
               </span>
             ) : s.connected ? (
               <>
-                <span>Connected{s.user ? <> as <span className="mono">{s.user}</span></> : ''}</span>
-                {s.expiresAt && <span className="ledger-aside">renews on its own, next by {new Date(s.expiresAt).toLocaleDateString(locale())}</span>}
+                <span>{s.user ? tx('Connected as {user}', { user: <span className="mono">{s.user}</span> }) : tr('Connected')}</span>
+                {s.expiresAt && <span className="ledger-aside">{tr('renews on its own, next by {date}', { date: new Date(s.expiresAt).toLocaleDateString(locale()) })}</span>}
                 {s.canConnect && !readOnly && (
                   <button type="button" className="text-button" onClick={() => void disconnect()}>
-                    Disconnect
+                    {tr('Disconnect')}
                   </button>
                 )}
               </>
             ) : (
               <>
-                <span className="ledger-aside">Not connected.</span>
+                <span className="ledger-aside">{tr('Not connected.')}</span>
                 {s.canConnect && !readOnly && (
                   <button type="button" className="button button-quiet" onClick={() => void connect()}>
-                    Connect Trakt
+                    {tr('Connect Trakt')}
                   </button>
                 )}
               </>
@@ -608,28 +621,34 @@ function CatalogCheck() {
   }, []);
   if (!audit) return null;
   const clean = !audit.missing.length && !audit.discovered.length;
+  const discoveredParts = { link: <Link to="/apps?arrange=1">{tr('Apps, Edit apps')}</Link>, services: <code>services:</code> };
   return (
     <section className="section span-all" id="catalog">
       <header className="section-head">
-        <h2>Catalog</h2>
+        <h2>{tr('Catalog')}</h2>
         <span className="section-count">{(audit.yamlApps ?? 0) > 0 ? 'config/services.yaml' : 'apps saved in Patchboard'}</span>
       </header>
       <p className="settings-note">
-        Keep your catalog in git? <a href="/api/catalog/yaml" download>Download services.yaml</a> writes the apps as you arranged them here, with groups,
-        order, icons and apps you added. Hidden apps and live numbers stay in Patchboard.
+        {tx('Keep your catalog in git? {download} writes the apps as you arranged them here, with groups, order, icons and apps you added. Hidden apps and live numbers stay in Patchboard.', {
+          download: (
+            <a href="/api/catalog/yaml" download>
+              {tr('Download services.yaml')}
+            </a>
+          ),
+        })}
       </p>
       {(audit.yamlApps ?? 0) > 0 && !readOnly && (
         <div className="adopt">
           <p>
             <strong>
-              services.yaml lists {audit.yamlApps} {audit.yamlApps === 1 ? 'app' : 'apps'}
-              {audit.yamlLinks ? ` and ${audit.yamlLinks} ${audit.yamlLinks === 1 ? 'link' : 'links'}` : ''}.
+              {audit.yamlLinks
+                ? tr('services.yaml lists {apps} and {links}.', { apps: tn(audit.yamlApps ?? 0, '{n} app', '{n} apps'), links: tn(audit.yamlLinks, '{n} link', '{n} links') })
+                : tn(audit.yamlApps ?? 0, 'services.yaml lists {n} app.', 'services.yaml lists {n} apps.')}
             </strong>{' '}
-            Copy them into Patchboard, with their groups, order, icons and checks, and you no longer need the file. Patchboard never edits the file;
-            delete it yourself afterward.
+            {tr('Copy them into Patchboard, with their groups, order, icons and checks, and you no longer need the file. Patchboard never edits the file; delete it yourself afterward.')}
           </p>
           <button type="button" className="button" disabled={adoptState === 'busy'} onClick={() => void adoptYaml()}>
-            {adoptState === 'busy' ? 'Copying...' : adoptState === 'done' ? 'Copied. Safe to delete services.yaml' : 'Copy into Patchboard'}
+            {adoptState === 'busy' ? tr('Copying...') : adoptState === 'done' ? tr('Copied. Safe to delete services.yaml') : tr('Copy into Patchboard')}
           </button>
           {adoptErr && <p className="crit-text" role="alert">{adoptErr}</p>}
         </div>
@@ -637,16 +656,15 @@ function CatalogCheck() {
       {!readOnly && (
         <div className="adopt">
           <p>
-            <strong>Coming from Homepage?</strong> Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you
-            already have.
+            <strong>{tr('Coming from Homepage?')}</strong>{' '}{tr('Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you already have.')}
           </p>
           <button type="button" className="button button-quiet" onClick={() => setImporting(true)}>
-            Import from Homepage
+            {tr('Import from Homepage')}
           </button>
         </div>
       )}
       {importing && <HomepageImport onClose={() => setImporting(false)} />}
-      {clean && <p className="settings-note">Every catalog entry matches a container, and every running app is listed.</p>}
+      {clean && <p className="settings-note">{tr('Every catalog entry matches a container, and every running app is listed.')}</p>}
       {audit.missing.length > 0 && (
         <dl className="ledger">
           {audit.missing.map((m) => (
@@ -654,7 +672,7 @@ function CatalogCheck() {
               <dt>{m.service}</dt>
               <dd>
                 <span className="warn-text">
-                  No container named <span className="mono">{m.container}</span>
+                  {tx('No container named {name}', { name: <span className="mono">{m.container}</span> })}
                 </span>
               </dd>
             </div>
@@ -664,8 +682,9 @@ function CatalogCheck() {
       {audit.discovered.length > 0 && (
         <>
           <p className="settings-note">
-            {audit.discovered.length} running {audit.discovered.length === 1 ? "app isn't" : "apps aren't"} listed. Add {audit.discovered.length === 1 ? 'it' : 'them'} in
-            one click from <Link to="/apps?arrange=1">Apps, Edit apps</Link>, or paste these entries under a group's <code>services:</code> in services.yaml.
+            {audit.discovered.length === 1
+              ? tx("One running app isn't listed. Add it in one click from {link}, or paste this entry under a group's {services} in services.yaml.", discoveredParts)
+              : tx("{n} running apps aren't listed. Add them in one click from {link}, or paste these entries under a group's {services} in services.yaml.", { ...discoveredParts, n: audit.discovered.length })}
           </p>
           <div className="rb-body">
             <pre>
@@ -679,7 +698,7 @@ function CatalogCheck() {
                   setTimeout(() => setCopied(false), 1600);
                 }}
               >
-                {copied ? 'Copied' : 'Copy'}
+                {copied ? tr('Copied') : tr('Copy')}
               </button>
             </pre>
           </div>
@@ -699,60 +718,60 @@ interface AuditRow {
 }
 
 const ACTION_TEXT: Record<string, string> = {
-  'container.restart': 'restarted',
-  'container.stop': 'stopped',
-  'container.start': 'started',
-  'container.update': 'updated',
-  'container.rollback': 'rolled back an update',
-  'board.save': 'saved the Home board',
-  'board.reset': 'reset the Home board',
-  'apps.order': 'rearranged the apps',
-  'apps.order.reset': 'put the apps back in catalog order',
-  'secret.set': 'saved the key',
-  'secret.delete': 'removed the key',
-  'icon.upload': 'uploaded an icon',
-  'pages.save': 'customized a page',
-  'setup.import': 'imported a setup file',
-  'update.dismiss': 'dismissed an image update mark for',
-  'trakt.connect': 'started a Trakt sign-in',
-  'trakt.disconnect': 'disconnected Trakt',
-  'auth.signin': 'signed in',
-  'household.add': 'made a household link',
-  'household.remove': 'removed a household device',
-  'household.join': 'opened its household link',
-  'household.view': 'changed what a household device shows',
-  'auth.failed': 'failed to sign in',
-  'auth.hosts': 'changed the addresses Patchboard answers on',
-  'auth.off': 'turned sign-in off',
-  'board.add': 'added a board',
-  'brand.save': 'renamed the dashboard',
-  'setup.save': 'saved the settings for',
-  'setup.remove': 'removed the integration',
-  'setup.test': 'tested the connection to',
-  'setup.thresholds': 'changed the alert thresholds',
-  'wake': 'woke',
-  'downloads.pause': 'paused every download in',
-  'downloads.resume': 'resumed every download in',
-  'downloads.altspeed': 'switched alternative speed limits in',
-  'downloads.item.pause': 'paused',
-  'downloads.item.resume': 'resumed',
-  'downloads.item.remove': 'removed the download',
-  'arr.search': 'searched again for',
-  'arr.retry': 'tried another release for',
-  'arr.remove': 'removed from the queue',
-  'requests.approve': 'approved',
-  'requests.decline': 'declined',
-  'ha.toggle': 'switched',
-  'ha.run': 'ran',
-  'proxmox.start': 'started',
-  'proxmox.shutdown': 'shut down',
-  'proxmox.reboot': 'rebooted',
+  'container.restart': msg('restarted'),
+  'container.stop': msg('stopped'),
+  'container.start': msg('started'),
+  'container.update': msg('updated'),
+  'container.rollback': msg('rolled back an update'),
+  'board.save': msg('saved the Home board'),
+  'board.reset': msg('reset the Home board'),
+  'apps.order': msg('rearranged the apps'),
+  'apps.order.reset': msg('put the apps back in catalog order'),
+  'secret.set': msg('saved the key'),
+  'secret.delete': msg('removed the key'),
+  'icon.upload': msg('uploaded an icon'),
+  'pages.save': msg('customized a page'),
+  'setup.import': msg('imported a setup file'),
+  'update.dismiss': msg('dismissed an image update mark for'),
+  'trakt.connect': msg('started a Trakt sign-in'),
+  'trakt.disconnect': msg('disconnected Trakt'),
+  'auth.signin': msg('signed in'),
+  'household.add': msg('made a household link'),
+  'household.remove': msg('removed a household device'),
+  'household.join': msg('opened its household link'),
+  'household.view': msg('changed what a household device shows'),
+  'auth.failed': msg('failed to sign in'),
+  'auth.hosts': msg('changed the addresses Patchboard answers on'),
+  'auth.off': msg('turned sign-in off'),
+  'board.add': msg('added a board'),
+  'brand.save': msg('renamed the dashboard'),
+  'setup.save': msg('saved the settings for'),
+  'setup.remove': msg('removed the integration'),
+  'setup.test': msg('tested the connection to'),
+  'setup.thresholds': msg('changed the alert thresholds'),
+  'wake': msg('woke'),
+  'downloads.pause': msg('paused every download in'),
+  'downloads.resume': msg('resumed every download in'),
+  'downloads.altspeed': msg('switched alternative speed limits in'),
+  'downloads.item.pause': msg('paused'),
+  'downloads.item.resume': msg('resumed'),
+  'downloads.item.remove': msg('removed the download'),
+  'arr.search': msg('searched again for'),
+  'arr.retry': msg('tried another release for'),
+  'arr.remove': msg('removed from the queue'),
+  'requests.approve': msg('approved'),
+  'requests.decline': msg('declined'),
+  'ha.toggle': msg('switched'),
+  'ha.run': msg('ran'),
+  'proxmox.start': msg('started'),
+  'proxmox.shutdown': msg('shut down'),
+  'proxmox.reboot': msg('rebooted'),
 };
 
 /** What an action was done to, in words: a title or name over an id. */
 function auditSubject(r: AuditRow): string | undefined {
   if (r.action.startsWith('auth.')) return undefined;
-  if (r.action.startsWith('requests.')) return r.detail || `request ${r.target}`;
+  if (r.action.startsWith('requests.')) return r.detail || tr('request {id}', { id: r.target });
   if (r.action.startsWith('setup.') && r.action !== 'setup.thresholds' && r.action !== 'setup.import') return INTEGRATIONS.find((i) => i.id === r.target)?.name ?? r.target;
   return r.detail && (r.action.startsWith('downloads.item.') || r.action.startsWith('arr.')) ? r.detail : r.target;
 }
@@ -764,23 +783,23 @@ function Activity() {
     void (async () => setRows(await (await fetch('/api/audit')).json()))();
   }, []);
   return (
-    <Section title="Activity" count={rows ? `${rows.length} recent` : undefined} className="span-all">
+    <Section title="Activity" count={rows ? tr('{n} recent', { n: rows.length }) : undefined} className="span-all">
       {!rows?.length ? (
-        <p className="settings-note">Nothing yet. Container actions, updates, board changes and sign-ins show up here, with who did each.</p>
+        <p className="settings-note">{tr('Nothing yet. Container actions, updates, board changes and sign-ins show up here, with who did each.')}</p>
       ) : (
         <ul className="audit">
           {rows.slice(0, 60).map((r) => (
             <li key={r.id}>
               <span className="mono audit-who">{r.who}</span>
               <span>
-                {ACTION_TEXT[r.action] ?? r.action.replace(/[._]/g, ' ')}
+                {ACTION_TEXT[r.action] ? tr(ACTION_TEXT[r.action]) : r.action.replace(/[._]/g, ' ')}
                 {auditSubject(r) && !['board.save', 'board.reset', 'apps.order', 'apps.order.reset', 'icon.upload', 'pages.save', 'brand.save', 'trakt.connect', 'trakt.disconnect', 'setup.import', 'setup.thresholds'].includes(r.action) && (
                   <>
                     {' '}
                     <span className={r.action.startsWith('container.') || r.action.startsWith('secret.') || r.action === 'update.dismiss' ? 'ident' : undefined}>{auditSubject(r)}</span>
                   </>
                 )}
-                {r.detail && r.action.startsWith('auth.') ? <span className="ledger-aside"> from {r.detail}</span> : null}
+                {r.detail && r.action.startsWith('auth.') ? <span className="ledger-aside"> {tr('from {place}', { place: r.detail })}</span> : null}
               </span>
               <time>{agoLong(r.at)}</time>
             </li>
@@ -822,8 +841,9 @@ function Keys() {
   return (
     <Section title="Keys" count={list.length ? String(list.length) : undefined}>
       <p className="settings-note">
-        Keys you pasted for live numbers. Patchboard keeps them on the server and never shows them again. An API numbers widget can use one as{' '}
-        <code>{'${secret:NAME}'}</code>.
+        {tx('Keys you pasted for live numbers. Patchboard keeps them on the server and never shows them again. An API numbers widget can use one as {ref}.', {
+          ref: <code>{'${secret:NAME}'}</code>,
+        })}
       </p>
       {list.length > 0 && (
         <ul className="audit keys">
@@ -832,8 +852,8 @@ function Keys() {
               <span className="mono">{k.name}</span>
               <time>{agoLong(k.at)}</time>
               {!readOnly && (
-                <HoldButton className="text-button" danger hint="Hold to remove. Anything using it stops working." onConfirm={() => void remove(k.name)}>
-                  Remove
+                <HoldButton className="text-button" danger hint={tr('Hold to remove. Anything using it stops working.')} onConfirm={() => void remove(k.name)}>
+                  {tr('Remove')}
                 </HoldButton>
               )}
             </li>
@@ -842,10 +862,10 @@ function Keys() {
       )}
       {!readOnly && (
         <div className="key-add">
-          <input className="field mono" value={name} placeholder="NAME" aria-label="Key name" onChange={(e) => setName(e.target.value)} />
-          <input className="field mono" type="password" autoComplete="off" value={value} placeholder="Paste the key" aria-label="Key" onChange={(e) => setValue(e.target.value)} />
+          <input className="field mono" value={name} placeholder="NAME" aria-label={tr('Key name')} onChange={(e) => setName(e.target.value)} />
+          <input className="field mono" type="password" autoComplete="off" value={value} placeholder={tr('Paste the key')} aria-label={tr('Key')} onChange={(e) => setValue(e.target.value)} />
           <button type="button" className="button button-quiet" disabled={!name.trim() || !value.trim()} onClick={() => void add()}>
-            Save key
+            {tr('Save key')}
           </button>
           {err && <span className="crit-text" role="alert">{err}</span>}
         </div>
@@ -883,15 +903,15 @@ function Integrations() {
   if (!snap) return null;
   const status = (i: Integration): { on: boolean; text: string; tone: 'ok' | 'warn' | 'off'; why?: string } => {
     if (i.id === 'updates' && snap.features?.includes('no-docker-cli'))
-      return { on: false, text: 'Off', tone: 'off', why: 'This is the slim image, which has no Docker CLI. Use the full image to update containers from here.' };
+      return { on: false, text: tr('Off'), tone: 'off', why: tr('This is the slim image, which has no Docker CLI. Use the full image to update containers from here.') };
     // Hardcover and Goodreads fill one Books widget; with both saved, Hardcover is the one used.
     if (i.id === 'goodreads' && snap.features?.includes('hardcover') && setupOf('goodreads')?.fromUi)
-      return { on: false, text: 'Saved, Hardcover is in use', tone: 'off' };
-    if (!i.source) return snap.features?.includes(i.id) ? { on: true, text: 'On', tone: 'ok' } : { on: false, text: 'Off', tone: 'off' };
+      return { on: false, text: tr('Saved, Hardcover is in use'), tone: 'off' };
+    if (!i.source) return snap.features?.includes(i.id) ? { on: true, text: tr('On'), tone: 'ok' } : { on: false, text: tr('Off'), tone: 'off' };
     const s = snap.sources[i.id as keyof typeof snap.sources];
-    if (!s) return { on: false, text: 'Off', tone: 'off' };
-    if (!s.ok) return { on: true, text: s.error ? `Can't reach it: ${s.error}` : s.updatedAt ? "Can't reach it" : 'Connecting', tone: s.error ? 'warn' : 'off' };
-    return { on: true, text: s.updatedAt ? `On, updated ${agoLong(s.updatedAt)}` : 'On', tone: 'ok' };
+    if (!s) return { on: false, text: tr('Off'), tone: 'off' };
+    if (!s.ok) return { on: true, text: s.error ? tr("Can't reach it: {error}", { error: s.error }) : s.updatedAt ? tr("Can't reach it") : tr('Connecting'), tone: s.error ? 'warn' : 'off' };
+    return { on: true, text: s.updatedAt ? tr('On, updated {when}', { when: agoLong(s.updatedAt) }) : tr('On'), tone: 'ok' };
   };
   const setupOf = (id: string) => setup?.integrations.find((x) => x.id === id);
   const rows = INTEGRATIONS.map((i) => ({ i, st: status(i) }));
@@ -917,26 +937,26 @@ function Integrations() {
       >
         <span className="integration-name">{i.name}</span>
         <span className="integration-adds">
-          {i.adds}
+          {tr(i.adds)}
           {st.why ? <small>{st.why}</small> : !su && !st.on && i.where && <small>{i.where}</small>}
         </span>
         <span className="integration-end">
           <span className={`integration-status tone-${st.tone}`}>
             {st.text}
-            {su?.fromUi && <small> Set up here</small>}
-            {locked && st.on && <small> From the environment</small>}
+            {su?.fromUi && <small>{' '}{tr('Set up here')}</small>}
+            {locked && st.on && <small>{' '}{tr('From the environment')}</small>}
           </span>
           {su ? (
-            <button type="button" className="text-button" aria-expanded={open === i.id} aria-label={`${st.on ? 'Settings for' : 'Set up'} ${i.name}`} onClick={() => setOpen(open === i.id ? null : i.id)}>
+            <button type="button" className="text-button" aria-expanded={open === i.id} aria-label={st.on ? tr('Settings for {name}', { name: i.name }) : tr('Set up {name}', { name: i.name })} onClick={() => setOpen(open === i.id ? null : i.id)}>
               {/* The form below has Cancel; this stays its name and only shows it's open. */}
-              {st.on ? 'Settings' : 'Set up'}
+              {st.on ? tr('Settings') : tr('Set up')}
             </button>
           ) : (
             st.on && <span className="integration-slot" aria-hidden />
           )}
           {!su && !st.on && !st.why && (
             <span className="integration-env">
-              {[...i.env, ...(i.optional ?? []).map((v) => `${v} (optional)`)].map((v) => (
+              {[...i.env, ...(i.optional ?? []).map((v) => tr('{name} (optional)', { name: v }))].map((v) => (
                 <code key={v}>{v}</code>
               ))}
             </span>
@@ -982,37 +1002,38 @@ function Integrations() {
     }
   };
   return (
-    <Section title="Integrations" count={`${on.length} of ${rows.length} on`} className="span-all" id="integrations">
+    <Section title="Integrations" count={tr('{on} of {all} on', { on: on.length, all: rows.length })} className="span-all" id="integrations">
       <p className="settings-note">
-        Keys stay encrypted on this server and never reach a browser. A variable in your environment wins over this page and shows here as
-        locked.
+        {tr('Keys stay encrypted on this server and never reach a browser. A variable in your environment wins over this page and shows here as locked.')}
       </p>
       {!setup?.demo && !snap.readOnly && envOnly.length > 0 && (
         <div className="adopt">
           <p>
-            <strong>{envOnly.length} settings come from your .env.</strong> Save them in Patchboard, encrypted, and you can remove those lines. Nothing
-            changes until you do; the .env keeps winning while it has them.
+            <strong>{tn(envOnly.length, '{n} setting comes from your .env.', '{n} settings come from your .env.')}</strong>{' '}
+            {tr('Save them in Patchboard, encrypted, and you can remove those lines. Nothing changes until you do; the .env keeps winning while it has them.')}
           </p>
           <button type="button" className="button" disabled={adopting} onClick={() => void adopt()}>
-            {adopting ? 'Saving...' : 'Save them in Patchboard'}
+            {adopting ? tr('Saving...') : tr('Save them in Patchboard')}
           </button>
           {moveErr && <p className="crit-text" role="alert">{moveErr}</p>}
         </div>
       )}
       {movedIn.length > 0 && (
         <p className="settings-note adopt-done">
-          Saved here too, so these can come out of your .env: <span className="mono">{movedIn.join(', ')}</span>. Then recreate Patchboard with{' '}
-          <code>docker compose up -d</code>: a restart keeps the old environment.
+          {tx('Saved here too, so these can come out of your .env: {names}. Then recreate Patchboard with {command}: a restart keeps the old environment.', {
+            names: <span className="mono">{movedIn.join(', ')}</span>,
+            command: <code>docker compose up -d</code>,
+          })}
         </p>
       )}
       <div className="int-tools">
-        <input className="field" type="search" value={find} placeholder="Find an integration" aria-label="Find an integration" onChange={(e) => setFind(e.target.value)} />
-        <span className="seg" role="group" aria-label="Show">
+        <input className="field" type="search" value={find} placeholder={tr('Find an integration')} aria-label={tr('Find an integration')} onChange={(e) => setFind(e.target.value)} />
+        <span className="seg" role="group" aria-label={tr('Show')}>
           {(
             [
-              ['all', `All ${rows.length}`],
-              ['on', `On ${on.length}`],
-              ['off', `Not set up ${off.length}`],
+              ['all', tr('All {n}', { n: rows.length })],
+              ['on', tr('On {n}', { n: on.length })],
+              ['off', tr('Not set up {n}', { n: off.length })],
             ] as const
           ).map(([k, label]) => (
             <button key={k} type="button" aria-pressed={show === k} onClick={() => setShow(k)}>
@@ -1049,7 +1070,7 @@ function Integrations() {
                 {col.flatMap(({ cat, list }) => [
                   <li key={`cat-${cat}`} className="integrations-divider">
                     <h3 className="jw-sub">
-                      {cat} <span className="int-cat-count">{list.filter((r) => r.st.on).length} on</span>
+                      {tr(cat)} <span className="int-cat-count">{tr('{n} on', { n: list.filter((r) => r.st.on).length })}</span>
                     </h3>
                   </li>,
                   ...list.map(row),
@@ -1060,10 +1081,16 @@ function Integrations() {
         );
       })()}
       {find.trim() && !rows.some((r) => `${r.i.name} ${r.i.adds}`.toLowerCase().includes(find.trim().toLowerCase())) && (
-        <p className="settings-note">Nothing called that. App numbers on tiles work for any app with a JSON API: Apps, Edit apps.</p>
+        <p className="settings-note">{tr('Nothing called that. App numbers on tiles work for any app with a JSON API: Apps, Edit apps.')}</p>
       )}
       <p className="settings-note">
-        More on each: <a href="https://github.com/sourpatchdad/patchboard/blob/main/docs/INTEGRATIONS.md" target="_blank" rel="noreferrer">docs/INTEGRATIONS.md</a>.
+        {tx('More on each: {link}.', {
+          link: (
+            <a href="https://github.com/sourpatchdad/patchboard/blob/main/docs/INTEGRATIONS.md" target="_blank" rel="noreferrer">
+              docs/INTEGRATIONS.md
+            </a>
+          ),
+        })}
       </p>
     </Section>
   );
@@ -1087,7 +1114,7 @@ function SetupFile() {
     try {
       setPending({ name: f.name, body: JSON.parse(await f.text()) });
     } catch {
-      setErr("That file isn't JSON. Pick one saved with Download setup.");
+      setErr(tr("That file isn't JSON. Pick one saved with Download setup."));
     }
   };
   const replace = async () => {
@@ -1095,20 +1122,20 @@ function SetupFile() {
     const res = await fetch('/api/setup', { method: 'PUT', headers: ACTION, body: JSON.stringify(pending.body) });
     setPending(null);
     if (!res.ok) return setErr(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `HTTP ${res.status}`);
-    setMsg('Replaced. Every open tab shows the new boards.');
+    setMsg(tr('Replaced. Every open tab shows the new boards.'));
   };
   return (
     <Section title="Setup file">
       <p className="settings-note">
-        Boards, apps, settings, notes and thresholds in one file, for a backup or a new server. Integrations, keys and uploaded icons stay behind.
+        {tr('Boards, apps, settings, notes and thresholds in one file, for a backup or a new server. Integrations, keys and uploaded icons stay behind.')}
       </p>
       <div className="choice-row">
         <a className="button button-quiet" href="/api/setup" download>
-          Download setup
+          {tr('Download setup')}
         </a>
         {!readOnly && (
           <>
-            <button type="button" className="button button-quiet" onClick={() => fileInput.current?.click()}>Import a setup file</button>
+            <button type="button" className="button button-quiet" onClick={() => fileInput.current?.click()}>{tr('Import a setup file')}</button>
             <input ref={fileInput} type="file" accept="application/json,.json" hidden onChange={(e) => {
               const f = e.target.files?.[0];
               // Cleared, so choosing the same file again after Cancel still counts.
@@ -1122,13 +1149,13 @@ function SetupFile() {
       {pending && (
         <div className="choice-row">
           <span>
-            Replace your boards, apps, page settings, notes and thresholds with <span className="mono">{pending.name}</span>?
+            {tx('Replace your boards, apps, page settings, notes and thresholds with {file}?', { file: <span className="mono">{pending.name}</span> })}
           </span>
-          <HoldButton danger hint="Hold to replace" onConfirm={() => void replace()}>
-            Replace
+          <HoldButton danger hint={tr('Hold to replace')} onConfirm={() => void replace()}>
+            {tr('Replace')}
           </HoldButton>
           <button type="button" className="text-button" onClick={() => setPending(null)}>
-            Cancel
+            {tr('Cancel')}
           </button>
         </div>
       )}
@@ -1166,7 +1193,7 @@ function Alerts() {
       const j = await res.json();
       if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
       take(j.thresholds);
-      setMsg({ ok: true, text: 'Saved. Needs attention uses the new numbers now.' });
+      setMsg({ ok: true, text: tr('Saved. Needs attention uses the new numbers now.') });
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
     } finally {
@@ -1185,11 +1212,11 @@ function Alerts() {
               const st = state.find((x) => x.name === t.name)!;
               return (
                 <label key={t.name} className="threshold">
-                  <span className="threshold-label">{t.label}</span>
+                  <span className="threshold-label">{tr(t.label)}</span>
                   <span className="threshold-input">
                     {st.locked ? (
                       <span className="setup-locked">
-                        {st.value || 'none'} {t.unit} (set in the environment, {t.name})
+                        {tr('{value} (set in the environment, {name})', { value: `${st.value || tr('none')} ${t.unit ?? ''}`.trim(), name: t.name })}
                       </span>
                     ) : (
                       <>
@@ -1210,8 +1237,8 @@ function Alerts() {
                     )}
                   </span>
                   <small className="threshold-hint">
-                    {t.hint}
-                    {t.kind === 'number' && !st.locked && ` Default ${t.default}${t.unit === '°C' ? '°C' : t.unit?.startsWith('%') ? '%' : t.unit ? ` ${t.unit}` : ''}.`}
+                    {tr(t.hint)}
+                    {t.kind === 'number' && !st.locked && ` ${tr('Default {value}.', { value: `${t.default}${t.unit === '°C' ? '°C' : t.unit?.startsWith('%') ? '%' : t.unit ? ` ${t.unit}` : ''}` })}`}
                   </small>
                 </label>
               );
@@ -1222,11 +1249,11 @@ function Alerts() {
       {!readOnly && (
         <div className="thresholds-save">
           <button type="button" className="button" disabled={!changed} aria-disabled={busy || undefined} onClick={() => !busy && void save()}>
-            {busy ? 'Saving...' : 'Save'}
+            {busy ? tr('Saving...') : tr('Save')}
           </button>
           {changed && (
             <button type="button" className="text-button" onClick={() => take(state)}>
-              Undo changes
+              {tr('Undo changes')}
             </button>
           )}
           {/* A problem is announced and reads as one; a confirmation is a quiet note. */}
@@ -1245,14 +1272,14 @@ function ShowcaseSettings() {
     <Section title="Screenshots">
       <label className="check">
         <input type="checkbox" checked={sc.on} onChange={(e) => setShowcase({ on: e.target.checked, words })} />
-        Showcase mode
+        {tr('Showcase mode')}
       </label>
       <p className="settings-note">
-        On this device, addresses, email, the words below and camera pictures get stand-ins, so a screenshot is safe to post.
+        {tr('On this device, addresses, email, the words below and camera pictures get stand-ins, so a screenshot is safe to post.')}
       </p>
       <textarea
         className="field mono showcase-words"
-        aria-label="Words to swap"
+        aria-label={tr('Words to swap')}
         rows={4}
         spellCheck={false}
         value={words}
@@ -1260,7 +1287,7 @@ function ShowcaseSettings() {
         onChange={(e) => setWords(e.target.value)}
         onBlur={() => words !== sc.words && setShowcase({ words })}
       />
-      <p className="settings-note">One per line. Nicholas = Rivera picks the stand-in.</p>
+      <p className="settings-note">{tr('One per line. Nicholas = Rivera picks the stand-in.')}</p>
     </Section>
   );
 }

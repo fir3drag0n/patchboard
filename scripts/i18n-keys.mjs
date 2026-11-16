@@ -23,8 +23,8 @@ const str = String.raw`(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")`;
 const pick = (m, i) => (m[i] ?? m[i + 1] ?? '').replace(/\\'/g, "'").replace(/\\"/g, '"');
 for (const f of files) {
   const s = readFileSync(f, 'utf8');
-  // t('x'), tr('x'), and tn(n, 'one', 'many').
-  for (const m of s.matchAll(new RegExp(String.raw`\b(?:t|tr)\(` + str, 'g'))) keys.add(pick(m, 1));
+  // t('x'), tr('x'), tx('x', parts), msg('x'), and tn(n, 'one', 'many').
+  for (const m of s.matchAll(new RegExp(String.raw`\b(?:t|tr|tx|msg)\(` + str, 'g'))) keys.add(pick(m, 1));
   for (const m of s.matchAll(new RegExp(String.raw`\btn\([^,]+,\s*` + str + String.raw`,\s*` + str, 'g'))) {
     keys.add(pick(m, 1));
     keys.add(pick(m, 3));
@@ -44,6 +44,19 @@ const moon = readFileSync('shared/almanac.ts', 'utf8');
 for (const m of (moon.match(/const PHASES = \[([^\]]+)\]/)?.[1] ?? '').matchAll(/'([^']+)'/g)) keys.add(m[1]);
 const kiosk = readFileSync('web/board/Kiosk.tsx', 'utf8');
 for (const m of (kiosk.match(/const SPAN_WORDS = \{([^}]+)\}/)?.[1] ?? '').matchAll(/: '([^']+)'/g)) keys.add(m[1]);
+// Settings' data: what each integration adds and its category, the setup
+// form's field labels and choices, and the alert thresholds.
+const integrations = readFileSync('shared/integrations.ts', 'utf8');
+for (const m of integrations.matchAll(new RegExp(String.raw`\badds:\s*` + str, 'g'))) keys.add(pick(m, 1));
+for (const m of (integrations.match(/export const CATEGORIES[^=]*= \[([\s\S]*?)\n\];/)?.[1] ?? '').matchAll(/\['([^']+)', \[/g)) keys.add(m[1]);
+const setup = readFileSync('shared/setup.ts', 'utf8');
+for (const m of setup.matchAll(/\[\/[^\n]*?\/, '([^']+)'\]/g)) keys.add(m[1]);
+for (const m of (setup.match(/export const CHOICES[^=]*= \{([\s\S]*?)\n\};/)?.[1] ?? '').matchAll(/\['[\w-]+', '([^']+)'\]/g)) keys.add(m[1]);
+for (const m of (setup.match(/export const THRESHOLDS[^=]*= \[([\s\S]*?)\n\];/)?.[1] ?? '').matchAll(new RegExp(String.raw`\b(?:group|label|hint|unit):\s*` + str, 'g'))) {
+  if (/[a-z]{2}/.test(pick(m, 1))) keys.add(pick(m, 1));
+}
+// The problem titles the server writes, which a browser says in its own language.
+for (const m of readFileSync('server/alerts.ts', 'utf8').matchAll(new RegExp(String.raw`\bsay\(` + str, 'g'))) keys.add(pick(m, 1));
 keys.delete('');
 
 const sorted = [...keys].sort((a, b) => a.localeCompare(b));

@@ -98,11 +98,14 @@ export function Episode({ text }: { text?: string }) {
 
 /** Render "unpackerr is not running" with the leading identifier in mono. */
 export function WithSubject({ title, subject }: { title: string; subject?: string }) {
-  if (!subject || !title.startsWith(subject)) return <>{title}</>;
+  // Where the name falls: another language may not start with it.
+  const at = subject ? title.indexOf(subject) : -1;
+  if (!subject || at < 0) return <>{title}</>;
   return (
     <>
+      {title.slice(0, at)}
       <Ident>{subject}</Ident>
-      {title.slice(subject.length)}
+      {title.slice(at + subject.length)}
     </>
   );
 }

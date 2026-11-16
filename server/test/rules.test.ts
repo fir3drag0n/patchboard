@@ -43,6 +43,12 @@ test('a stopped container is critical; expectStopped ones are not', () => {
   assert.equal(alerts[0].href, '/c/unpackerr');
 });
 
+test('a problem title carries its template, so a browser can say it in another language', () => {
+  const [a] = computeAlerts(sources({ docker: { containers: [down('unpackerr')] } }), catalog());
+  assert.deepEqual(a.say, { key: '{name} is not running', vars: { name: 'unpackerr' } });
+  assert.equal(a.title, 'unpackerr is not running');
+});
+
 test('a stop from Patchboard is a note at once, not after the grace for unexplained stops', () => {
   const now = Date.now();
   kvSet('parked', ['sonarr']);

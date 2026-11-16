@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import type { Integration } from '../../shared/integrations.ts';
 import { CHOICES, type SetupIntegration } from '../../shared/setup.ts';
 import { DEFAULT_ON } from '../../shared/setup.ts';
+import { t as tr } from '../lib/i18n.ts';
 
 async function call(url: string, method: string, body?: unknown): Promise<Record<string, unknown>> {
   const res = await fetch(url, {
@@ -61,7 +62,7 @@ export function IntegrationForm({
     setResult(null);
     try {
       const r = await call(`/api/setup/integrations/${integration.id}/test`, 'POST', { values: payload() });
-      setResult(r.ok ? { ok: true, text: String(r.summary ?? 'Connected.') } : { ok: false, text: String(r.error ?? "Couldn't connect. Check the address and key.") });
+      setResult(r.ok ? { ok: true, text: String(r.summary ?? tr('Connected.')) } : { ok: false, text: String(r.error ?? tr("Couldn't connect. Check the address and key.")) });
       // Something missing: focus the first empty field; otherwise back on Test.
       requestAnimationFrame(() => {
         const empty = !r.ok && String(r.error ?? '').startsWith('Fill in') ? [...document.querySelectorAll<HTMLInputElement>(`#int-${integration.id} .setup-field input:not([disabled])`)].find((x) => !x.value) : undefined;
@@ -81,7 +82,7 @@ export function IntegrationForm({
       const r = await call(`/api/setup/integrations/${integration.id}`, 'PUT', { values: payload() });
       onSaved(r.integrations as SetupIntegration[]);
       setValues((prev) => Object.fromEntries(Object.entries(prev).filter(([k]) => setup.fields.find((f) => f.name === k)?.kind !== 'secret')));
-      setResult({ ok: true, text: 'Saved. Patchboard connects now; the status above updates within a few seconds.' });
+      setResult({ ok: true, text: tr('Saved. Patchboard connects now; the status above updates within a few seconds.') });
     } catch (err) {
       setResult({ ok: false, text: (err as Error).message });
     } finally {
@@ -116,23 +117,23 @@ export function IntegrationForm({
       {setup.fields.map((f, idx) => (
         <label key={f.name} className="setup-field">
           <span>
-            {f.label}
-            {!f.required && <em> optional</em>}
+            {tr(f.label)}
+            {!f.required && <em> {tr('optional')}</em>}
           </span>
           {f.locked ? (
             <span className="setup-locked">
-              {f.savedToo ? `Saved here too. You can remove ${f.name} from your .env.` : `Set in the environment (${f.name})`}
+              {f.savedToo ? tr('Saved here too. You can remove {name} from your .env.', { name: f.name }) : tr('Set in the environment ({name})', { name: f.name })}
             </span>
           ) : f.kind === 'flag' ? (
             <select className="field" value={values[f.name] || (DEFAULT_ON.has(f.name) ? '1' : '0')} disabled={readOnly} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}>
-              <option value="0">No</option>
-              <option value="1">Yes</option>
+              <option value="0">{tr('No')}</option>
+              <option value="1">{tr('Yes')}</option>
             </select>
           ) : f.kind === 'choice' ? (
             <select className="field" value={values[f.name] || CHOICES[f.name][0][0]} disabled={readOnly} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}>
               {CHOICES[f.name].map(([v, label]) => (
                 <option key={v} value={v}>
-                  {label}
+                  {tr(label)}
                 </option>
               ))}
             </select>
@@ -148,7 +149,7 @@ export function IntegrationForm({
               autoComplete={f.kind === 'secret' ? 'new-password' : 'off'}
               spellCheck={false}
               disabled={readOnly}
-              placeholder={f.kind === 'secret' ? (f.set ? 'Saved. Type to replace it.' : 'Paste it here') : (f.hint ?? (f.kind === 'url' ? 'For example http://192.168.1.10:port' : ''))}
+              placeholder={f.kind === 'secret' ? (f.set ? tr('Saved. Type to replace it.') : tr('Paste it here')) : (f.hint ?? (f.kind === 'url' ? tr('For example {address}', { address: 'http://192.168.1.10:port' }) : ''))}
               value={values[f.name] ?? ''}
               onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
             />
@@ -168,23 +169,23 @@ export function IntegrationForm({
         </p>
       )}
       {integration.where && <p className="settings-note">{integration.where}</p>}
-      {demo && <p className="settings-note">Demo mode: Test checks the fields are filled in. Nothing connects or saves.</p>}
+      {demo && <p className="settings-note">{tr('Demo mode: Test checks the fields are filled in. Nothing connects or saves.')}</p>}
       <div className="setup-actions">
         <button type="button" className="button button-quiet setup-test" disabled={readOnly} aria-disabled={!!busy || undefined} onClick={() => !busy && void test()}>
-          {busy === 'test' ? 'Testing...' : 'Test connection'}
+          {busy === 'test' ? tr('Testing...') : tr('Test connection')}
         </button>
         {editable && (
           <button type="submit" className="button board-save" disabled={disabled} aria-disabled={!!busy || undefined}>
-            {busy === 'save' ? 'Saving...' : 'Save'}
+            {busy === 'save' ? tr('Saving...') : tr('Save')}
           </button>
         )}
         <button type="button" className="text-button" onClick={onClose}>
-          Cancel
+          {tr('Cancel')}
         </button>
         {setup.fromUi && !disabled && (
           <span className="setup-remove">
-            <HoldButton className="text-button" danger hint="Hold to remove" onConfirm={() => void remove()}>
-              Remove
+            <HoldButton className="text-button" danger hint={tr('Hold to remove')} onConfirm={() => void remove()}>
+              {tr('Remove')}
             </HoldButton>
           </span>
         )}

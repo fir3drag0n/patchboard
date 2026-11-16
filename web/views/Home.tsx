@@ -50,7 +50,7 @@ import {
 } from '../lib/format.ts';
 import { containerMap, ctrState, isExternal, serviceFor } from '../lib/services.ts';
 import { useNow, useSource, useStore } from '../lib/store.tsx';
-import { byUrgency, needsYou } from '../lib/attention.ts';
+import { alertTitle, byUrgency, needsYou } from '../lib/attention.ts';
 import { locale } from '../lib/region.ts';
 import { t, tn } from '../lib/i18n.ts';
 
@@ -285,13 +285,13 @@ function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
   if (!list.length) return null;
   const notes = hidden.filter((a) => a.level === 'info').length;
   const problems = hidden.length - notes;
-  const more = [problems && `${problems} more`, notes && plural(notes, 'note')].filter(Boolean).join(', ');
+  const more = [problems && t('{n} more', { n: problems }), notes && tn(notes, '{n} note', '{n} notes')].filter(Boolean).join(', ');
   const row = (a: Alert) => {
     const body = (
       <>
         <Led state={alertLed[a.level]} />
         <span className="head-alert-title">
-          <WithSubject title={a.title} subject={a.subject} />
+          <WithSubject title={alertTitle(a)} subject={a.subject} />
         </span>
         {a.since && <span className="head-alert-since">{agoLong(a.since, now)}</span>}
         {/* On touch screens, where the hover title can't be read, a tap shows it. */}
@@ -379,9 +379,9 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
   const clear = serious === 0 && (
     <div className="all-clear">
       <p>
-        <strong>{blind ? 'Connection problem.' : 'Nothing needs you.'}</strong>
+        <strong>{blind ? t('Connection problem.') : t('Nothing needs you.')}</strong>
         <br />
-        {blind ? blind : alerts.length ? `${alerts.length === 1 ? 'One note' : `${alerts.length} notes`} below, nothing urgent.` : 'Everything is running.'}
+        {blind ? blind : alerts.length ? tn(alerts.length, 'One note below, nothing urgent.', '{n} notes below, nothing urgent.') : t('Everything is running.')}
       </p>
     </div>
   );
@@ -395,7 +395,7 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
             <>
               <Led state={alertLed[a.level]} />
               <span className="alert-title">
-                <WithSubject title={a.title} subject={a.subject} />
+                <WithSubject title={alertTitle(a)} subject={a.subject} />
               </span>
               {a.detail && <span className="alert-detail">{a.detail}</span>}
               {a.since && <span className="alert-since">{agoLong(a.since, now)}</span>}
@@ -801,7 +801,7 @@ const sourceName = { sonarr: 'Sonarr', radarr: 'Radarr', trakt: 'Trakt' };
 
 /** An alert as one spoken sentence: its parts sit side by side on screen, so a reader needs the pauses. */
 function spoken(a: Alert, now: number): string {
-  return [a.title, a.since ? agoLong(a.since, now) : '', a.detail ?? ''].filter(Boolean).join('. ');
+  return [alertTitle(a), a.since ? agoLong(a.since, now) : '', a.detail ?? ''].filter(Boolean).join('. ');
 }
 
 /** An alert wears the status light: red down, amber trouble, a dark socket for a note. */

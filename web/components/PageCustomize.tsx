@@ -7,6 +7,7 @@ import { useState } from 'react';
 import type { PageId, PageSettings } from '../../shared/pages.ts';
 import { moved, useDragSort } from '../lib/dragsort.ts';
 import { useStore } from '../lib/store.tsx';
+import { t as tr } from '../lib/i18n.ts';
 
 export interface SectionDef {
   id: string;
@@ -41,7 +42,7 @@ export function CustomizePage({ page, title, sections, lists }: { page: PageId; 
   return (
     <>
       <button type="button" className="button button-quiet page-customize" onClick={() => setOpen(true)}>
-        Customize
+        {tr('Customize')}
       </button>
       {open && <Panel page={page} title={title} sections={sections ?? []} lists={lists ?? []} saved={saved} onClose={() => setOpen(false)} />}
     </>
@@ -89,17 +90,17 @@ function Panel({ page, title, sections, lists, saved, onClose }: { page: PageId;
 
   return (
     <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette drawer widget-settings page-panel" ref={modal} role="dialog" aria-label={`Customize ${title}`} onClick={(e) => e.stopPropagation()}>
+      <div className="palette drawer widget-settings page-panel" ref={modal} role="dialog" aria-label={tr('Customize {page}', { page: tr(title) })} onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
-          <h2>Customize {title}</h2>
+          <h2>{tr('Customize')}{' '}{title}</h2>
           <button type="button" className="text-button" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </button>
         </header>
 
         {sections.length > 0 && (
           <>
-            <p className="settings-note">Untick what you don't need; drag to reorder.</p>
+            <p className="settings-note">{tr('Untick what you don\'t need; drag to reorder.')}</p>
             {groups.map((g) => {
               const ids = order.filter((id) => (label(id)?.group ?? '') === g);
               return (
@@ -127,10 +128,10 @@ function Panel({ page, title, sections, lists, saved, onClose }: { page: PageId;
                           <span>{label(id)?.label}</span>
                         </label>
                         <span className="arrange-btns">
-                          <button type="button" className="cell-btn" disabled={i === 0} onClick={() => step(id, -1)} aria-label={`Move ${label(id)?.label} up`}>
+                          <button type="button" className="cell-btn" disabled={i === 0} onClick={() => step(id, -1)} aria-label={tr('Move {name} up', { name: label(id)?.label ?? '' })}>
                             ↑
                           </button>
-                          <button type="button" className="cell-btn" disabled={i === ids.length - 1} onClick={() => step(id, 1)} aria-label={`Move ${label(id)?.label} down`}>
+                          <button type="button" className="cell-btn" disabled={i === ids.length - 1} onClick={() => step(id, 1)} aria-label={tr('Move {name} down', { name: label(id)?.label ?? '' })}>
                             ↓
                           </button>
                         </span>
@@ -164,7 +165,7 @@ function Panel({ page, title, sections, lists, saved, onClose }: { page: PageId;
 
         <div className="jw-actions">
           <button type="button" className="button board-save" disabled={busy} onClick={() => void done()}>
-            {busy ? 'Saving...' : 'Save'}
+            {busy ? tr('Saving...') : tr('Save')}
           </button>
           {err && <span className="crit-text" role="alert">{err}</span>}
         </div>

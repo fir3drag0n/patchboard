@@ -10,7 +10,7 @@ import type { BackupRun, BackupsData, ChangeEvent, Container, Series, StatsData,
 import { HourHeatmap } from '../components/Squares.tsx';
 import { useHistory } from '../lib/api.ts';
 import { setPageName, useAppearance } from '../lib/appearance.ts';
-import { needsYou } from '../lib/attention.ts';
+import { alertTitle, needsYou } from '../lib/attention.ts';
 import { useFollowOpens, useNightDim } from '../lib/household.ts';
 import { WallPages } from '../components/WallPages.tsx';
 import { EINK_MS, einkOn, useEink } from '../lib/eink.ts';
@@ -246,7 +246,7 @@ export function Monitor() {
             <ul className="mon-list">
               {trouble.map((a) => (
                 <li key={a.id} className={a.level === 'critical' ? 'is-crit' : 'is-warn'}>
-                  {a.title}
+                  {alertTitle(a)}
                 </li>
               ))}
             </ul>

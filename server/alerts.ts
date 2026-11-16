@@ -72,6 +72,15 @@ function boardWith(type: WidgetType): string | undefined {
   return undefined;
 }
 
+/**
+ * A title in English, with its template and values, so a browser can say it
+ * in its own language. Notifications and the API keep the English.
+ */
+function say(key: string, vars?: Record<string, string | number>): { title: string; say: { key: string; vars?: Record<string, string | number> } } {
+  const title = vars ? key.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : key;
+  return { title, say: vars ? { key, vars } : { key } };
+}
+
 export function computeAlerts(sources: Sources, catalog: Catalog, updates: Record<string, ImageUpdate> = {}, now = Date.now()): Alert[] {
   const alerts: Alert[] = [];
   const expectStopped = new Set(
@@ -120,7 +129,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         id: `ctr-parked-${c.name}`,
         subject: c.name,
         level: 'info',
-        title: `${c.name} is stopped`,
+        ...say('{name} is stopped', { name: c.name }),
         detail: 'You stopped it from Patchboard. Start it from its page when you want it back.',
         since: lastEventAt(c.name, 'container.stopped'),
         href: logs,
@@ -132,7 +141,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         id: `ctr-down-${c.name}`,
         subject: c.name,
         level: 'critical',
-        title: `${c.name} is ${c.state === 'restarting' ? 'restart-looping' : 'not running'}`,
+        ...(c.state === 'restarting' ? say('{name} is restart-looping', { name: c.name }) : say('{name} is not running', { name: c.name })),
         detail: dependents
           ? `${stoppedDetail(c.status, c.image)} Also down because of it: ${dependents.join(', ')}.`
           : stoppedDetail(c.status, c.image),
@@ -145,7 +154,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         id: `ctr-unhealthy-${c.name}`,
         subject: c.name,
         level: 'warn',
-        title: `${c.name} is failing its health check`,
+        ...say('{name} is failing its health check', { name: c.name }),
         detail: c.status,
         since: lastEventAt(c.name, 'container.unhealthy'),
         href: logs,
@@ -159,18 +168,18 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!p.healthy) {
       alerts.push({ id: `pool-health-${p.name}`, subject: p.name, level: 'critical', title: `${p.name} is ${p.status.toLowerCase()}`, detail: p.disks.filter((d) => d.status !== 'ONLINE' || d.errors).map((d) => `${d.name} ${d.status}${d.errors ? `, ${d.errors} errors` : ''}`).join('; ') || 'Open the Server page for the pool layout.', href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
     } else if (p.disks.some((d) => d.errors > 0)) {
-      alerts.push({ id: `pool-errors-${p.name}`, subject: p.name, level: 'warn', title: `${p.name} has disk errors`, detail: p.disks.filter((d) => d.errors).map((d) => `${d.name}: ${d.errors}`).join(', '), href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
+      alerts.push({ id: `pool-errors-${p.name}`, subject: p.name, level: 'warn', ...say('{name} has disk errors', { name: p.name }), detail: p.disks.filter((d) => d.errors).map((d) => `${d.name}: ${d.errors}`).join(', '), href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
     }
     if (p.scan?.errors) {
-      alerts.push({ id: `pool-scrub-${p.name}`, subject: p.name, level: 'warn', title: `${p.name} scrub found ${p.scan.errors} errors`, href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
+      alerts.push({ id: `pool-scrub-${p.name}`, subject: p.name, level: 'warn', ...(p.scan.errors === 1 ? say('{name} scrub found {n} error', { name: p.name, n: 1 }) : say('{name} scrub found {n} errors', { name: p.name, n: p.scan.errors })), href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
     }
     if (p.usedPct >= config.poolWarnPct) {
-      alerts.push({ id: `pool-full-${p.name}`, level: p.usedPct >= config.poolCritPct ? 'critical' : 'warn', title: `Storage is ${Math.round(p.usedPct)}% full`, detail: `${fmtTB(p.freeBytes)} free on ${p.name}`, href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
+      alerts.push({ id: `pool-full-${p.name}`, level: p.usedPct >= config.poolCritPct ? 'critical' : 'warn', ...say('Storage is {pct}% full', { pct: Math.round(p.usedPct) }), detail: `${fmtTB(p.freeBytes)} free on ${p.name}`, href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
     }
   }
   for (const d of nas?.disks ?? []) {
     if (d.tempC != null && d.tempC >= config.diskWarnC) {
-      alerts.push({ id: `disk-temp-${d.name}`, subject: d.name, level: d.tempC >= config.diskCritC ? 'critical' : 'warn', title: `${d.name} is running at ${Math.round(d.tempC)}°C (${Math.round(d.tempC * 1.8 + 32)}°F)`, detail: d.model, href: '/server#disks', source: 'truenas' });
+      alerts.push({ id: `disk-temp-${d.name}`, subject: d.name, level: d.tempC >= config.diskCritC ? 'critical' : 'warn', ...say('{name} is running at {c}°C ({f}°F)', { name: d.name, c: Math.round(d.tempC), f: Math.round(d.tempC * 1.8 + 32) }), detail: d.model, href: '/server#disks', source: 'truenas' });
     }
   }
   for (const a of nas?.alerts ?? []) {
@@ -186,17 +195,17 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   for (const [id, name] of [['pihole', 'Pi-hole'], ['adguard', 'AdGuard Home']] as const) {
     const d = data<DnsData>(sources, id);
     if (d && !d.protecting && !d.resumesAt) {
-      alerts.push({ id: `dns-off-${id}`, level: 'warn', title: `${name} isn't blocking ads`, detail: 'Blocking is off with no timer. Turn it back on from the Ad blocking widget.', href: boardWith('dns') ?? (id === 'pihole' ? appUrl(config.pihole, '/admin') : appUrl(config.adguard)), source: id });
+      alerts.push({ id: `dns-off-${id}`, level: 'warn', ...say("{name} isn't blocking ads", { name }), detail: 'Blocking is off with no timer. Turn it back on from the Ad blocking widget.', href: boardWith('dns') ?? (id === 'pihole' ? appUrl(config.pihole, '/admin') : appUrl(config.adguard)), source: id });
     }
   }
 
   // Internet speed: Speedtest Tracker's own thresholds decide what is slow.
   const speed = data<SpeedData>(sources, 'speedtest');
   if (speed?.lastFailed && (!speed.latest || speed.lastFailed > speed.latest.at)) {
-    alerts.push({ id: 'speed-failed', level: 'warn', title: 'The last speed test failed', detail: 'Speedtest Tracker could not reach a test server. The connection may be down.', since: speed.lastFailed, href: appUrl(config.speedtest), source: 'speedtest' });
+    alerts.push({ id: 'speed-failed', level: 'warn', ...say('The last speed test failed'), detail: 'Speedtest Tracker could not reach a test server. The connection may be down.', since: speed.lastFailed, href: appUrl(config.speedtest), source: 'speedtest' });
   } else if (speed?.latest && speed.latest.healthy === false) {
     const l = speed.latest;
-    alerts.push({ id: 'speed-slow', level: 'warn', title: 'The internet is slower than your thresholds', detail: `${l.down} Mbps down, ${l.up} up${l.ping != null ? `, ${l.ping} ms ping` : ''} in the last test.`, since: l.at, href: appUrl(config.speedtest), source: 'speedtest' });
+    alerts.push({ id: 'speed-slow', level: 'warn', ...say('The internet is slower than your thresholds'), detail: `${l.down} Mbps down, ${l.up} up${l.ping != null ? `, ${l.ping} ms ping` : ''} in the last test.`, since: l.at, href: appUrl(config.speedtest), source: 'speedtest' });
   }
 
   // Monitors (Uptime Kuma, Gatus, Healthchecks.io): one that is down right
@@ -213,7 +222,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         id: src === 'uptimekuma' ? `kuma-${m.id}` : String(m.id),
         subject: m.name,
         level: 'critical',
-        title: job ? `${m.name} missed its check-in` : `${m.name} is down`,
+        ...(job ? say('{name} missed its check-in', { name: m.name }) : say('{name} is down', { name: m.name })),
         detail: `${m.msg && !job ? `${m.msg.replace(/\.$/, '')}. ` : ''}Seen by ${label}.`,
         since: m.since,
         href: mon!.link,
@@ -236,7 +245,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       id: `check-${s.name}`,
       subject: s.name,
       level: 'warn',
-      title: `${s.name} isn't answering`,
+      ...say("{name} isn't answering", { name: s.name }),
       detail: `${ck.error ?? 'No answer'} from ${ck.target}${ctr ? ', though its container is running' : ''}.`,
       href: s.container ? `/c/${s.container}` : '/apps',
       source: 'checks',
@@ -251,13 +260,13 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       if (!last) return;
       const failed = last.items.filter((i) => !i.ok).map((i) => i.label);
       if (failed.length) {
-        alerts.push({ id: `bk-${id}-fail`, level: 'warn', title: `Last night's ${what} backup failed for ${failed.join(', ')}`, detail: `${last.items.length - failed.length} of ${last.items.length} completed.`, since: last.startedAt, href: '/server#backups', source: 'backups' });
+        alerts.push({ id: `bk-${id}-fail`, level: 'warn', ...(what === 'database' ? say("Last night's database backup failed for {names}", { names: failed.join(', ') }) : say("Last night's file backup failed for {names}", { names: failed.join(', ') })), detail: `${last.items.length - failed.length} of ${last.items.length} completed.`, since: last.startedAt, href: '/server#backups', source: 'backups' });
       }
       if (!last.finishedAt && Date.now() - last.startedAt > 2 * H) {
-        alerts.push({ id: `bk-${id}-stuck`, level: 'warn', title: `The ${what} backup started but never finished`, since: last.startedAt, href: '/server#backups', source: 'backups' });
+        alerts.push({ id: `bk-${id}-stuck`, level: 'warn', ...(what === 'database' ? say('The database backup started but never finished') : say('The file backup started but never finished')), since: last.startedAt, href: '/server#backups', source: 'backups' });
       }
       if (Date.now() - last.startedAt > 36 * H) {
-        alerts.push({ id: `bk-${id}-stale`, level: 'warn', title: `No ${what} backup in over a day and a half`, detail: 'The nightly cron may have stopped.', since: last.startedAt, href: '/server#backups', source: 'backups' });
+        alerts.push({ id: `bk-${id}-stale`, level: 'warn', ...(what === 'database' ? say('No database backup in over a day and a half') : say('No file backup in over a day and a half')), detail: 'The nightly cron may have stopped.', since: last.startedAt, href: '/server#backups', source: 'backups' });
       }
     };
     check(backups.db, 'database', 'db');
@@ -269,7 +278,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     alerts.push({
       id: 'pool-full',
       level: sys.pool.usedPct >= config.poolCritPct ? 'critical' : 'warn',
-      title: `Storage is ${Math.round(sys.pool.usedPct)}% full`,
+      ...say('Storage is {pct}% full', { pct: Math.round(sys.pool.usedPct) }),
       detail: `${fmtTB(sys.pool.totalBytes - sys.pool.usedBytes)} free on ${sys.pool.path}`,
       href: '/server#storage',
       source: 'system',
@@ -282,39 +291,39 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!arr) continue;
     const name = ARR_NAMES[id];
     for (const p of arr.problems) {
-      alerts.push({ id: `${id}-q-${p.title}`, level: 'warn', title: `${name} can't import a download`, detail: `${p.message} (${p.title})`, href: appUrl(config[id], '/activity/queue') ?? `/c/${id}`, source: id });
+      alerts.push({ id: `${id}-q-${p.title}`, level: 'warn', ...say("{name} can't import a download", { name }), detail: `${p.message} (${p.title})`, href: appUrl(config[id], '/activity/queue') ?? `/c/${id}`, source: id });
     }
     for (const h of arr.health.filter((h) => h.level === 'error')) {
-      alerts.push({ id: `${id}-h-${h.message}`, level: 'warn', title: `${name} health check`, detail: h.message, href: appUrl(config[id], '/system/status'), source: id });
+      alerts.push({ id: `${id}-h-${h.message}`, level: 'warn', ...say('{name} health check', { name }), detail: h.message, href: appUrl(config[id], '/system/status'), source: id });
     }
   }
 
   const qbit = data<QbitData>(sources, 'qbit');
   for (const name of qbit?.errored ?? []) {
-    alerts.push({ id: `qbit-err-${name}`, level: 'warn', title: 'Torrent has errored', detail: name, href: appUrl(config.qbit), source: 'qbit' });
+    alerts.push({ id: `qbit-err-${name}`, level: 'warn', ...say('Torrent has errored'), detail: name, href: appUrl(config.qbit), source: 'qbit' });
   }
 
   const frigate = data<FrigateData>(sources, 'frigate');
   for (const cam of frigate?.cameras ?? []) {
     if (!cam.online) {
-      alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', href: appUrl(config.frigate) ?? '/c/frigate', source: 'frigate' });
+      alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, ...say('{name} camera is offline', { name: cam.name }), detail: 'Frigate is receiving no frames', href: appUrl(config.frigate) ?? '/c/frigate', source: 'frigate' });
     }
   }
 
   // Nextcloud: app updates waiting, as a quiet note.
   const nc = data<NextcloudData>(sources, 'nextcloud');
-  if (nc?.appUpdates) alerts.push({ id: 'nc-apps', level: 'info', title: `${nc.appUpdates} Nextcloud ${nc.appUpdates === 1 ? 'app has an update' : 'apps have updates'}`, href: `${nc.webUrl}/settings/apps/updates`, source: 'nextcloud' });
+  if (nc?.appUpdates) alerts.push({ id: 'nc-apps', level: 'info', ...(nc.appUpdates === 1 ? say('{n} Nextcloud app has an update', { n: 1 }) : say('{n} Nextcloud apps have updates', { n: nc.appUpdates })), href: `${nc.webUrl}/settings/apps/updates`, source: 'nextcloud' });
 
   // UniFi: a device that drops off. Tailscale: keys expiring or expired.
   const unifi = data<UnifiData>(sources, 'unifi');
   for (const d of unifi?.devices ?? []) {
-    if (!d.online) alerts.push({ id: `unifi-${d.id}`, level: 'warn', subject: d.name, title: `${d.name} is offline`, detail: [d.model, unifi!.sites > 1 ? d.site : undefined].filter(Boolean).join(', ') || undefined, href: unifi!.webUrl, source: 'unifi' });
+    if (!d.online) alerts.push({ id: `unifi-${d.id}`, level: 'warn', subject: d.name, ...say('{name} is offline', { name: d.name }), detail: [d.model, unifi!.sites > 1 ? d.site : undefined].filter(Boolean).join(', ') || undefined, href: unifi!.webUrl, source: 'unifi' });
   }
   for (const d of data<TailnetData>(sources, 'tailscale')?.devices ?? []) {
     if (d.keyExpires == null) continue;
     const days = (d.keyExpires - now) / 86_400_000;
-    if (days < 0) alerts.push({ id: `ts-exp-${d.id}`, level: 'critical', subject: d.name, title: `${d.name}'s Tailscale key has expired`, detail: 'It is off the tailnet until someone signs it in again.', href: 'https://login.tailscale.com/admin/machines', source: 'tailscale' });
-    else if (days < 7) alerts.push({ id: `ts-soon-${d.id}`, level: 'warn', subject: d.name, title: `${d.name}'s Tailscale key expires in ${Math.max(1, Math.round(days))} ${Math.round(days) === 1 ? 'day' : 'days'}`, detail: 'Renew it, or turn off key expiry for this machine.', href: 'https://login.tailscale.com/admin/machines', source: 'tailscale' });
+    if (days < 0) alerts.push({ id: `ts-exp-${d.id}`, level: 'critical', subject: d.name, ...say("{name}'s Tailscale key has expired", { name: d.name }), detail: 'It is off the tailnet until someone signs it in again.', href: 'https://login.tailscale.com/admin/machines', source: 'tailscale' });
+    else if (days < 7) alerts.push({ id: `ts-soon-${d.id}`, level: 'warn', subject: d.name, ...(Math.max(1, Math.round(days)) === 1 ? say("{name}'s Tailscale key expires in {n} day", { name: d.name, n: 1 }) : say("{name}'s Tailscale key expires in {n} days", { name: d.name, n: Math.round(days) })), detail: 'Renew it, or turn off key expiry for this machine.', href: 'https://login.tailscale.com/admin/machines', source: 'tailscale' });
   }
 
   // Netdata and Prometheus: their firing alerts, as they rate them.
@@ -337,8 +346,8 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   // Portainer: an environment that goes down, or unhealthy containers on one.
   const portainer = data<PortainerData>(sources, 'portainer');
   for (const e of portainer?.envs ?? []) {
-    if (!e.up) alerts.push({ id: `pt-down-${e.id}`, level: 'critical', subject: e.name, title: `Docker host ${e.name} is down`, detail: 'Portainer can no longer reach it.', href: portainer!.webUrl, source: 'portainer' });
-    else if (e.unhealthy) alerts.push({ id: `pt-sick-${e.id}`, level: 'warn', subject: e.name, title: `${e.unhealthy} unhealthy ${e.unhealthy === 1 ? 'container' : 'containers'} on ${e.name}`, href: portainer!.webUrl, source: 'portainer' });
+    if (!e.up) alerts.push({ id: `pt-down-${e.id}`, level: 'critical', subject: e.name, ...say('Docker host {name} is down', { name: e.name }), detail: 'Portainer can no longer reach it.', href: portainer!.webUrl, source: 'portainer' });
+    else if (e.unhealthy) alerts.push({ id: `pt-sick-${e.id}`, level: 'warn', subject: e.name, ...(e.unhealthy === 1 ? say('{n} unhealthy container on {name}', { n: 1, name: e.name }) : say('{n} unhealthy containers on {name}', { n: e.unhealthy, name: e.name })), href: portainer!.webUrl, source: 'portainer' });
   }
 
   // Unraid, Synology, QNAP: one set of rules for every storage system.
@@ -351,14 +360,14 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       if (v.status && v.status !== 'ok') {
         alerts.push({ id: `nas-vol-${id}-${v.name}`, level: v.status === 'failed' ? 'critical' : 'warn', subject: v.name, title: `${v.name} on ${n.name} is ${v.detail ?? (v.status === 'failed' ? 'failing' : 'degraded')}`, href: n.webUrl, source: id });
       } else if (pct >= config.poolWarnPct) {
-        alerts.push({ id: `nas-full-${id}-${v.name}`, level: pct >= config.poolCritPct ? 'critical' : 'warn', subject: v.name, title: `${v.name} on ${n.name} is ${Math.round(pct)}% full`, detail: `${fmtTB(v.total - v.used)} free`, href: n.webUrl, source: id });
+        alerts.push({ id: `nas-full-${id}-${v.name}`, level: pct >= config.poolCritPct ? 'critical' : 'warn', subject: v.name, ...say('{name} on {host} is {pct}% full', { name: v.name, host: n.name, pct: Math.round(pct) }), detail: `${fmtTB(v.total - v.used)} free`, href: n.webUrl, source: id });
       }
     }
     for (const d of n.disks) {
       if (d.status !== 'ok') {
         alerts.push({ id: `nas-disk-${id}-${d.name}`, level: d.status === 'failed' ? 'critical' : 'warn', subject: d.name, title: `Disk ${d.name} on ${n.name} is ${d.detail ?? (d.status === 'failed' ? 'failing' : 'reporting trouble')}`, detail: d.model, href: n.webUrl, source: id });
       } else if (d.tempC != null && d.tempC >= config.diskWarnC) {
-        alerts.push({ id: `nas-temp-${id}-${d.name}`, level: d.tempC >= config.diskCritC ? 'critical' : 'warn', subject: d.name, title: `Disk ${d.name} on ${n.name} is running at ${Math.round(d.tempC)}°C (${Math.round(d.tempC * 1.8 + 32)}°F)`, detail: d.model, href: n.webUrl, source: id });
+        alerts.push({ id: `nas-temp-${id}-${d.name}`, level: d.tempC >= config.diskCritC ? 'critical' : 'warn', subject: d.name, ...say('Disk {name} on {host} is running at {c}°C ({f}°F)', { name: d.name, host: n.name, c: Math.round(d.tempC), f: Math.round(d.tempC * 1.8 + 32) }), detail: d.model, href: n.webUrl, source: id });
       }
     }
   }
@@ -371,14 +380,14 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         id: `ups-power-${u.name}`,
         level: 'critical',
         subject: u.name,
-        title: u.lowBattery ? `${u.name}'s battery is nearly empty` : `The power is out: ${u.name} is on battery`,
+        ...(u.lowBattery ? say("{name}'s battery is nearly empty", { name: u.name }) : say('The power is out: {name} is on battery', { name: u.name })),
         detail: [left, u.charge != null ? `${Math.round(u.charge)}% charged` : undefined].filter(Boolean).join(', ') || undefined,
         href: boardWith('power'),
         source: 'nut',
       });
     }
     if (u.replaceBattery) {
-      alerts.push({ id: `ups-rb-${u.name}`, level: 'warn', subject: u.name, title: `${u.name} needs a new battery`, detail: u.model, href: boardWith('power'), source: 'nut' });
+      alerts.push({ id: `ups-rb-${u.name}`, level: 'warn', subject: u.name, ...say('{name} needs a new battery', { name: u.name }), detail: u.model, href: boardWith('power'), source: 'nut' });
     }
   }
 
@@ -387,7 +396,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   for (const src of ['glances', 'beszel'] as const)
   for (const h of data<GlancesData>(sources, src)?.hosts ?? []) {
     if (!h.ok) {
-      alerts.push({ id: `host-down-${h.url}`, level: 'warn', subject: h.name, title: `${h.name} isn't answering`, detail: h.error, href: src === 'glances' ? h.url : appUrl(config.beszel), source: src });
+      alerts.push({ id: `host-down-${h.url}`, level: 'warn', subject: h.name, ...say("{name} isn't answering", { name: h.name }), detail: h.error, href: src === 'glances' ? h.url : appUrl(config.beszel), source: src });
       continue;
     }
     for (const d of h.disks) {
@@ -396,7 +405,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         id: `host-disk-${h.name}-${d.mount}`,
         level: d.pct >= config.poolCritPct ? 'critical' : 'warn',
         subject: h.name,
-        title: `${d.mount === '/' && !d.size ? 'The disk' : d.mount} on ${h.name} is ${Math.round(d.pct)}% full`,
+        ...(d.mount === '/' && !d.size ? say('The disk on {host} is {pct}% full', { host: h.name, pct: Math.round(d.pct) }) : say('{name} on {host} is {pct}% full', { name: d.mount, host: h.name, pct: Math.round(d.pct) })),
         detail: d.size ? `${fmtTB(d.size - d.used)} free` : undefined,
         href: src === 'glances' ? h.url : appUrl(config.beszel),
         source: src,
@@ -410,7 +419,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   for (const sv of tr?.servers ?? []) {
     if (sv.status !== 'down') continue;
     if (alerts.some((x) => x.subject?.toLowerCase() === sv.name.toLowerCase())) continue;
-    alerts.push({ id: `tracearr-server-${sv.id}`, level: 'warn', subject: sv.name, title: `${sv.name} is down`, detail: `${sv.reason ? `${sv.reason.replace(/\.$/, '')}. ` : ''}Seen by Tracearr.`, href: tr!.webUrl, source: 'tracearr' });
+    alerts.push({ id: `tracearr-server-${sv.id}`, level: 'warn', subject: sv.name, ...say('{name} is down', { name: sv.name }), detail: `${sv.reason ? `${sv.reason.replace(/\.$/, '')}. ` : ''}Seen by Tracearr.`, href: tr!.webUrl, source: 'tracearr' });
   }
   for (const v of tr?.violations ?? []) {
     alerts.push({
@@ -434,7 +443,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       id: `sync-folder-${f.id}`,
       level: 'warn',
       subject: f.label,
-      title: f.state === 'error' ? `${f.label} stopped syncing` : `${f.label} has ${f.failing} ${f.failing === 1 ? 'file' : 'files'} it can't sync`,
+      ...(f.state === 'error' ? say('{name} stopped syncing', { name: f.label }) : f.failing === 1 ? say("{name} has {n} file it can't sync", { name: f.label, n: 1 }) : say("{name} has {n} files it can't sync", { name: f.label, n: f.failing })),
       detail: f.error ? `${f.error.replace(/\.$/, '')}. Seen by Syncthing.` : 'Seen by Syncthing.',
       href: st!.webUrl,
       source: 'syncthing',
@@ -446,7 +455,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       id: `sync-device-${d.id}`,
       level: 'warn',
       subject: d.name,
-      title: `${d.name} hasn't synced in ${Math.floor((now - d.lastSeen) / 86_400_000)} days`,
+      ...say("{name} hasn't synced in {n} days", { name: d.name, n: Math.floor((now - d.lastSeen) / 86_400_000) }),
       detail: 'Its last contact with Syncthing.',
       since: d.lastSeen,
       href: st!.webUrl,
@@ -457,13 +466,13 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   // BitAxe: a miner running hot, or not answering.
   for (const m of data<MinerData>(sources, 'bitaxe')?.miners ?? []) {
     if (!m.ok) {
-      alerts.push({ id: `miner-down-${m.name}`, level: 'warn', subject: m.name, title: `Miner ${m.name} isn't answering`, detail: `${m.error ?? 'No answer'} from ${m.url}.`, href: m.url, source: 'bitaxe' });
+      alerts.push({ id: `miner-down-${m.name}`, level: 'warn', subject: m.name, ...say("Miner {name} isn't answering", { name: m.name }), detail: `${m.error ?? 'No answer'} from ${m.url}.`, href: m.url, source: 'bitaxe' });
     } else if (m.tempC != null && m.tempC >= MINER_WARM_C) {
       alerts.push({
         id: `miner-hot-${m.name}`,
         level: m.tempC >= MINER_HOT_C ? 'critical' : 'warn',
         subject: m.name,
-        title: `Miner ${m.name} is running hot`,
+        ...say('Miner {name} is running hot', { name: m.name }),
         detail: `The ASIC is at ${Math.round(m.tempC)} °C. Check its fan and airflow, or lower its frequency in AxeOS.`,
         href: m.url,
         source: 'bitaxe',
@@ -480,7 +489,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       id: `car-tire-${car.vin}`,
       level: 'warn',
       subject: car.name,
-      title: soft.length === 1 ? `${car.name}'s ${names[soft[0]]} tire is low` : soft.length === 4 ? `${car.name}'s tires are low` : `${car.name} has ${soft.length} low tires`,
+      ...(soft.length === 4 ? say("{name}'s tires are low", { name: car.name }) : soft.length > 1 ? say('{name} has {n} low tires', { name: car.name, n: soft.length }) : soft[0] === 'fl' ? say("{name}'s front left tire is low", { name: car.name }) : soft[0] === 'fr' ? say("{name}'s front right tire is low", { name: car.name }) : soft[0] === 'rl' ? say("{name}'s rear left tire is low", { name: car.name }) : say("{name}'s rear right tire is low", { name: car.name })),
       detail: tireDetail(soft, car.tires, names),
       source: 'tessie',
     });
@@ -495,7 +504,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       id: `drive-${d.id}`,
       level: d.status === 'failed' ? 'critical' : 'warn',
       subject: d.name,
-      title: d.status === 'failed' ? `Drive ${d.name} is failing` : `Drive ${d.name} is wearing out`,
+      ...(d.status === 'failed' ? say('Drive {name} is failing', { name: d.name }) : say('Drive {name} is wearing out', { name: d.name })),
       detail: `${d.status === 'failed' ? 'Its own SMART check failed. Back up what it holds and replace it.' : "It crossed Scrutiny's thresholds. Plan a replacement."}${where ? ` ${where}.` : ''}`,
       href: data<ScrutinyData>(sources, 'scrutiny')?.webUrl,
       source: 'scrutiny',
@@ -504,7 +513,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
 
   // Proxmox: a node that drops out of the cluster.
   for (const n of data<ProxmoxData>(sources, 'proxmox')?.nodes ?? []) {
-    if (!n.online) alerts.push({ id: `pve-${n.name}`, level: 'critical', subject: n.name, title: `Proxmox node ${n.name} is offline`, detail: 'The cluster can no longer reach it.', href: appUrl(config.proxmox), source: 'proxmox' });
+    if (!n.online) alerts.push({ id: `pve-${n.name}`, level: 'critical', subject: n.name, ...say('Proxmox node {name} is offline', { name: n.name }), detail: 'The cluster can no longer reach it.', href: appUrl(config.proxmox), source: 'proxmox' });
   }
 
   // Image updates: one quiet line, not one per container.
@@ -513,7 +522,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     alerts.push({
       id: 'image-updates',
       level: 'info',
-      title: pending.length === 1 ? `An image update is available for ${pending[0]}` : `${pending.length} containers have image updates`,
+      ...(pending.length === 1 ? say('An image update is available for {name}', { name: pending[0] }) : say('{n} containers have image updates', { n: pending.length })),
       detail: pending.length > 1 ? pending.slice(0, 6).join(', ') + (pending.length > 6 ? ', and more' : '') : undefined,
       href: '/stacks?updates=1',
       source: 'patchboard',
@@ -526,7 +535,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     alerts.push({
       id: 'open-to-internet',
       level: 'critical',
-      title: 'Patchboard is open to the internet with no sign-in',
+      ...say('Patchboard is open to the internet with no sign-in'),
       detail: 'Someone reached it from a public address. Turn on a password in Settings, Connections, Sign-in and keys, or put it behind your proxy\'s sign-in.',
       href: '/settings?tab=connections&part=access',
       source: 'patchboard',
@@ -538,7 +547,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     alerts.push({
       id: 'oidc-open',
       level: 'warn',
-      title: 'Anyone your sign-in provider knows can open Patchboard',
+      ...say('Anyone your sign-in provider knows can open Patchboard'),
       detail: 'Set OIDC_ALLOWED to the people or groups who may, or OIDC_ALLOW_ANYONE=1 if your provider already decides.',
       href: '/settings?tab=connections&part=access',
       source: 'patchboard',
@@ -549,7 +558,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   // only once it has failed for two minutes: restarting Jellyfin isn't news.
   for (const s of Object.values(sources)) {
     if (s && !s.ok && s.error && (!s.failingSince || now - s.failingSince >= SOURCE_GRACE_MS)) {
-      alerts.push({ id: `src-${s.id}`, level: 'info', title: `Can't reach ${s.label}`, detail: s.error, since: s.failingSince, href: '/settings?tab=connections', source: s.id });
+      alerts.push({ id: `src-${s.id}`, level: 'info', ...say("Can't reach {name}", { name: s.label }), detail: s.error, since: s.failingSince, href: '/settings?tab=connections', source: s.id });
     }
   }
 

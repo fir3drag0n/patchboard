@@ -3,6 +3,10 @@
 // never raise the count.
 
 import type { Alert } from '../../shared/types.ts';
+import { t } from './i18n.ts';
+
+/** An alert's title in this device's language: the server sends the English template with it. */
+export const alertTitle = (a: Alert): string => (a.say ? t(a.say.key, a.say.vars) : a.title);
 
 const ORDER: Record<Alert['level'], number> = { critical: 0, warn: 1, info: 2 };
 

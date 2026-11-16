@@ -1144,6 +1144,8 @@ export interface Alert {
   id: string;
   level: AlertLevel;
   title: string;
+  /** The title's English template and values, for a browser in another language. */
+  say?: { key: string; vars?: Record<string, string | number> };
   /** Identifier the title starts with (a container or camera name), set in mono. */
   subject?: string;
   detail?: string;

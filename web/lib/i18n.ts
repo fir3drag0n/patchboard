@@ -11,6 +11,7 @@ import fr from '../i18n/fr.json' with { type: 'json' };
 import it from '../i18n/it.json' with { type: 'json' };
 import nl from '../i18n/nl.json' with { type: 'json' };
 import pt from '../i18n/pt.json' with { type: 'json' };
+import { createElement, Fragment, type ReactNode } from 'react';
 import { getAppearance } from './appearance.ts';
 
 const CATALOGS: Record<string, Record<string, string>> = { de, es, fr, it, nl, pt };
@@ -39,6 +40,22 @@ export function t(english: string, vars?: Record<string, string | number>): stri
   const said = CATALOGS[lang()]?.[english] ?? english;
   return vars ? said.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : said;
 }
+
+/**
+ * A sentence with elements in it, such as a link: "Open {link} to change
+ * it" with { link: <Link ...> }. Each {name} becomes its part, wherever the
+ * language puts it.
+ */
+export function tx(english: string, parts: Record<string, ReactNode>): ReactNode[] {
+  const said = CATALOGS[lang()]?.[english] ?? english;
+  return said.split(/(\{\w+\})/).map((piece, i) => {
+    const k = /^\{(\w+)\}$/.exec(piece)?.[1];
+    return k && k in parts ? createElement(Fragment, { key: i }, parts[k]) : piece;
+  });
+}
+
+/** Marks English for the catalogs where it's defined; t() translates it where it shows. */
+export const msg = (english: string): string => english;
 
 /** One form or the other by the language's own plural rule: French counts 0 as one. */
 export function tn(n: number, one: string, many: string, vars?: Record<string, string | number>): string {
