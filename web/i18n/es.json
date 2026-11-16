@@ -1184,5 +1184,18 @@
  "Set every file to…": "Poner todos los archivos en…",
  "Skip": "Omitir",
  "Speed limits saved.": "Límites de velocidad guardados.",
- "Upload limit, MB/s": "Límite de subida, MB/s"
+ "Upload limit, MB/s": "Límite de subida, MB/s",
+ "airs {when}": "se emite el {when}",
+ "Deleted": "Eliminado",
+ "Grabbed": "Capturado",
+ "Hide seasons": "Ocultar temporadas",
+ "Ignored": "Ignorado",
+ "Imported": "Importado",
+ "No date yet": "Aún sin fecha",
+ "Nothing has happened yet.": "Aún no ha pasado nada.",
+ "Other": "Otro",
+ "Renamed": "Renombrado",
+ "Seasons and episodes": "Temporadas y episodios",
+ "Specials": "Especiales",
+ "Untitled": "Sin título"
 }

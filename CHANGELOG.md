@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **A show's seasons and episodes, and History, on the Library page:**
+  Seasons and episodes opens a show: each season with how many episodes
+  are on disk, Monitor and Search, and each episode with when it aired or
+  airs and Search when it's missing. History lists what Sonarr or Radarr
+  did lately: grabbed, imported, failed, deleted, with the release, the
+  quality and where it came from, and why a download failed.
 - **Open a torrent on the Downloads page:** Details lists its files with
   how far along each is, and sets each to Skip, Normal or High, or every
   file at once. Give the torrent its own download and upload limits, and

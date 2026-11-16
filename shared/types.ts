@@ -444,6 +444,53 @@ export interface LibraryItem {
   url: string;
 }
 
+/** One season of a show on the Library page. */
+export interface SeasonInfo {
+  number: number;
+  monitored: boolean;
+  /** Episodes on disk, aired so far, and in all. */
+  have: number;
+  aired: number;
+  total: number;
+  size: number;
+}
+
+export interface EpisodeInfo {
+  id: number;
+  season: number;
+  number: number;
+  title: string;
+  /** When it airs or aired, in ms. */
+  airs?: number;
+  hasFile: boolean;
+  monitored: boolean;
+}
+
+/** A show opened up: its seasons and every episode. */
+export interface ShowDetail {
+  seasons: SeasonInfo[];
+  episodes: EpisodeInfo[];
+}
+
+export type HistoryEvent = 'grabbed' | 'imported' | 'failed' | 'deleted' | 'renamed' | 'ignored' | 'other';
+
+/** Something Sonarr or Radarr did: grabbed a release, imported it, failed. */
+export interface HistoryItem {
+  id: number;
+  event: HistoryEvent;
+  at: number;
+  title: string;
+  /** S02E03 and the episode's name, or a film's year. */
+  subtitle?: string;
+  /** The release's own name. */
+  release?: string;
+  quality?: string;
+  /** The indexer or download client it came through. */
+  from?: string;
+  /** Why it failed or went. */
+  message?: string;
+}
+
 /** A monitored episode or film with no file. */
 export interface WantedItem {
   /** The episode or film id, which a search takes. */

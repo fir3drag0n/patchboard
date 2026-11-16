@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { DnsLists, DnsLog, DownloadEntry, FilePriority, IndexerList, TorrentChange, TorrentDetail, MediaLibraries, SubtitleItem, SubtitleKind, SubtitleList, MediaServerId, SeerrData, Stream } from '../shared/types.ts';
+import type { DnsLists, DnsLog, DownloadEntry, FilePriority, HistoryItem, IndexerList, ShowDetail, TorrentChange, TorrentDetail, MediaLibraries, SubtitleItem, SubtitleKind, SubtitleList, MediaServerId, SeerrData, Stream } from '../shared/types.ts';
 import { fieldLabel } from '../shared/setup.ts';
 import { latestReleases, readFeeds } from './outside.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -1044,6 +1044,7 @@ const LIB_ACTIONS: Record<string, { part: string; run: (lib: ArrLibrary, id: num
   'items:monitor': { part: 'items', run: (lib, id, b) => lib.monitor(id, b.on === true) },
   'items:search': { part: 'items', run: (lib, id) => lib.searchItem(id) },
   'wanted:search': { part: 'wanted', run: (lib, id) => lib.searchWanted(id) },
+  'episodes:search': { part: 'episodes', run: (lib, id) => lib.searchWanted(id) },
   'queue:retry': { part: 'queue', run: (lib, id) => lib.retry(id) },
   'queue:remove': { part: 'queue', run: (lib, id) => lib.remove(id) },
 };
@@ -1066,6 +1067,66 @@ app.post('/api/library/:app/:part/:id/:action', async (c) => {
   }
   recordAudit(who(c), `library.${part}.${action}${action === 'monitor' ? (body.on === true ? '.on' : '.off') : ''}`, name, what);
   if (part === 'queue') void hub.pollNow(name as ArrApp);
+  return c.json({ ok: true });
+});
+
+app.get('/api/library/:app/history', async (c) => {
+  const app = c.req.param('app');
+  const lib = libraryOf(app);
+  if (!lib) return c.json({ error: `${appName(app)} is not set up` }, 404);
+  try {
+    return c.json((await lib.history()) satisfies HistoryItem[]);
+  } catch (err) {
+    return libFail(c, err);
+  }
+});
+
+/** Adds to what the page was sent, so two shows open at once both stay actionable. */
+function libRemember(app: string, part: string, names: [number, string][]) {
+  const old = libSeen.get(`${app}:${part}`);
+  const ids = old && Date.now() - old.at < 600_000 ? old.ids : new Map<number, string>();
+  for (const [id, name] of names) ids.set(id, name);
+  libSeen.set(`${app}:${part}`, { at: Date.now(), ids });
+}
+
+// A show opened up: its seasons and episodes, straight from Sonarr.
+app.get('/api/library/:app/items/:id/show', async (c) => {
+  const app = c.req.param('app');
+  const lib = libraryOf(app);
+  if (!lib?.show) return c.json({ error: 'Only Sonarr has seasons' }, 404);
+  const id = Number(c.req.param('id'));
+  const title = libName(app, 'items', id);
+  if (!title) return c.json({ error: 'That is no longer on the list. Reload and try again.' }, 404);
+  try {
+    const show = await lib.show(id);
+    const code = (s: number, e: number) => `S${String(s).padStart(2, '0')}E${String(e).padStart(2, '0')}`;
+    libRemember(app, 'episodes', show.episodes.map((e) => [e.id, `${title} ${code(e.season, e.number)}`]));
+    libRemember(app, 'seasons', show.seasons.map((s) => [id * 1000 + s.number, `${title} season ${s.number}`]));
+    return c.json(show satisfies ShowDetail);
+  } catch (err) {
+    return libFail(c, err);
+  }
+});
+
+app.post('/api/library/:app/items/:id/season/:season/:action', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const app = c.req.param('app');
+  const lib = libraryOf(app);
+  if (!lib?.monitorSeason || !lib.searchSeason) return c.json({ error: 'Only Sonarr has seasons' }, 404);
+  const action = c.req.param('action');
+  if (action !== 'monitor' && action !== 'search') return c.json({ error: 'Unknown action' }, 400);
+  const id = Number(c.req.param('id'));
+  const season = Number(c.req.param('season'));
+  const what = Number.isInteger(season) && season >= 0 && season < 1000 ? libName(app, 'seasons', id * 1000 + season) : undefined;
+  if (!what) return c.json({ error: 'That is no longer on the list. Reload and try again.' }, 404);
+  const on = ((await c.req.json().catch(() => ({}))) as { on?: unknown }).on === true;
+  try {
+    if (action === 'monitor') await lib.monitorSeason(id, season, on);
+    else await lib.searchSeason(id, season);
+  } catch (err) {
+    return libFail(c, err);
+  }
+  recordAudit(who(c), `library.season.${action}${action === 'monitor' ? (on ? '.on' : '.off') : ''}`, app, what);
   return c.json({ ok: true });
 });
 

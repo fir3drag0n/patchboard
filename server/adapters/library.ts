@@ -3,7 +3,7 @@
 // page is open; the 5-minute snapshot in arr.ts keeps the calendar and health.
 
 import { rememberArt } from '../art.ts';
-import type { ArrApp, ArrOptions, ArrQueueItem, FoundItem, LibraryItem, WantedList } from '../../shared/types.ts';
+import type { ArrApp, ArrOptions, ArrQueueItem, EpisodeInfo, FoundItem, HistoryEvent, HistoryItem, LibraryItem, SeasonInfo, ShowDetail, WantedList } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { getJson, HttpError } from '../http.ts';
 import { toQueue } from './arr.ts';
@@ -33,6 +33,92 @@ export interface ArrLibrary {
   /** The same, blocklisting its release and searching for another. */
   retry(queueId: number): Promise<void>;
   add(what: AddRequest): Promise<string>;
+  /** A show's seasons and episodes. Sonarr only. */
+  show?(id: number): Promise<ShowDetail>;
+  monitorSeason?(id: number, season: number, on: boolean): Promise<void>;
+  searchSeason?(id: number, season: number): Promise<void>;
+  /** The newest things it did, newest first. */
+  history(): Promise<HistoryItem[]>;
+}
+
+/** How many history events the page lists. */
+export const HISTORY_SIZE = 60;
+
+interface ShowSeason {
+  seasonNumber: number;
+  monitored: boolean;
+  statistics?: { episodeFileCount?: number; episodeCount?: number; totalEpisodeCount?: number; sizeOnDisk?: number };
+}
+interface ShowEpisode {
+  id: number;
+  seasonNumber: number;
+  episodeNumber: number;
+  title?: string;
+  airDateUtc?: string;
+  hasFile: boolean;
+  monitored: boolean;
+}
+
+export function fromShow(seasons: ShowSeason[], episodes: ShowEpisode[], now = Date.now()): ShowDetail {
+  const eps = episodes
+    .map((e): EpisodeInfo => ({ id: e.id, season: e.seasonNumber, number: e.episodeNumber, title: e.title ?? '', ...(e.airDateUtc ? { airs: Date.parse(e.airDateUtc) } : {}), hasFile: e.hasFile, monitored: e.monitored }))
+    .sort((a, b) => a.season - b.season || a.number - b.number);
+  return {
+    // Newest season first; specials (season 0) last.
+    seasons: seasons
+      .map((s): SeasonInfo => {
+        const mine = eps.filter((e) => e.season === s.seasonNumber);
+        return {
+          number: s.seasonNumber,
+          monitored: s.monitored,
+          have: s.statistics?.episodeFileCount ?? mine.filter((e) => e.hasFile).length,
+          aired: mine.filter((e) => e.airs !== undefined && e.airs <= now).length,
+          total: s.statistics?.totalEpisodeCount ?? mine.length,
+          size: s.statistics?.sizeOnDisk ?? 0,
+        };
+      })
+      .sort((a, b) => (a.number === 0 ? 1 : b.number === 0 ? -1 : b.number - a.number)),
+    episodes: eps,
+  };
+}
+
+interface HistoryRecord {
+  id: number;
+  eventType: string;
+  date: string;
+  sourceTitle?: string;
+  quality?: { quality?: { name?: string } };
+  data?: Record<string, string | undefined>;
+  series?: { title?: string };
+  episode?: { seasonNumber: number; episodeNumber: number; title?: string };
+  movie?: { title?: string; year?: number };
+}
+
+const EVENT: [RegExp, HistoryEvent][] = [
+  [/grab/i, 'grabbed'],
+  [/import/i, 'imported'],
+  [/fail/i, 'failed'],
+  [/delet/i, 'deleted'],
+  [/renam/i, 'renamed'],
+  [/ignor/i, 'ignored'],
+];
+
+export function fromHistory(records: HistoryRecord[]): HistoryItem[] {
+  return records.map((r) => {
+    const d = r.data ?? {};
+    const ep = r.episode;
+    return {
+      id: r.id,
+      event: EVENT.find(([re]) => re.test(r.eventType))?.[1] ?? 'other',
+      at: Date.parse(r.date),
+      title: r.series?.title ?? r.movie?.title ?? r.sourceTitle ?? '',
+      ...(ep ? { subtitle: `${epCode(ep.seasonNumber, ep.episodeNumber)} ${ep.title ?? ''}`.trim() } : r.movie?.year ? { subtitle: String(r.movie.year) } : {}),
+      ...(r.sourceTitle ? { release: r.sourceTitle } : {}),
+      ...(r.quality?.quality?.name ? { quality: r.quality.quality.name } : {}),
+      ...((d.indexer || d.downloadClientName || d.downloadClient) ? { from: d.indexer || d.downloadClientName || d.downloadClient } : {}),
+      ...((d.message || d.reason) ? { message: d.message || d.reason } : {}),
+    };
+  });
 }
 
 type Image = { coverType: string; remoteUrl?: string };
@@ -195,6 +281,24 @@ export function arrLibrary(app: ArrApp): ArrLibrary {
     searchItem: (id) => command(sonarr ? { name: 'SeriesSearch', seriesId: id } : { name: 'MoviesSearch', movieIds: [id] }),
     searchWanted: (id) => command(sonarr ? { name: 'EpisodeSearch', episodeIds: [id] } : { name: 'MoviesSearch', movieIds: [id] }),
     searchAll: () => command({ name: sonarr ? 'MissingEpisodeSearch' : 'MissingMoviesSearch' }),
+    async history() {
+      const q = `/history?page=1&pageSize=${HISTORY_SIZE}&sortKey=date&sortDirection=descending&${sonarr ? 'includeSeries=true&includeEpisode=true' : 'includeMovie=true'}`;
+      return fromHistory((await get<{ records: HistoryRecord[] }>(q)).records ?? []);
+    },
+    ...(sonarr
+      ? {
+          async show(id: number) {
+            const [series, episodes] = await Promise.all([get<{ seasons: ShowSeason[] }>(`/series/${id}`), get<ShowEpisode[]>(`/episode?seriesId=${id}`)]);
+            return fromShow(series.seasons ?? [], episodes);
+          },
+          async monitorSeason(id: number, season: number, on: boolean) {
+            const series = await get<{ seasons: ShowSeason[] } & Record<string, unknown>>(`/series/${id}`);
+            if (!series.seasons.some((s) => s.seasonNumber === season)) throw new Error('Sonarr has no such season');
+            await send('PUT', `/series/${id}`, { ...series, seasons: series.seasons.map((s) => (s.seasonNumber === season ? { ...s, monitored: on } : s)) });
+          },
+          searchSeason: (id: number, season: number) => command({ name: 'SeasonSearch', seriesId: id, seasonNumber: season }),
+        }
+      : {}),
     remove: (id) => send('DELETE', `/queue/${id}?removeFromClient=true&blocklist=false`).then(() => {}),
     retry: (id) => send('DELETE', `/queue/${id}?removeFromClient=true&blocklist=true&skipRedownload=false`).then(() => {}),
     async add({ key: id, profile, folder, search }) {

@@ -1184,5 +1184,18 @@
  "Set every file to…": "Alle bestanden zetten op…",
  "Skip": "Overslaan",
  "Speed limits saved.": "Snelheidslimieten opgeslagen.",
- "Upload limit, MB/s": "Uploadlimiet, MB/s"
+ "Upload limit, MB/s": "Uploadlimiet, MB/s",
+ "airs {when}": "komt uit op {when}",
+ "Deleted": "Verwijderd",
+ "Grabbed": "Opgehaald",
+ "Hide seasons": "Seizoenen verbergen",
+ "Ignored": "Genegeerd",
+ "Imported": "Geïmporteerd",
+ "No date yet": "Nog geen datum",
+ "Nothing has happened yet.": "Er is nog niets gebeurd.",
+ "Other": "Overig",
+ "Renamed": "Hernoemd",
+ "Seasons and episodes": "Seizoenen en afleveringen",
+ "Specials": "Specials",
+ "Untitled": "Zonder titel"
 }

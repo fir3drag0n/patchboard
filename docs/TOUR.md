@@ -247,7 +247,9 @@ name, switch monitoring, or search for what's missing. Missing lists every
 monitored episode or film without a file, to search one at a time or all
 at once. Queue has the whole queue, with Try another release and Remove.
 Add finds a show or film by name and adds it with the quality and folder
-you pick.
+you pick. Seasons and episodes opens a show to monitor or search one
+season, or one episode. History shows what Sonarr or Radarr grabbed,
+imported or gave up on, and why.
 
 ![Library](screenshots/library.webp)
 

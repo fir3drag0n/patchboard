@@ -1,28 +1,32 @@
 // Library: Sonarr's shows and Radarr's films in one place. Every title with
 // what's on disk, what's missing, the whole queue, and adding something new.
-// With Bazarr, the subtitles still missing; with Prowlarr, the indexers.
+// A show opens to its seasons and episodes. History is what Sonarr or
+// Radarr did lately. With Bazarr, the subtitles still missing; with
+// Prowlarr, the indexers.
 // Lists come straight from the app while the page is open; the queue
 // refreshes every few seconds while it's in view.
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { ArrApp, ArrOptions, ArrQueueItem, FoundItem, Indexer, IndexerList, IndexerTest, LibraryItem, SubtitleItem, SubtitleKind, SubtitleLang, SubtitleList, WantedList } from '../../shared/types.ts';
+import type { ArrApp, ArrOptions, ArrQueueItem, EpisodeInfo, FoundItem, HistoryEvent, HistoryItem, Indexer, IndexerList, IndexerTest, LibraryItem, SubtitleItem, SubtitleKind, ShowDetail, SubtitleLang, SubtitleList, WantedList } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { Empty, Meter, PosterRow as Row } from '../components/ui.tsx';
 import { agoLong, breakable, clock, size } from '../lib/format.ts';
 import { msg, t as tr } from '../lib/i18n.ts';
 import { ACTION, call, useList } from '../lib/live-list.ts';
+import { locale } from '../lib/region.ts';
 import { useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 
 const QUEUE_EVERY_MS = 5000;
 const PAGE = 60;
 
-type View = 'items' | 'wanted' | 'queue' | 'subtitles' | 'indexers' | 'add';
+type View = 'items' | 'wanted' | 'queue' | 'history' | 'subtitles' | 'indexers' | 'add';
 const VIEWS: [View, string][] = [
   ['items', msg('Library')],
   ['wanted', msg('Missing')],
   ['queue', msg('Queue')],
+  ['history', msg('History')],
   ['subtitles', msg('Subtitles')],
   ['indexers', msg('Indexers')],
   ['add', msg('Add')],
@@ -124,6 +128,7 @@ export function Library() {
       {view === 'items' && <Items app={on} shows={shows} ro={ro} act={act} />}
       {view === 'wanted' && <Wanted app={on} shows={shows} ro={ro} act={act} />}
       {view === 'queue' && <Queue app={on} ro={ro} act={act} />}
+      {view === 'history' && <History app={on} />}
       {view === 'subtitles' && snap.sources.bazarr && <Subtitles kind={shows ? 'episodes' : 'movies'} ro={ro} onSaid={setSaid} onErr={setErr} />}
       {view === 'indexers' && snap.sources.prowlarr && <Indexers ro={ro} onSaid={setSaid} onErr={setErr} />}
       {view === 'add' && !ro && <Add app={on} shows={shows} onAdded={(title) => setSaid(tr('Added {title}.', { title }))} />}
@@ -135,6 +140,7 @@ type Act = (path: string, done: string, body?: object, after?: () => void) => Pr
 
 function Items({ app, shows, ro, act }: { app: ArrApp; shows: boolean; ro: boolean; act: Act }) {
   const { data, err, reload } = useList<LibraryItem[]>(`/api/library/${app}/items`);
+  const [opened, setOpened] = useState<number | null>(null);
   const [q, setQ] = useState('');
   const [more, setMore] = useState(PAGE);
   const needle = q.trim().toLowerCase();
@@ -194,6 +200,12 @@ function Items({ app, shows, ro, act }: { app: ArrApp; shows: boolean; ro: boole
                     {status[i.status] && <span>{status[i.status]}</span>}
                     {i.by && <span>{i.by}</span>}
                   </div>
+                  {shows && (
+                    <button type="button" className="text-button lib-open" aria-expanded={opened === i.id} onClick={() => setOpened(opened === i.id ? null : i.id)}>
+                      {opened === i.id ? tr('Hide seasons') : tr('Seasons and episodes')}
+                    </button>
+                  )}
+                  {shows && opened === i.id && <ShowPanel app={app} id={i.id} title={i.title} ro={ro} act={act} />}
                 </Row>
               );
             })}
@@ -256,6 +268,118 @@ function Wanted({ app, shows, ro, act }: { app: ArrApp; shows: boolean; ro: bool
         </ul>
       )}
     </>
+  );
+}
+
+const code = (s: number, e: number) => `S${String(s).padStart(2, '0')}E${String(e).padStart(2, '0')}`;
+const day = (t: number) => new Date(t).toLocaleDateString(locale(), { month: 'short', day: 'numeric', ...(new Date(t).getFullYear() !== new Date().getFullYear() ? { year: 'numeric' } : {}) });
+
+/** A show opened up: each season with Monitor and Search, and its episodes a tap away. */
+function ShowPanel({ app, id, title, ro, act }: { app: ArrApp; id: number; title: string; ro: boolean; act: Act }) {
+  const { data, err, reload } = useList<ShowDetail>(`/api/library/${app}/items/${id}/show`);
+  const [season, setSeason] = useState<number | null>(null);
+  const now = Date.now();
+  if (err) return <p className="crit-text lib-panel">{err}</p>;
+  if (!data) return <div className="lib-panel dlp-loading" aria-busy="true" />;
+  // The newest season with episodes on the way or missing opens first.
+  const shown = season ?? data.seasons.find((s) => s.number > 0)?.number ?? null;
+  return (
+    <div className="lib-panel">
+      <ul className="lib-seasons">
+        {data.seasons.map((s) => {
+          const name = s.number === 0 ? tr('Specials') : tr('Season {n}', { n: s.number });
+          const short = s.monitored && s.have < s.aired;
+          const eps = data.episodes.filter((e) => e.season === s.number);
+          return (
+            <li key={s.number}>
+              <div className="lib-season">
+                <button type="button" className="text-button lib-season-name" aria-expanded={shown === s.number} onClick={() => setSeason(shown === s.number ? -1 : s.number)}>
+                  {name}
+                </button>
+                <span className={`lib-total ${short ? 'warn-text' : ''}`}>{tr('{have} of {total} episodes', { have: s.have, total: s.aired })}</span>
+                {s.size > 0 && <span className="lib-total">{size(s.size)}</span>}
+                {!ro && (
+                  <span className="lib-season-actions">
+                    <button type="button" className="button button-quiet" aria-pressed={s.monitored} onClick={() => void act(`items/${id}/season/${s.number}/monitor`, s.monitored ? tr('Stopped watching for {title}.', { title: `${title}, ${name}` }) : tr('Watching for {title}.', { title: `${title}, ${name}` }), { on: !s.monitored }, reload)}>
+                      {s.monitored ? tr('Monitored') : tr('Not monitored')}
+                    </button>
+                    {s.have < s.aired && (
+                      <button type="button" className="button button-quiet" onClick={() => void act(`items/${id}/season/${s.number}/search`, tr('Searching for {title}.', { title: `${title}, ${name}` }))}>
+                        {tr('Search')}
+                      </button>
+                    )}
+                  </span>
+                )}
+              </div>
+              {shown === s.number && (
+                <ul className="lib-episodes">
+                  {eps.map((e) => (
+                    <EpisodeRow key={e.id} e={e} now={now} show={title} ro={ro} act={act} />
+                  ))}
+                </ul>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function EpisodeRow({ e, now, show, ro, act }: { e: EpisodeInfo; now: number; show: string; ro: boolean; act: Act }) {
+  const aired = e.airs !== undefined && e.airs <= now;
+  const missing = aired && !e.hasFile;
+  return (
+    <li className={e.hasFile ? '' : aired ? 'is-missing' : 'is-ahead'}>
+      <span className="lib-ep-code">{code(e.season, e.number)}</span>
+      <span className="lib-ep-title">{e.title || tr('Untitled')}</span>
+      <span className="lib-total lib-ep-date">{e.airs ? (aired ? day(e.airs) : tr('airs {when}', { when: day(e.airs) })) : tr('No date yet')}</span>
+      <span className={`lib-total lib-ep-state ${missing && e.monitored ? 'warn-text' : ''}`}>{e.hasFile ? tr('On disk') : aired ? tr('Missing') : ''}</span>
+      {!ro && missing && (
+        <button type="button" className="text-button lib-ep-act" onClick={() => void act(`episodes/${e.id}/search`, tr('Searching for {title}.', { title: `${show} ${code(e.season, e.number)}` }))}>
+          {tr('Search')}
+        </button>
+      )}
+    </li>
+  );
+}
+
+const EVENT: Record<HistoryEvent, string> = {
+  grabbed: msg('Grabbed'),
+  imported: msg('Imported'),
+  failed: msg('Failed'),
+  deleted: msg('Deleted'),
+  renamed: msg('Renamed'),
+  ignored: msg('Ignored'),
+  other: msg('Other'),
+};
+
+function History({ app }: { app: ArrApp }) {
+  const { data, err } = useList<HistoryItem[]>(`/api/library/${app}/history`);
+  if (err) return <p className="crit-text">{err}</p>;
+  if (!data) return <div className="dlp-loading" aria-busy="true" />;
+  if (!data.length) return <Empty>{tr('Nothing has happened yet.')}</Empty>;
+  return (
+    <ul className="lib-list">
+      {data.map((h) => (
+        <li key={h.id} className={`lib-row no-art lib-history is-${h.event}`}>
+          <div className="lib-body">
+            <span className="lib-title">
+              {h.title}
+              {h.subtitle && <span className="lib-year"> {h.subtitle}</span>}
+            </span>
+            <div className="dlp-meta">
+              <span className={h.event === 'failed' ? 'crit-text' : h.event === 'imported' ? 'lib-imported' : undefined}>{tr(EVENT[h.event])}</span>
+              <span>{agoLong(h.at)}</span>
+              {h.quality && <span>{h.quality}</span>}
+              {h.from && <span>{h.from}</span>}
+            </div>
+            {h.message && <p className={`lib-test ${h.event === 'failed' ? 'crit-text' : 'lib-total'}`}>{h.message}</p>}
+            {h.release && <p className="lib-release">{breakable(h.release)}</p>}
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 

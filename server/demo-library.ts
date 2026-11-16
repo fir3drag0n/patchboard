@@ -1,7 +1,7 @@
 // Demo mode's Sonarr and Radarr libraries, for the Library page. Taps change
 // what the page shows until the server restarts.
 
-import type { ArrApp, ArrQueueItem, FoundItem, LibraryItem, WantedItem } from '../shared/types.ts';
+import type { ArrApp, ArrQueueItem, EpisodeInfo, FoundItem, HistoryItem, LibraryItem, ShowDetail, WantedItem } from '../shared/types.ts';
 import type { ArrLibrary } from './adapters/library.ts';
 import { poster } from './demo-media.ts';
 
@@ -69,6 +69,61 @@ const monitored = new Map<string, boolean>();
 const removed = new Set<string>();
 const added: Record<ArrApp, LibraryItem[]> = { sonarr: [], radarr: [] };
 
+// A show opened up: seasons of up to ten episodes, a week apart, the newest
+// aired yesterday. The Bear has two still to air, and what Missing lists
+// has no file.
+const seasonMonitored = new Map<string, boolean>();
+const WANTED_CODES = new Set(WANTED_SHOWS.map((w) => `${w.title}:${w.subtitle}`));
+
+function demoShow(s: LibraryItem): ShowDetail {
+  const upcoming = s.title === 'The Bear' ? 2 : 0;
+  const count = s.total + upcoming;
+  const episodes: EpisodeInfo[] = [];
+  for (let i = 0; i < count; i++) {
+    const season = Math.floor(i / 10) + 1;
+    const number = (i % 10) + 1;
+    const code = `S${String(season).padStart(2, '0')}E${String(number).padStart(2, '0')}`;
+    const airs = Date.now() - (s.total - 1 - i) * 7 * DAY - DAY;
+    const missing = WANTED_CODES.has(`${s.title}:${code}`);
+    episodes.push({ id: s.id * 1000 + season * 100 + number, season, number, title: `Chapter ${i + 1}`, airs, hasFile: i < s.have && !missing, monitored: s.monitored });
+  }
+  const numbers = [...new Set(episodes.map((e) => e.season))];
+  return {
+    seasons: numbers
+      .map((n) => {
+        const mine = episodes.filter((e) => e.season === n);
+        return {
+          number: n,
+          monitored: seasonMonitored.get(`${s.id}:${n}`) ?? s.monitored,
+          have: mine.filter((e) => e.hasFile).length,
+          aired: mine.filter((e) => (e.airs ?? 0) <= Date.now()).length,
+          total: mine.length,
+          size: Math.round((s.size / Math.max(1, s.have)) * mine.filter((e) => e.hasFile).length),
+        };
+      })
+      .sort((a, b) => b.number - a.number),
+    episodes,
+  };
+}
+
+const HISTORY: Record<ArrApp, HistoryItem[]> = {
+  sonarr: [
+    { id: 9, event: 'grabbed', at: ago(0.02), title: 'Slow Horses', subtitle: 'S05E02 Hello Goodbye', release: 'Slow.Horses.S05E02.1080p.ATVP.WEB-DL', quality: 'WEBDL-1080p', from: 'NZBgeek' },
+    { id: 8, event: 'grabbed', at: ago(0.05), title: 'Silo', subtitle: 'S02E10 Into the Fire', release: 'Silo.S02E10.2160p.ATVP.WEB-DL', quality: 'WEBDL-2160p', from: 'DrunkenSlug' },
+    { id: 7, event: 'imported', at: ago(0.4), title: 'The Bear', subtitle: 'S04E03 Scraps', release: 'The.Bear.S04E03.1080p.WEB.h264', quality: 'WEBDL-1080p', from: 'qBittorrent' },
+    { id: 6, event: 'failed', at: ago(0.9), title: 'Shōgun', subtitle: 'S01E05 Broken to the Fist', release: 'Shogun.S01E05.2160p.HULU.WEB-DL', quality: 'WEBDL-2160p', from: 'qBittorrent', message: 'Files missing from /downloads/tv' },
+    { id: 5, event: 'deleted', at: ago(1.2), title: 'Severance', subtitle: 'S02E09 The After Hours', quality: 'WEBDL-1080p', message: 'Upgrade' },
+    { id: 4, event: 'imported', at: ago(1.2), title: 'Severance', subtitle: 'S02E09 The After Hours', release: 'Severance.S02E09.2160p.ATVP.WEB-DL', quality: 'WEBDL-2160p', from: 'SABnzbd' },
+    { id: 3, event: 'renamed', at: ago(3), title: 'Fallout', subtitle: 'S01E08 The Beginning', quality: 'WEBDL-1080p' },
+  ],
+  radarr: [
+    { id: 19, event: 'grabbed', at: ago(0.1), title: 'Sinners', subtitle: '2025', release: 'Sinners.2025.1080p.WEB-DL', quality: 'WEBDL-1080p', from: '1337x' },
+    { id: 18, event: 'failed', at: ago(0.6), title: 'One Battle After Another', subtitle: '2025', release: 'One.Battle.After.Another.2025.2160p.WEB-DL', quality: 'WEBDL-2160p', from: 'qBittorrent', message: 'No files found are eligible for import' },
+    { id: 17, event: 'imported', at: ago(2), title: 'Dune: Part Two', subtitle: '2024', release: 'Dune.Part.Two.2024.2160p.UHD.BluRay.REMUX', quality: 'Remux-2160p', from: 'SABnzbd' },
+    { id: 16, event: 'ignored', at: ago(4), title: 'Poor Things', subtitle: '2023', release: 'Poor.Things.2023.CAM', quality: 'CAM', message: 'Ignored from the queue' },
+  ],
+};
+
 export function demoLibrary(app: ArrApp): ArrLibrary {
   const base = app === 'sonarr' ? SHOWS : FILMS;
   const all = () => [...base, ...added[app]].map((i) => ({ ...i, monitored: monitored.get(`${app}:${i.id}`) ?? i.monitored }));
@@ -104,6 +159,20 @@ export function demoLibrary(app: ArrApp): ArrLibrary {
     searchAll: async () => {},
     remove: async (id) => void removed.add(`${app}:${id}`),
     retry: async (id) => void removed.add(`${app}:${id}`),
+    history: async () => HISTORY[app],
+    ...(app === 'sonarr'
+      ? {
+          async show(id: number) {
+            const s = all().find((x) => x.id === id);
+            if (!s) throw new Error('Sonarr has no such show');
+            return demoShow(s);
+          },
+          async monitorSeason(id: number, season: number, on: boolean) {
+            seasonMonitored.set(`${id}:${season}`, on);
+          },
+          searchSeason: async () => {},
+        }
+      : {}),
     async add({ key }) {
       const f = FIND[app].find((x) => x.key === key);
       if (!f) throw new Error('Not found');

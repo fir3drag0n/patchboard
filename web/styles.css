@@ -14883,6 +14883,100 @@ a.lib-title:hover {
   flex: none;
 }
 
+.lib-open {
+  justify-self: start;
+  margin-top: 4px;
+}
+
+.lib-panel {
+  margin-top: 10px;
+}
+
+.lib-seasons,
+.lib-episodes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lib-seasons > li {
+  border-top: 1px solid var(--line);
+  padding: 8px 0;
+}
+
+.lib-season {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.lib-season-name {
+  font-weight: 600;
+}
+
+.lib-season-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.lib-episodes {
+  margin-top: 6px;
+}
+
+.lib-episodes li {
+  display: grid;
+  grid-template-columns: 4.2em minmax(0, 1fr) auto 5.5em 4em;
+  grid-template-areas: 'code title date state act';
+  align-items: baseline;
+  gap: 2px 12px;
+  padding: 4px 0;
+}
+
+.lib-ep-code { grid-area: code; }
+.lib-ep-title { grid-area: title; }
+.lib-ep-date { grid-area: date; }
+.lib-ep-state { grid-area: state; }
+.lib-ep-act { grid-area: act; justify-self: end; }
+
+/* An open show keeps its poster and buttons at the top, by its name. */
+.lib-row:has(.lib-panel) {
+  align-items: start;
+}
+
+.lib-episodes li.is-ahead {
+  color: var(--ink-3);
+}
+
+.lib-ep-code {
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  font-size: 13.5px;
+}
+
+.lib-ep-title {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .lib-episodes li {
+    grid-template-columns: 4.2em minmax(0, 1fr) auto;
+    grid-template-areas: 'code title state' '. date act';
+  }
+}
+
+.lib-imported {
+  color: var(--ok, inherit);
+}
+
+.lib-release {
+  margin: 2px 0 0;
+  color: var(--ink-3);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
 .lib-test {
   margin: 4px 0 0;
   font-size: 13.5px;
