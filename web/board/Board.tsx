@@ -574,7 +574,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               <input type="checkbox" checked={!!draft.fit} onChange={(e) => setDraft((d) => (d ? { ...d, fit: e.target.checked || undefined } : d))} />
               Fit the window
             </label>
-            <label className="check board-fit" title="For a tablet or screen on the wall: one status line instead of the header, and no tabs, and it stays off Home's tabs. A household device also drops the navigation and swipes between its pages.">
+            <label className="check board-fit" title="For a tablet or screen on the wall: one status line in place of the header, no tabs, and kept off Home's tabs. A household device also drops the navigation and swipes between its pages.">
               <input type="checkbox" checked={!!draft.wall} onChange={(e) => setDraft((d) => (d ? { ...d, wall: e.target.checked || undefined } : d))} />
               For a wall screen
             </label>
@@ -1396,7 +1396,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
                 </Fragment>
               );
             })}
-            {types.length === 0 && waiting.length === 0 && <li className="settings-note">{find.trim() ? `No widget matches "${find.trim()}".` : 'Everything is already on the board.'}</li>}
+            {types.length === 0 && waiting.length === 0 && <li className="settings-note">{find.trim() ? `No widget matches "${find.trim()}".` : 'Every widget is on the board.'}</li>}
             {waiting.length > 0 && <li className="drawer-sub drawer-kind" role="presentation">Set up first</li>}
             {waiting.map((t) => (
               <li key={t} className="is-waiting">

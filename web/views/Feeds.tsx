@@ -287,7 +287,7 @@ export function Feeds() {
             title="Reading"
             lists={[
               { key: 'hideCategories', title: 'Categories', note: 'Tap a category to hide it, here and on Home.', items: allCats },
-              { key: 'hideFeeds', title: 'Feeds', note: 'Tap a feed to hide it. Feeds show up here once they have unread articles.', items: allFeeds },
+              { key: 'hideFeeds', title: 'Feeds', note: 'Tap a feed to hide it. Feeds show here once they have unread articles.', items: allFeeds },
             ]}
           />
         </header>
@@ -472,7 +472,7 @@ function Edition(props: {
   if (!entries.length)
     return (
       <p className="reader-hint">
-        {filtered ? 'Nothing unread matches. Clear the filters to see everything.' : "You're caught up. New articles show up here as Miniflux fetches them."}
+        {filtered ? 'Nothing unread matches. Clear the filters to see everything.' : "You're caught up. New articles show here as Miniflux fetches them."}
       </p>
     );
   const lead = entries.find((e) => e.image) ?? entries[0];

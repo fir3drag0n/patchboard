@@ -291,7 +291,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'portainer',
     name: 'Portainer',
-    adds: "A Docker hosts widget for every environment Portainer manages: up or down, with running, stopped and unhealthy containers and stacks. An environment that goes down, or unhealthy containers on any host, show in Needs attention. Patchboard's own pages keep using the Docker socket it is given.",
+    adds: "A Docker hosts widget for every environment Portainer manages: up or down, with running, stopped and unhealthy containers and stacks. An environment that goes down, or unhealthy containers on any host, show in Needs attention. Patchboard's own pages keep using its Docker socket.",
     env: ['PORTAINER_URL', 'PORTAINER_KEY'],
     where: 'In Portainer: your account (top right), Access tokens, Add access token.',
     source: true,
@@ -328,7 +328,7 @@ export const INTEGRATIONS: Integration[] = [
     adds: 'Your tailnet in the Network widget: which machines are online, and keys about to expire. A key that expires within a week warns in Needs attention; an expired one is an alarm, since that machine has dropped off.',
     env: ['TAILSCALE_KEY'],
     optional: ['TAILSCALE_TAILNET'],
-    where: 'The Tailscale admin console: Settings, Keys, Generate access token. Access tokens last 90 days at most, so Patchboard reminds you before this one runs out too.',
+    where: 'The Tailscale admin console: Settings, Keys, Generate access token. Access tokens last 90 days at most; Patchboard reminds you before this one runs out.',
     source: true,
   },
   {
@@ -422,7 +422,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'goodreads',
     name: 'Goodreads',
-    adds: "A Books widget from your currently-reading shelf. Goodreads closed its API, so this reads the shelf's public feed: the shelf must be visible to anyone.",
+    adds: "A Books widget from your currently-reading shelf. It reads the shelf's public feed, so make the shelf visible to anyone.",
     env: ['GOODREADS_USER'],
     where: 'The number in your profile address, goodreads.com/user/show/12345678.',
     source: false,
@@ -430,7 +430,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'nut',
     name: 'NUT (UPS)',
-    adds: 'A Power widget for every UPS your NUT server knows: on mains or on battery, charge, runtime left and load. When the power goes out it shows in Needs attention at once, with the minutes left; a low battery or one due for replacement does too.',
+    adds: 'A Power widget for every UPS your NUT server knows: on mains or on battery, charge, runtime left and load. A power cut shows in Needs attention at once with the minutes left, as do a low battery and one due for replacement.',
     env: ['NUT_HOST'],
     where: "The machine your UPS plugs into over USB runs the NUT server, port 3493: TrueNAS (Services, UPS), Unraid (UPS settings, NUT plugin), Synology (Hardware & Power, UPS, Enable network UPS server, and allow Patchboard's address), Proxmox or any Linux box with nut-server. Reading needs no login.",
     source: true,
@@ -582,7 +582,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'updates',
     name: 'Updates from the UI',
-    adds: 'Pull and recreate one compose service from its page, watch each step, and roll back to the previous image afterwards if it fails or misbehaves.',
+    adds: 'Pull and recreate one compose service from its page, watch each step, and roll back to the previous image if it fails or misbehaves.',
     env: [],
     optional: ['COMPOSE_ROOT'],
     where: 'Mount your compose folders read-only at the same path as on the host.',

@@ -119,7 +119,7 @@ export function HomepageImport({ onClose }: { onClose: () => void }) {
                       {preview.links ? `, ${tn(preview.links, '{n} link', '{n} links')}` : ''}.
                     </strong>
                   ) : (
-                    <strong>{tr('Nothing new: every app here is already in Patchboard.')}</strong>
+                    <strong>{tr('Nothing new: Patchboard has every app here.')}</strong>
                   )}{' '}
                   {preview.already > 0 && `${tn(preview.already, '{n} app is already here and stays as it is.', '{n} apps are already here and stay as they are.')} `}
                   {preview.groups.length > 0 && tr('Groups: {names}.', { names: preview.groups.join(', ') })}

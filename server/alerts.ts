@@ -346,7 +346,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   // Portainer: an environment that goes down, or unhealthy containers on one.
   const portainer = data<PortainerData>(sources, 'portainer');
   for (const e of portainer?.envs ?? []) {
-    if (!e.up) alerts.push({ id: `pt-down-${e.id}`, level: 'critical', subject: e.name, ...say('Docker host {name} is down', { name: e.name }), detail: 'Portainer can no longer reach it.', href: portainer!.webUrl, source: 'portainer' });
+    if (!e.up) alerts.push({ id: `pt-down-${e.id}`, level: 'critical', subject: e.name, ...say('Docker host {name} is down', { name: e.name }), detail: "Portainer can't reach it.", href: portainer!.webUrl, source: 'portainer' });
     else if (e.unhealthy) alerts.push({ id: `pt-sick-${e.id}`, level: 'warn', subject: e.name, ...(e.unhealthy === 1 ? say('{n} unhealthy container on {name}', { n: 1, name: e.name }) : say('{n} unhealthy containers on {name}', { n: e.unhealthy, name: e.name })), href: portainer!.webUrl, source: 'portainer' });
   }
 
@@ -513,7 +513,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
 
   // Proxmox: a node that drops out of the cluster.
   for (const n of data<ProxmoxData>(sources, 'proxmox')?.nodes ?? []) {
-    if (!n.online) alerts.push({ id: `pve-${n.name}`, level: 'critical', subject: n.name, ...say('Proxmox node {name} is offline', { name: n.name }), detail: 'The cluster can no longer reach it.', href: appUrl(config.proxmox), source: 'proxmox' });
+    if (!n.online) alerts.push({ id: `pve-${n.name}`, level: 'critical', subject: n.name, ...say('Proxmox node {name} is offline', { name: n.name }), detail: "The cluster can't reach it.", href: appUrl(config.proxmox), source: 'proxmox' });
   }
 
   // Image updates: one quiet line, not one per container.

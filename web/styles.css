@@ -5478,9 +5478,17 @@ body.is-sorting * {
   place-items: center;
   width: 52px;
   height: 52px;
+  padding: 0;
+  border: 0;
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--card-edge);
+  color: inherit;
+  cursor: pointer;
+}
+
+.icon-preview:disabled {
+  cursor: progress;
 }
 
 /* ---------- Patch bay: icons only, names on hover ---------- */
@@ -14013,4 +14021,21 @@ html[data-eink] .fr-backdrop {
 
 html[data-eink] .fr-sheet {
   animation: none;
+}
+
+/* Connect: quiet beside the app until it's set up, then gone. */
+.tile-connect {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: 0 10px;
+  font-size: 12px;
+  color: var(--ink-3);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+.tile-connect:hover,
+.tile-connect:focus-visible {
+  color: var(--accent);
 }

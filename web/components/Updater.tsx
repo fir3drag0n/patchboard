@@ -196,7 +196,7 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
         : tr('Updating...')
       : job.status === 'done'
         ? job.from === job.to
-          ? tr('Already up to date. Checked in {time}.', { time: took })
+          ? tr('Up to date. Checked in {time}.', { time: took })
           : rollback
             ? tr('Rolled back in {time}.', { time: took })
             : tr('Updated in {time}.', { time: took })

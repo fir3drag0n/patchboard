@@ -631,9 +631,9 @@ function AppForm({
           <div className="ws-row">
             <span>Icon</span>
             <div className="icon-pick">
-              <span className="icon-preview">
+              <button type="button" className="icon-preview" title="Upload your own icon" aria-label="Upload your own icon" disabled={busy} onClick={() => file.current?.click()}>
                 <Icon key={v.icon ?? autoIcon} name={v.name || '?'} icon={v.icon || (ours ? autoIcon : app.icon)} size={40} />
-              </span>
+              </button>
               <input
                 className="field mono"
                 value={v.icon ?? ''}
@@ -653,7 +653,7 @@ function AppForm({
               />
             </div>
             <span className="settings-note">
-              A name from <a href="https://dashboardicons.com" target="_blank" rel="noreferrer">dashboard icons</a> (like <code>jellyfin</code>), any image URL, or your own file.
+              A name from <a href="https://dashboardicons.com" target="_blank" rel="noreferrer">dashboard icons</a> or <a href="https://selfh.st/icons/" target="_blank" rel="noreferrer">selfh.st</a> (like <code>jellyfin</code>), any image URL, or your own file.
             </span>
           </div>
           <LiveNumberFields app={{ ...v, name: v.name || app.name }} d={live} onChange={setLive} />

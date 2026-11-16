@@ -140,7 +140,7 @@ function CameraLive({ name, web, onClose }: { name: string; web?: string; onClos
         {snap?.demo ? (
           <>
             <LiveFrame name={name} />
-            <p className="settings-note">The demo has no cameras to stream, so this is its still. With Frigate connected, this is the camera live.</p>
+            <p className="settings-note">The demo has no cameras to stream, so this is a still. With Frigate connected, the camera plays live.</p>
           </>
         ) : failed ? (
           <p className="settings-note">Couldn't start the live view. Three can be open at once; close one elsewhere, or try again.</p>

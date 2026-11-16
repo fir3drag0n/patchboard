@@ -134,7 +134,7 @@ function Masthead({ now, weatherOnBoard, attentionCard, attentionOff, slim }: { 
   const status =
     alerts.length === 0
       ? !dockerOk
-        ? { tone: 'warn', text: t("Can't see Docker right now.") }
+        ? { tone: 'warn', text: t("Can't see Docker.") }
         : blind
           ? { tone: 'warn', text: blind }
           : { tone: 'ok', text: tn(running, 'All quiet. {n} container running.', 'All quiet. {n} containers running.') }
@@ -458,7 +458,7 @@ export function Inbox({ now }: { now: number }) {
           ))}
         </ul>
       ) : (
-        <Empty>{data ? 'Inbox zero. Nothing waiting.' : 'Connecting to Fastmail.'}</Empty>
+        <Empty>{data ? 'Nothing in the inbox.' : 'Connecting to Fastmail.'}</Empty>
       )}
     </Section>
   );

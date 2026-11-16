@@ -413,7 +413,7 @@ function DeviceEditor({
 
       <section className="device-part" aria-labelledby={`look-${d.id}`}>
         <h3 id={`look-${d.id}`}>{tr('Look')}</h3>
-        <p className="settings-note">{tr('As the device has it keeps whatever was set on the device itself.')}</p>
+        <p className="settings-note">{tr("As the device has it keeps the device's own setting.")}</p>
         <div className="device-grid">
           {lookSelect(
             'theme',

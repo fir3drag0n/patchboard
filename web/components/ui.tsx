@@ -117,7 +117,9 @@ export function Empty({ children }: { children: ReactNode }) {
 /** Service icon with a monogram fallback when the CDN has nothing. */
 export function Icon({ name, icon, size = 22 }: { name: string; icon?: string; size?: number }) {
   const [broken, setBroken] = useState(false);
-  const src = iconUrl(icon);
+  // No icon set: ask for one by the name itself; the server knows thousands, by alias too.
+  const byName = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const src = iconUrl(icon ?? (byName.length > 1 ? `${byName}.png` : undefined));
   if (!src || broken) {
     return (
       <span className="icon-mono" style={{ width: size, height: size, fontSize: Math.max(11, size * 0.5) }} aria-hidden>

@@ -212,7 +212,7 @@ export function Stacks() {
           </section>
         );
       })}
-      {!all.length && <p className="empty">{snap.sources.docker?.ok ? 'No containers.' : "Can't see Docker right now."}</p>}
+      {!all.length && <p className="empty">{snap.sources.docker?.ok ? 'No containers.' : "Can't see Docker."}</p>}
       {all.length > 0 && ordered.length === 0 && (
         <p className="empty">{onlyUpdates && !updateCount ? 'No image updates left. Every container runs its newest image.' : 'Nothing matches that filter.'}</p>
       )}

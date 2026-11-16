@@ -23,6 +23,15 @@
   sunrise. It shows the language, clock and units it read from your browser,
   ticks the apps it found, and offers an optional password. Open Patchboard
   works the moment it appears. The old Welcome checklist on Home is gone.
+- **Icons for nearly everything:** Patchboard looks up each app in two icon
+  sets, dashboard icons and selfh.st, by its image, container and service
+  names and their aliases, so `portainer-ce`, `pms-docker` and
+  `jellyfin-server` find theirs. Containers on Stacks get icons too. Tap an
+  app's icon in Edit apps to upload your own.
+- **Connect where the app is:** a tile for Sonarr, Plex or any app with an
+  integration shows Connect until you set it up, and it opens that setup.
+- **Plainer words:** a pass over the README, the docs and the app's own text
+  trimmed filler and repeats.
 - **Showcase mode is gone:** it was for taking screenshots of this project,
   and the demo covers that.
 - **Settings in your language:** Settings and the problem titles the server

@@ -186,7 +186,7 @@ export function Logs() {
               {status === 'failed' && <p className="logs-note">Couldn't read logs: {failure}</p>}
               {status === 'ended' &&
                 (name && serviceFor(snap, name)?.expectStopped ? (
-                  <p className="logs-note">{lines.length ? 'It finished here. It runs on a schedule, so this is expected.' : 'It has written nothing yet. It runs on a schedule.'}</p>
+                  <p className="logs-note">{lines.length ? 'It finished here. It runs on a schedule.' : 'It has written nothing yet. It runs on a schedule.'}</p>
                 ) : (
                   <p className="logs-note">{lines.length ? 'It stopped here. These are its last lines. ' : 'It has written nothing yet. '}
                     {name && <Link to={`/c/${encodeURIComponent(name)}`}>Start it from its page</Link>}</p>

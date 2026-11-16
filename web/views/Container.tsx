@@ -96,7 +96,7 @@ export function ContainerPage() {
         <Crumbs />
         <h1 className="page-title">{name}</h1>
         <Empty>
-          {snap.sources.docker?.ok ? 'Docker has no container by this name. Someone may have removed or renamed it.' : "Can't see Docker right now."}
+          {snap.sources.docker?.ok ? 'Docker has no container by this name. Someone may have removed or renamed it.' : "Can't see Docker."}
         </Empty>
       </div>
     );
@@ -268,7 +268,7 @@ export function ContainerPage() {
           {ctr.state === 'running' && <Resources name={name} cpu={live?.cpu} mem={live?.memBytes} />}
           {!problem && sections.length > 0 && <Runbook sections={sections} />}
           {runbook.data && !runbook.data.available && sections.length === 0 && problem && (
-            <p className="detail-note">Mount the folder holding RUNBOOK.md at /docs and the matching section shows up here.</p>
+            <p className="detail-note">Mount the folder holding RUNBOOK.md at /docs and the matching section shows here.</p>
           )}
           {calm ? facts : <div className="detail-facts">{facts}</div>}
           {calm && history}

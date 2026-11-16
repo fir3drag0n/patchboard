@@ -4,6 +4,8 @@
 // A group header counts only what needs attention, so a quiet group shows
 // no count.
 
+import { integrationOf, isConnected } from '../lib/connect.ts';
+import { t } from '../lib/i18n.ts';
 import { Roving } from './Roving.tsx';
 import { Link } from 'react-router-dom';
 import type { Service } from '../../shared/types.ts';
@@ -127,9 +129,17 @@ function Tile({ s, stat }: { s: Service; stat: ReturnType<typeof appStat> }) {
         {body}
       </span>
     );
+  // An app whose integration isn't set up offers it here, where you'd look for its numbers.
+  const integration = integrationOf(s);
+  const connect = integration && snap && !snap.readOnly && !snap.household && !isConnected(snap, integration);
   return (
     <li className="tile" data-tone={(stat.tone === 'ok' || stat.tone === 'none') && raised ? raised : stat.tone}>
       {main}
+      {connect && (
+        <Link className="tile-connect" to={`/settings?tab=connections&setup=${integration.id}`} aria-label={t('Connect {name}', { name: integration.name })}>
+          {t('Connect')}
+        </Link>
+      )}
       {s.container && s.href && (
         <Link className="tile-more" to={`/c/${s.container}`} aria-label={`${s.name} details`} title="Container details">
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">

@@ -642,7 +642,7 @@ function CatalogCheck() {
                 ? tr('services.yaml lists {apps} and {links}.', { apps: tn(audit.yamlApps ?? 0, '{n} app', '{n} apps'), links: tn(audit.yamlLinks, '{n} link', '{n} links') })
                 : tn(audit.yamlApps ?? 0, 'services.yaml lists {n} app.', 'services.yaml lists {n} apps.')}
             </strong>{' '}
-            {tr('Copy them into Patchboard, with their groups, order, icons and checks, and you no longer need the file. Patchboard never edits the file; delete it yourself afterward.')}
+            {tr('Copy them into Patchboard with their groups, order, icons and checks, then delete the file yourself. Patchboard never edits it.')}
           </p>
           <button type="button" className="button" disabled={adoptState === 'busy'} onClick={() => void adoptYaml()}>
             {adoptState === 'busy' ? tr('Copying...') : adoptState === 'done' ? tr('Copied. Safe to delete services.yaml') : tr('Copy into Patchboard')}
@@ -653,7 +653,7 @@ function CatalogCheck() {
       {!readOnly && (
         <div className="adopt">
           <p>
-            <strong>{tr('Coming from Homepage?')}</strong>{' '}{tr('Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you already have.')}
+            <strong>{tr('Coming from Homepage?')}</strong>{' '}{tr('Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you have.')}
           </p>
           <button type="button" className="button button-quiet" onClick={() => setImporting(true)}>
             {tr('Import from Homepage')}
@@ -782,7 +782,7 @@ function Activity() {
   return (
     <Section title="Activity" count={rows ? tr('{n} recent', { n: rows.length }) : undefined} className="span-all">
       {!rows?.length ? (
-        <p className="settings-note">{tr('Nothing yet. Container actions, updates, board changes and sign-ins show up here, with who did each.')}</p>
+        <p className="settings-note">{tr('Nothing yet. Container actions, updates, board changes and sign-ins show here, with who did each.')}</p>
       ) : (
         <ul className="audit">
           {rows.slice(0, 60).map((r) => (

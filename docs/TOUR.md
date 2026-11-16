@@ -273,6 +273,11 @@ apps. Each board's Apps widget can show only the groups you tick in its
 settings: Home with what you use every day, a Work board with only that.
 Cameras picks its cameras the same way.
 
+Icons come from two open sets, dashboard icons and selfh.st, matched by the
+app's image, container and service names. Tap an app's icon in Edit apps to
+upload your own. An app Patchboard has an integration for, such as Sonarr or
+Plex, shows Connect on its tile until you set it up.
+
 ![Edit apps](screenshots/edit-apps.webp)
 
 **A live number on any app.** Pick the app, paste its key, press Test.

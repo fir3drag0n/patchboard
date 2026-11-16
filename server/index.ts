@@ -17,6 +17,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { appIconFor, clearAppIcon, saveAppIcon } from './appicon.ts';
 import { apiRoutes } from './api.ts';
 import { findPlaces, finishFirstRun, markExistingInstall } from './firstrun.ts';
+import { iconIndex } from './icon-index.ts';
 import { createKey, listKeys, revokeKey } from './apikeys.ts';
 import { radarrAdapter, sonarrAdapter, arrControl, type ArrControl } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
@@ -1714,9 +1715,22 @@ app.get('/api/icons/:file', (c) => {
 
 // App icons by name, from the dashboard-icons set, fetched once and kept in
 // the data folder. Sandboxed like uploads: an SVG opened directly can't run script.
+// A name the set doesn't draw is looked up in both sets' indexes
+// (server/icon-index.ts): an alias, the name without "-ce" or "-server", or
+// an icon only selfh.st has.
 const icons = iconCache(join(config.dataDir, 'icon-cache'));
+const selfhstIcons = iconCache(join(config.dataDir, 'icon-cache', 'selfhst'), 'https://cdn.jsdelivr.net/gh/selfhst/icons');
+const iconIdx = iconIndex(join(config.dataDir, 'icon-cache'));
 app.get('/api/icon/:kind/:file', async (c) => {
-  const got = await icons.get(c.req.param('kind'), c.req.param('file'));
+  const kind = c.req.param('kind');
+  const file = c.req.param('file');
+  let got = await icons.get(kind, file);
+  if (!got && /^(png|svg|webp)$/.test(kind)) {
+    const base = file.replace(/\.(png|svg|webp)$/, '');
+    const r = await iconIdx.resolve([base]);
+    if (r?.set === 'dash' && r.ref !== base) got = await icons.get(kind, `${r.ref}.${kind}`);
+    else if (r?.set === 'selfhst') got = await selfhstIcons.get(kind, `${r.ref}.${kind}`);
+  }
   if (!got) return c.json({ error: 'No such icon' }, 404);
   return c.body(got.body, 200, {
     'Content-Type': got.type,
@@ -1752,6 +1766,15 @@ app.get('/api/catalog/audit', async (c) => {
     }),
   );
   const audit = auditCatalog(catalog, containers, (n) => ports.get(n), hostGuess);
+  // Each found app's icon: the first of its image, container and service names either icon set draws.
+  await Promise.all(
+    audit.discovered.map(async (d) => {
+      const ctr = containers.find((x) => x.name === d.container);
+      const repo = ctr?.image.replace(/@sha256:.*/, '').replace(/:[^/]+$/, '').split('/').pop();
+      const r = await iconIdx.resolve([d.icon.replace(/\.png$/, ''), repo ?? '', d.container, ctr?.service ?? '', d.name].filter(Boolean));
+      if (r) d.icon = `${r.ref}.png`;
+    }),
+  );
   // What services.yaml still holds that Patchboard hasn't copied in.
   const saved = kvGet<AppOrder>('app-order');
   const savedApps = new Set((saved?.added ?? []).map((a) => a.name));
