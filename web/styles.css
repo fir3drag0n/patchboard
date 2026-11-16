@@ -14811,6 +14811,16 @@ a.lib-title:hover {
   color: var(--accent);
 }
 
+.lib-test {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+
+.lib-row.is-off .lib-title {
+  color: var(--ink-3);
+}
+
 .blk-domain {
   overflow-wrap: anywhere;
 }

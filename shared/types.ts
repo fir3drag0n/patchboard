@@ -461,6 +461,57 @@ export interface WantedList {
   items: WantedItem[];
 }
 
+/** A Prowlarr indexer on the Library page. */
+export interface Indexer {
+  id: number;
+  name: string;
+  protocol: 'torrent' | 'usenet';
+  enabled: boolean;
+  /** Set while Prowlarr has set it aside after failing: when it tries again. */
+  failingUntil?: number;
+  failingSince?: number;
+  queries?: number;
+  grabs?: number;
+  failed?: number;
+  responseMs?: number;
+}
+
+export interface IndexerList {
+  indexers: Indexer[];
+}
+
+export interface IndexerTest {
+  id: number;
+  name: string;
+  ok: boolean;
+  error?: string;
+}
+
+export type SubtitleKind = 'episodes' | 'movies';
+
+export interface SubtitleLang {
+  /** Two-letter code: en, fr. */
+  code: string;
+  name: string;
+  forced?: boolean;
+  /** For the hard of hearing. */
+  hi?: boolean;
+}
+
+/** An episode or film Bazarr has no subtitles for yet, in some language. */
+export interface SubtitleItem {
+  /** "series:episode" for an episode, the Radarr id for a film. */
+  id: string;
+  title: string;
+  subtitle?: string;
+  missing: SubtitleLang[];
+}
+
+export interface SubtitleList {
+  items: SubtitleItem[];
+  total: number;
+}
+
 /** A show or film found by name, to add. */
 export interface FoundItem {
   /** TVDB id for a show, TMDB id for a film. */

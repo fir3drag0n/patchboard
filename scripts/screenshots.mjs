@@ -316,6 +316,8 @@ try {
   await shoot(page, 'downloads');
   await go('/library', 2500);
   await shoot(page, 'library');
+  await go('/library?view=indexers', 2500);
+  await shoot(page, 'indexers');
   await go('/media', 2500);
   await shoot(page, 'media');
   await go('/blocking', 2500);

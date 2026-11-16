@@ -1,14 +1,15 @@
 // Library: Sonarr's shows and Radarr's films in one place. Every title with
 // what's on disk, what's missing, the whole queue, and adding something new.
+// With Bazarr, the subtitles still missing; with Prowlarr, the indexers.
 // Lists come straight from the app while the page is open; the queue
 // refreshes every few seconds while it's in view.
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { ArrApp, ArrOptions, ArrQueueItem, FoundItem, LibraryItem, WantedList } from '../../shared/types.ts';
+import type { ArrApp, ArrOptions, ArrQueueItem, FoundItem, Indexer, IndexerList, IndexerTest, LibraryItem, SubtitleItem, SubtitleKind, SubtitleLang, SubtitleList, WantedList } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { Empty, Meter, PosterRow as Row } from '../components/ui.tsx';
-import { agoLong, breakable, size } from '../lib/format.ts';
+import { agoLong, breakable, clock, size } from '../lib/format.ts';
 import { msg, t as tr } from '../lib/i18n.ts';
 import { ACTION, call, useList } from '../lib/live-list.ts';
 import { useStore } from '../lib/store.tsx';
@@ -17,11 +18,13 @@ import { useUrlChoice } from '../lib/url.ts';
 const QUEUE_EVERY_MS = 5000;
 const PAGE = 60;
 
-type View = 'items' | 'wanted' | 'queue' | 'add';
+type View = 'items' | 'wanted' | 'queue' | 'subtitles' | 'indexers' | 'add';
 const VIEWS: [View, string][] = [
   ['items', msg('Library')],
   ['wanted', msg('Missing')],
   ['queue', msg('Queue')],
+  ['subtitles', msg('Subtitles')],
+  ['indexers', msg('Indexers')],
   ['add', msg('Add')],
 ];
 const APPS: [ArrApp, string][] = [
@@ -89,14 +92,14 @@ export function Library() {
 
       <div className="page-toolbar">
         <div className="seg lib-views" role="group" aria-label={tr('Show')}>
-          {VIEWS.filter(([v]) => !(ro && v === 'add')).map(([v, label]) => (
+          {VIEWS.filter(([v]) => !(ro && v === 'add') && (v !== 'subtitles' || snap.sources.bazarr) && (v !== 'indexers' || snap.sources.prowlarr)).map(([v, label]) => (
             <button key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)}>
               {tr(label)}
               {v === 'queue' && queueCount > 0 && <span className="dlp-count">{queueCount}</span>}
             </button>
           ))}
         </div>
-        {apps.length > 1 && (
+        {apps.length > 1 && view !== 'indexers' && (
           <div className="seg" role="group" aria-label={tr('Shows or films')}>
             {APPS.map(([a, label]) => (
               <button key={a} type="button" aria-pressed={on === a} onClick={() => setApp(a)}>
@@ -121,6 +124,8 @@ export function Library() {
       {view === 'items' && <Items app={on} shows={shows} ro={ro} act={act} />}
       {view === 'wanted' && <Wanted app={on} shows={shows} ro={ro} act={act} />}
       {view === 'queue' && <Queue app={on} ro={ro} act={act} />}
+      {view === 'subtitles' && snap.sources.bazarr && <Subtitles kind={shows ? 'episodes' : 'movies'} ro={ro} onSaid={setSaid} onErr={setErr} />}
+      {view === 'indexers' && snap.sources.prowlarr && <Indexers ro={ro} onSaid={setSaid} onErr={setErr} />}
       {view === 'add' && !ro && <Add app={on} shows={shows} onAdded={(title) => setSaid(tr('Added {title}.', { title }))} />}
     </div>
   );
@@ -248,6 +253,190 @@ function Wanted({ app, shows, ro, act }: { app: ArrApp; shows: boolean; ro: bool
               {w.when && <div className="dlp-meta">{shows ? tr('aired {when}', { when: agoLong(w.when) }) : tr('out {when}', { when: agoLong(w.when) })}</div>}
             </Row>
           ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+type Say = { ro: boolean; onSaid: (s: string) => void; onErr: (s: string) => void };
+
+const langName = (l: SubtitleLang) => (l.forced ? tr('{lang}, forced', { lang: l.name }) : l.hi ? tr('{lang}, hard of hearing', { lang: l.name }) : l.name);
+
+function Subtitles({ kind, ro, onSaid, onErr }: { kind: SubtitleKind } & Say) {
+  const { data, err, reload } = useList<SubtitleList>(`/api/subtitles/${kind}`);
+  const [busy, setBusy] = useState('');
+  const shows = kind === 'episodes';
+
+  async function search(item: SubtitleItem) {
+    const name = [item.title, item.subtitle].filter(Boolean).join(' ');
+    setBusy(item.id);
+    onSaid('');
+    onErr('');
+    try {
+      const r = await call<{ waiting?: boolean }>(`/api/subtitles/${kind}/${encodeURIComponent(item.id)}/search`, { method: 'POST', headers: ACTION });
+      onSaid(r.waiting ? tr('Bazarr is still looking for {title}.', { title: name }) : tr('Searched for {title}.', { title: name }));
+      reload();
+    } catch (e) {
+      onErr((e as Error).message);
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function searchAll() {
+    onSaid('');
+    onErr('');
+    try {
+      await call(`/api/subtitles/${kind}/search-all`, { method: 'POST', headers: ACTION });
+      onSaid(shows ? tr('Bazarr is searching for every episode’s subtitles.') : tr('Bazarr is searching for every film’s subtitles.'));
+    } catch (e) {
+      onErr((e as Error).message);
+    }
+  }
+
+  return (
+    <>
+      {data && data.total > 0 && (
+        <div className="lib-filter">
+          <span className="lib-total">
+            {shows ? tr('{n} episodes need subtitles', { n: data.total }) : tr('{n} films need subtitles', { n: data.total })}
+            {data.total > data.items.length ? `, ${tr('newest {n} here', { n: data.items.length })}` : ''}
+          </span>
+          {!ro && (
+            <button type="button" className="button" onClick={() => void searchAll()}>
+              {tr('Search for all')}
+            </button>
+          )}
+        </div>
+      )}
+      {err && <p className="crit-text">{err}</p>}
+      {!data ? (
+        !err && <div className="dlp-loading" aria-busy="true" />
+      ) : data.items.length === 0 ? (
+        <Empty>{shows ? tr('Every episode has its subtitles.') : tr('Every film has its subtitles.')}</Empty>
+      ) : (
+        <ul className="lib-list">
+          {data.items.map((s) => (
+            <li key={s.id} className="lib-row no-art">
+              <div className="lib-body">
+                <span className="lib-title">
+                  {s.title}
+                  {s.subtitle && <span className="lib-year"> {s.subtitle}</span>}
+                </span>
+                <div className="dlp-meta">
+                  {s.missing.map((l) => (
+                    <span key={`${l.code}${l.forced ? 'f' : ''}${l.hi ? 'h' : ''}`}>{langName(l)}</span>
+                  ))}
+                </div>
+              </div>
+              {!ro && (
+                <div className="lib-actions">
+                  <button type="button" className="button button-quiet" disabled={busy === s.id} onClick={() => void search(s)}>
+                    {busy === s.id ? tr('Searching') : tr('Search')}
+                  </button>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function Indexers({ ro, onSaid, onErr }: Say) {
+  const { data, err, reload } = useList<IndexerList>('/api/indexers');
+  const [busy, setBusy] = useState<number | 'all' | null>(null);
+  const [tests, setTests] = useState(new Map<number, IndexerTest>());
+
+  async function run(i: Indexer | null, action: 'test' | 'enable' | 'disable') {
+    setBusy(i?.id ?? 'all');
+    onSaid('');
+    onErr('');
+    try {
+      if (!i) {
+        const { results } = await call<{ results: IndexerTest[] }>('/api/indexers/test-all', { method: 'POST', headers: ACTION });
+        setTests(new Map(results.map((r) => [r.id, r])));
+        onSaid(tr('{ok} of {n} passed.', { ok: results.filter((r) => r.ok).length, n: results.length }));
+      } else if (action === 'test') {
+        try {
+          await call(`/api/indexers/${i.id}/test`, { method: 'POST', headers: ACTION });
+          setTests((m) => new Map(m).set(i.id, { id: i.id, name: i.name, ok: true }));
+        } catch (e) {
+          setTests((m) => new Map(m).set(i.id, { id: i.id, name: i.name, ok: false, error: (e as Error).message }));
+        }
+      } else {
+        await call(`/api/indexers/${i.id}/${action}`, { method: 'POST', headers: ACTION });
+        setTests((m) => {
+          const next = new Map(m);
+          next.delete(i.id);
+          return next;
+        });
+        onSaid(action === 'enable' ? tr('Turned on {name}.', { name: i.name }) : tr('Turned off {name}.', { name: i.name }));
+        reload();
+      }
+    } catch (e) {
+      onErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (err) return <p className="crit-text">{err}</p>;
+  if (!data) return <div className="dlp-loading" aria-busy="true" />;
+  const failing = data.indexers.filter((i) => i.enabled && i.failingUntil).length;
+  return (
+    <>
+      <div className="lib-filter">
+        <span className="lib-total">
+          {tr('{n} indexers', { n: data.indexers.length })}
+          {failing > 0 && <span className="warn-text">, {tr('{n} failing', { n: failing })}</span>}
+        </span>
+        {!ro && data.indexers.some((i) => i.enabled) && (
+          <button type="button" className="button" disabled={busy !== null} onClick={() => void run(null, 'test')}>
+            {busy === 'all' ? tr('Testing') : tr('Test all')}
+          </button>
+        )}
+      </div>
+      {data.indexers.length === 0 ? (
+        <Empty>{tr('Prowlarr has no indexers yet.')}</Empty>
+      ) : (
+        <ul className="lib-list">
+          {data.indexers.map((i) => {
+            const test = tests.get(i.id);
+            return (
+              <li key={i.id} className={`lib-row no-art ${i.enabled ? '' : 'is-off'}`}>
+                <div className="lib-body">
+                  <span className="lib-title">{i.name}</span>
+                  <div className="dlp-meta">
+                    <span>{i.protocol === 'usenet' ? tr('Usenet') : tr('Torrent')}</span>
+                    {!i.enabled ? (
+                      <span>{tr('Off')}</span>
+                    ) : (
+                      i.failingUntil && <span className="warn-text">{tr('Failing, tries again at {time}', { time: clock(i.failingUntil) })}</span>
+                    )}
+                    {i.queries != null && <span>{tr('{n} queries', { n: i.queries.toLocaleString() })}</span>}
+                    {i.grabs != null && <span>{tr('{n} grabs', { n: i.grabs.toLocaleString() })}</span>}
+                    {i.responseMs != null && i.queries ? <span>{tr('{n} ms', { n: Math.round(i.responseMs) })}</span> : null}
+                  </div>
+                  {test && (test.ok ? <p className="req-done lib-test">{tr('Test passed')}</p> : <p className="crit-text lib-test">{test.error ?? tr('Test failed')}</p>)}
+                </div>
+                {!ro && (
+                  <div className="lib-actions">
+                    {i.enabled && (
+                      <button type="button" className="button button-quiet" disabled={busy !== null} onClick={() => void run(i, 'test')}>
+                        {busy === i.id ? tr('Testing') : tr('Test')}
+                      </button>
+                    )}
+                    <button type="button" className="text-button" disabled={busy !== null} onClick={() => void run(i, i.enabled ? 'disable' : 'enable')}>
+                      {i.enabled ? tr('Turn off') : tr('Turn on')}
+                    </button>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </>

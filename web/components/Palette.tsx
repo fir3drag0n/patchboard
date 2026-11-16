@@ -122,7 +122,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       ...(snap.sources.tautulli || snap.sources.jellyfin || snap.sources.emby ? [{ id: 'v-media', label: 'Media', hint: 'View', terms: 'plex jellyfin emby watching streams stop scan libraries', run: go('/media') }] : []),
       ...(snap.sources.pihole || snap.sources.adguard ? [{ id: 'v-blocking', label: 'Ad blocking', hint: 'View', terms: 'pi-hole pihole adguard dns query log allow block domain pause', run: go('/blocking') }] : []),
       ...(snap.sources.overseerr ? [{ id: 'v-requests', label: 'Requests', hint: 'View', terms: 'overseerr jellyseerr seerr approve decline ask request film movie show', run: go('/requests') }] : []),
-      ...(snap.sources.sonarr || snap.sources.radarr ? [{ id: 'v-library', label: 'Library', hint: 'View', terms: 'sonarr radarr shows films movies tv series add missing wanted queue', run: go('/library') }] : []),
+      ...(snap.sources.sonarr || snap.sources.radarr ? [{ id: 'v-library', label: 'Library', hint: 'View', terms: 'sonarr radarr shows films movies tv series add missing wanted queue bazarr subtitles prowlarr indexers', run: go('/library') }] : []),
       { id: 'v-settings', label: 'Settings', hint: 'Appearance', run: go('/settings') },
       ...([['look', 'Look'], ['home', 'Home'], ['devices', 'Devices'], ['alerts', 'Alerts'], ['connections', 'Connections'], ['activity', 'Activity']] as const).map(([t, label]) => ({ id: `set-${t}`, label: `Settings: ${label}`, hint: 'Settings', terms: t === 'devices' ? 'wall tablet e-ink panel phone kiosk' : undefined, run: go(`/settings?tab=${t}`) })),
       // Every board, wall boards too, which stay off Home's tabs.

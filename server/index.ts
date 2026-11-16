@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { DnsLists, DnsLog, MediaLibraries, MediaServerId, SeerrData, Stream } from '../shared/types.ts';
+import type { DnsLists, DnsLog, IndexerList, MediaLibraries, SubtitleItem, SubtitleKind, SubtitleList, MediaServerId, SeerrData, Stream } from '../shared/types.ts';
 import { fieldLabel } from '../shared/setup.ts';
 import { latestReleases, readFeeds } from './outside.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -53,6 +53,8 @@ import { booksAdapter } from './adapters/books.ts';
 import { send } from './notify.ts';
 import { pendingIds, type SeerrClient, seerrClient } from './adapters/seerr.ts';
 import { mediaControl, plexSections } from './adapters/media-control.ts';
+import { prowlarrControl } from './adapters/indexers.ts';
+import { bazarrControl } from './adapters/subtitles.ts';
 import { adguardClient, cleanDomain, type DnsControl, type DnsDomains, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
 import { adoptEnvironment, candidate, checkThresholds, describeThresholds, saveThresholds, savedThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
@@ -74,7 +76,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
@@ -1012,6 +1014,114 @@ app.post('/api/library/:app/search-all', async (c) => {
   }
   recordAudit(who(c), 'library.search-all', name);
   return c.json({ ok: true });
+});
+
+// Prowlarr's indexers and Bazarr's missing subtitles, on the Library page.
+// Read live while the page is open; acting needs something the page was
+// just sent, the same as the rest of Library.
+const indexersOf = () => (config.demo ? demoIndexers : prowlarrControl());
+const subtitlesOf = () => (config.demo ? demoSubtitles : bazarrControl());
+const indexerSeen = { at: 0, names: new Map<number, string>() };
+const subtitleSeen = new Map<string, { at: number; item: SubtitleItem }>();
+const fresh = (at: number) => Date.now() - at < 600_000;
+
+app.get('/api/indexers', async (c) => {
+  const ctl = indexersOf();
+  if (!ctl) return c.json({ error: 'Prowlarr is not set up' }, 404);
+  try {
+    const indexers = await ctl.list();
+    indexerSeen.at = Date.now();
+    indexerSeen.names = new Map(indexers.map((i) => [i.id, i.name]));
+    return c.json({ indexers } satisfies IndexerList);
+  } catch (err) {
+    return libFail(c, err);
+  }
+});
+
+app.post('/api/indexers/test-all', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const ctl = indexersOf();
+  if (!ctl) return c.json({ error: 'Prowlarr is not set up' }, 404);
+  try {
+    const results = await ctl.testAll();
+    recordAudit(who(c), 'indexers.test-all', 'prowlarr', `${results.filter((r) => !r.ok).length} failed`);
+    return c.json({ results });
+  } catch (err) {
+    return libFail(c, err);
+  }
+});
+
+app.post('/api/indexers/:id/:action', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const ctl = indexersOf();
+  if (!ctl) return c.json({ error: 'Prowlarr is not set up' }, 404);
+  const action = c.req.param('action');
+  if (!['test', 'enable', 'disable'].includes(action)) return c.json({ error: 'Unknown action' }, 400);
+  const id = Number(c.req.param('id'));
+  const name = fresh(indexerSeen.at) ? indexerSeen.names.get(id) : undefined;
+  if (!name) return c.json({ error: 'That is no longer on the list. Reload and try again.' }, 404);
+  try {
+    if (action === 'test') await ctl.test(id);
+    else await ctl.enable(id, action === 'enable');
+  } catch (err) {
+    // A failed test is an answer, not a fault: say what Prowlarr said.
+    return c.json({ error: (err as Error).message }, action === 'test' ? 422 : 502);
+  }
+  recordAudit(who(c), `indexers.${action}`, 'prowlarr', name);
+  if (action !== 'test') void hub.pollNow('prowlarr');
+  return c.json({ ok: true });
+});
+
+const SUB_KINDS = ['episodes', 'movies'] as const;
+app.get('/api/subtitles/:kind', async (c) => {
+  const kind = c.req.param('kind') as SubtitleKind;
+  if (!SUB_KINDS.includes(kind)) return c.json({ error: 'Unknown list' }, 404);
+  const ctl = subtitlesOf();
+  if (!ctl) return c.json({ error: 'Bazarr is not set up' }, 404);
+  try {
+    const list = await ctl.wanted(kind);
+    const at = Date.now();
+    for (const item of list.items) subtitleSeen.set(`${kind}:${item.id}`, { at, item });
+    return c.json(list satisfies SubtitleList);
+  } catch (err) {
+    return libFail(c, err);
+  }
+});
+
+app.post('/api/subtitles/:kind/search-all', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const kind = c.req.param('kind') as SubtitleKind;
+  if (!SUB_KINDS.includes(kind)) return c.json({ error: 'Unknown list' }, 404);
+  const ctl = subtitlesOf();
+  if (!ctl) return c.json({ error: 'Bazarr is not set up' }, 404);
+  try {
+    await ctl.searchAll(kind);
+  } catch (err) {
+    return libFail(c, err);
+  }
+  recordAudit(who(c), 'subtitles.search-all', 'bazarr', kind);
+  return c.json({ ok: true });
+});
+
+app.post('/api/subtitles/:kind/:id/search', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const kind = c.req.param('kind') as SubtitleKind;
+  if (!SUB_KINDS.includes(kind)) return c.json({ error: 'Unknown list' }, 404);
+  const ctl = subtitlesOf();
+  if (!ctl) return c.json({ error: 'Bazarr is not set up' }, 404);
+  const seen = subtitleSeen.get(`${kind}:${c.req.param('id')}`);
+  if (!seen || !fresh(seen.at)) return c.json({ error: 'That is no longer on the list. Reload and try again.' }, 404);
+  const { item } = seen;
+  recordAudit(who(c), 'subtitles.search', 'bazarr', [item.title, item.subtitle].filter(Boolean).join(' '));
+  // Bazarr answers once every provider has been asked, which can take a
+  // minute. Past a few seconds, the page hears that it's still looking.
+  const search = ctl.search(kind, item).then(
+    () => 'done' as const,
+    (err: Error) => err,
+  );
+  const got = await Promise.race([search, new Promise<'waiting'>((r) => setTimeout(() => r('waiting'), 8000))]);
+  if (got instanceof Error) return libFail(c, got);
+  return c.json({ ok: true, waiting: got === 'waiting' });
 });
 
 // Add a show or film found by name, with a quality profile and folder that

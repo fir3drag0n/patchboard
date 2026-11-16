@@ -67,6 +67,8 @@ import type { DownloadManager } from './adapters/downloads.ts';
 import type { SeerrClient } from './adapters/seerr.ts';
 import type { MediaControl } from './adapters/media-control.ts';
 import type { DnsDomains } from './adapters/dns.ts';
+import type { IndexerControl } from './adapters/indexers.ts';
+import type { SubtitleControl } from './adapters/subtitles.ts';
 import { MINUTE, SECOND } from './adapters/adapter.ts';
 import { DEPENDS, demoBackups, demoChecks, demoMem, demoStats, demoTruenas, hash, IMAGES, PROJECTS } from './demo-ops.ts';
 
@@ -568,6 +570,71 @@ export function demoDnsControl(id: string): ((minutes: number | null) => Promise
     demoDnsPausedUntil = minutes === null ? 0 : Date.now() + minutes * MINUTE;
   };
 }
+
+// ---------- Prowlarr and Bazarr ----------
+
+// Six indexers: one Prowlarr has set aside after failures, one turned off.
+const demoIndexerList = [
+  { id: 1, name: '1337x', protocol: 'torrent', enabled: true, queries: 412, grabs: 38, failed: 3, responseMs: 840 },
+  { id: 2, name: 'EZTV', protocol: 'torrent', enabled: true, queries: 380, grabs: 61, failed: 1, responseMs: 410 },
+  { id: 3, name: 'NZBgeek', protocol: 'usenet', enabled: true, queries: 520, grabs: 94, failed: 0, responseMs: 290 },
+  { id: 4, name: 'TorrentGalaxy', protocol: 'torrent', enabled: true, queries: 205, grabs: 7, failed: 41, responseMs: 2900 },
+  { id: 5, name: 'DrunkenSlug', protocol: 'usenet', enabled: true, queries: 498, grabs: 52, failed: 2, responseMs: 350 },
+  { id: 6, name: 'The Pirate Bay', protocol: 'torrent', enabled: false, queries: 12, grabs: 0, failed: 9, responseMs: 5200 },
+] as const;
+const demoIndexerOn = new Map<number, boolean>(demoIndexerList.map((i) => [i.id, i.enabled]));
+const DEMO_DOWN = 'Unable to connect to indexer, check the log above the ValidationFailure for more details';
+
+export const demoIndexers: IndexerControl = {
+  async list() {
+    const now = Date.now();
+    return demoIndexerList.map((i) => ({
+      ...i,
+      enabled: demoIndexerOn.get(i.id)!,
+      ...(i.id === 4 ? { failingUntil: now + 25 * MINUTE, failingSince: now - 3 * 60 * MINUTE } : {}),
+    }));
+  },
+  async test(id) {
+    await new Promise((r) => setTimeout(r, 600));
+    if (id === 4 || id === 6) throw new Error(DEMO_DOWN);
+  },
+  async testAll() {
+    await new Promise((r) => setTimeout(r, 1200));
+    return demoIndexerList.filter((i) => demoIndexerOn.get(i.id)).map((i) => ({ id: i.id, name: i.name, ok: i.id !== 4, error: i.id === 4 ? DEMO_DOWN : undefined }));
+  },
+  async enable(id, on) {
+    demoIndexerOn.set(id, on);
+  },
+};
+
+const demoSubsFound = new Set<string>();
+const en = { code: 'en', name: 'English' };
+const DEMO_SUBS = {
+  episodes: [
+    { id: '11:1103', title: 'Severance', subtitle: '2x03 Who Is Alive?', missing: [en] },
+    { id: '14:1401', title: 'The Bear', subtitle: '3x01 Tomorrow', missing: [en, { code: 'es', name: 'Spanish' }] },
+    { id: '17:1705', title: 'Shōgun', subtitle: '1x05 Broken to the Fist', missing: [{ ...en, forced: true }] },
+    { id: '19:1902', title: 'Slow Horses', subtitle: '4x02 Hello Goodbye', missing: [{ ...en, hi: true }] },
+    { id: '21:2107', title: 'Andor', subtitle: '2x07 Messenger', missing: [en] },
+  ],
+  movies: [
+    { id: '301', title: 'Dune: Part Two', missing: [{ code: 'es', name: 'Spanish' }] },
+    { id: '302', title: 'Past Lives', missing: [en] },
+    { id: '303', title: 'Perfect Days', missing: [en, { ...en, hi: true }] },
+  ],
+};
+
+export const demoSubtitles: SubtitleControl = {
+  async wanted(kind) {
+    const items = DEMO_SUBS[kind].filter((i) => !demoSubsFound.has(`${kind}:${i.id}`));
+    return { items, total: items.length };
+  },
+  async search(kind, item) {
+    await new Promise((r) => setTimeout(r, 900));
+    demoSubsFound.add(`${kind}:${item.id}`);
+  },
+  async searchAll() {},
+};
 
 // The query log: a few minutes of a household's devices, some blocked by the
 // lists, one by your own list. Allow and Block move a domain between lists.

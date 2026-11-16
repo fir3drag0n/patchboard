@@ -250,6 +250,12 @@ you pick.
 
 ![Library](screenshots/library.webp)
 
+With Bazarr, Subtitles lists what still lacks subtitles and in which
+languages, with Search. With Prowlarr, Indexers shows how each indexer has
+done and which ones are failing, with Test and Turn off.
+
+![Indexers](screenshots/indexers.webp)
+
 **Requests:** Overseerr's or Jellyseerr's requests. Waiting has every one
 that needs approval, with who asked and when, to approve or decline.
 On the way lists what's approved and not here yet. New request finds a

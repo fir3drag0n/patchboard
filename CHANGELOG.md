@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Subtitles and Indexers on the Library page:** with Bazarr, Subtitles
+  lists each episode or film still missing subtitles and in which
+  languages, with Search for one and Search for all. With Prowlarr,
+  Indexers lists each indexer with its queries, grabs and response time,
+  and which ones Prowlarr has set aside after failing and when it tries
+  again. Test one, Test all, or turn one off.
 - **An Ad blocking page for Pi-hole and AdGuard Home:** Queries is the
   live query log: which device asked for what, when, and what blocked it.
   Filter by domain or show only blocks, then Allow a blocked domain or

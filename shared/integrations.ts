@@ -366,7 +366,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'prowlarr',
     name: 'Prowlarr',
-    adds: 'Health errors, such as indexers that keep failing, in Needs attention, and a word on the Prowlarr tile and the Media managers widget.',
+    adds: 'Indexers on the Library page, with how each has done, which are failing, Test and Turn off. Health errors in Needs attention, and a word on the Prowlarr tile and the Media managers widget.',
     env: ['PROWLARR_URL', 'PROWLARR_KEY'],
     where: 'Settings, General, API Key.',
     source: true,
@@ -374,7 +374,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'bazarr',
     name: 'Bazarr',
-    adds: 'Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.',
+    adds: 'Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.',
     env: ['BAZARR_URL', 'BAZARR_KEY'],
     where: 'Settings, General, Security, API Key.',
     source: true,
