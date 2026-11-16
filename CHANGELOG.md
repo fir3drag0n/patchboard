@@ -18,6 +18,11 @@
 - **Tire warnings on your terms:** Settings, Alerts sets the pressure that
   counts as low and how far under the others a tire may drift. 0 turns
   either check off.
+- **A first run that takes a minute:** one sheet, filled in already, names
+  the server, takes an icon and finds your town by name for the weather and
+  sunrise. It shows the language, clock and units it read from your browser,
+  ticks the apps it found, and offers an optional password. Open Patchboard
+  works the moment it appears. The old Welcome checklist on Home is gone.
 - **Showcase mode is gone:** it was for taking screenshots of this project,
   and the demo covers that.
 - **Settings in your language:** Settings and the problem titles the server

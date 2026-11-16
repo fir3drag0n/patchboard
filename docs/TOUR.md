@@ -341,8 +341,11 @@ bigger.
 
 ## First run
 
-Patchboard finds your running containers and adds them all in one click,
-grouped by compose stack.
+One sheet, filled in already: a name and an icon, the town for the weather,
+this browser's language, clock, units and region, and the running containers
+that look like apps, grouped by compose stack. Open Patchboard takes it as it
+is; Restore a setup file brings over another server's boards and apps. Each
+field lives in Settings afterward.
 
 ![First run](screenshots/first-run.webp)
 

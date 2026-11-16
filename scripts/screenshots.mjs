@@ -409,7 +409,7 @@ try {
 
   console.log('First run');
   const fp = await dark.newPage();
-  await fp.goto(fresh.base + '/');
+  await fp.goto(fresh.base + '/?setup=1');
   await settle(fp, 2500);
   await shoot(fp, 'first-run');
 

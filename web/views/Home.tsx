@@ -3,12 +3,8 @@
 
 import { HeaderServer } from '../components/HeaderServer.tsx';
 import { StreamRow } from '../components/StreamRow.tsx';
-import { HOME_ID, STARTERS } from '../../shared/board.ts';
-import { forThisServer } from '../board/ready.ts';
-import { NameForm } from '../components/BrandName.tsx';
-import { useJson } from '../lib/api.ts';
-import type { CatalogAudit, ListeningData } from '../../shared/types.ts';
-import { adoptAll, saveLayout } from '../lib/adopt.ts';
+import { HOME_ID } from '../../shared/board.ts';
+import type { ListeningData } from '../../shared/types.ts';
 import { Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
 import { Link, NavLink, useLocation, useParams } from 'react-router-dom';
@@ -23,14 +19,12 @@ import type {
   FastmailData,
   MinifluxData,
   ReleaseItem,
-  SystemData,
   TraktData,
-  TruenasData,
   WeatherData,
 } from '../../shared/types.ts';
 import { Board, cachedWidgetTypes, Vitals } from '../board/Board.tsx';
 import { getAppearance, useAppearance } from '../lib/appearance.ts';
-import { Empty, Episode, Icon, Ident, Led, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
+import { Empty, Episode, Ident, Led, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
 import {
   count,
   ago,
@@ -43,14 +37,13 @@ import {
   eta,
   isDateOnly,
   plural,
-  size,
   speed,
-  uptime,
   weatherText,
 } from '../lib/format.ts';
 import { containerMap, ctrState, isExternal, serviceFor } from '../lib/services.ts';
 import { useNow, useSource, useStore } from '../lib/store.tsx';
 import { alertTitle, byUrgency, needsYou } from '../lib/attention.ts';
+import { FirstRun } from '../components/FirstRun.tsx';
 import { locale } from '../lib/region.ts';
 import { t, tn } from '../lib/i18n.ts';
 
@@ -76,11 +69,21 @@ export function Home() {
         {snap.brand?.name || 'Patchboard'}, {board === HOME_ID ? 'Home' : (snap.boards?.find((b) => b.id === board)?.name ?? 'board')}
       </h1>
       <Masthead now={now} weatherOnBoard={widgets.includes('weather')} attentionCard={widgets.includes('attention-card')} attentionOff={widgets.includes('@no-attention')} slim={wall} />
-      {board === HOME_ID && <Welcome />}
+      {board === HOME_ID && <FirstRunSheet />}
       {!wall && <BoardTabs />}
       <Board key={board} id={board} now={now} onWidgets={setWidgets} />
     </div>
   );
+}
+
+/** The first-run sheet, until someone on this server finishes it. ?setup opens it again to look. */
+function FirstRunSheet() {
+  const { snap } = useStore();
+  const [open, setOpen] = useState(() => new URLSearchParams(location.search).has('setup'));
+  const show = open || (!!snap?.firstRun && !snap.household && !snap.readOnly);
+  const [closed, setClosed] = useState(false);
+  if (!show || closed) return null;
+  return <FirstRun onDone={() => (setClosed(true), setOpen(false))} />;
 }
 
 /** One tab per board, once there is more than Home. Wall boards belong to
@@ -999,140 +1002,4 @@ function AppLink({ container, children }: { container?: string; children: ReactN
   return container ? <Link to={`/c/${container}`}>{children}</Link> : <>{children}</>;
 }
 
-/** Sources every install has; anything else is an integration someone connected. */
-const BUILT_IN = new Set(['docker', 'stats', 'system', 'checks']);
 
-/**
- * First run: the containers already running, added as apps in one click;
- * then integrations; then the layout and the look. Stays until apps are in
- * and one integration is connected, or until hidden.
- */
-function Welcome() {
-  const { snap } = useStore();
-  // A fresh install: hardly any apps (a label or two) and nothing arranged yet.
-  const count = snap?.catalog.groups.reduce((n, g) => n + g.services.length, 0) ?? 0;
-  const appsDone = count >= 5 || !!snap?.catalog.ordered;
-  const connected = Object.keys(snap?.sources ?? {}).filter((id) => !BUILT_IN.has(id)).length;
-  const [dismissed, setDismissed] = useState(() => {
-    try {
-      return localStorage.getItem('pb-welcome-hidden') === '1';
-    } catch {
-      return false;
-    }
-  });
-  const none = !!snap && !dismissed && (!appsDone || connected === 0);
-  const audit = useJson<CatalogAudit>(none && !appsDone ? '/api/catalog/audit' : null, 60_000);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
-  if (!snap || !none) return null;
-  const found = audit.data?.discovered ?? [];
-  const docker = snap.sources.docker;
-  const addAll = async () => {
-    setBusy(true);
-    setErr('');
-    let existing = null;
-    try {
-      existing = await (await fetch('/api/app-order')).json();
-    } catch {
-      /* none yet */
-    }
-    const e = await saveLayout(adoptAll(found, existing));
-    setBusy(false);
-    if (e) setErr(e);
-  };
-  return (
-    <section className="welcome" aria-label="Getting started">
-      <header className="welcome-head">
-        <h2>Welcome to Patchboard.</h2>
-        <button
-          type="button"
-          className="text-button"
-          onClick={() => {
-            setDismissed(true);
-            try {
-              localStorage.setItem('pb-welcome-hidden', '1');
-            } catch {
-              /* fine: it comes back next time */
-            }
-          }}
-        >
-          Hide this
-        </button>
-      </header>
-      <ol className="welcome-steps">
-        <li>
-          <strong>Your apps.</strong>{' '}
-          {appsDone ? (
-            <span>
-              {count} on Home. <Link to="/apps?arrange=1">Edit apps</Link> adds, groups and renames them.
-            </span>
-          ) : !docker?.ok ? (
-            <span>
-              Patchboard can't see Docker yet. Mount <code>/var/run/docker.sock</code> (read-only is fine) or set <code>DOCKER_HOST</code>, then reload.
-            </span>
-          ) : found.length ? (
-            <span>
-              {found.length} of your {containerMap(snap).size} containers look like apps you open; databases and helpers are left out.{' '}
-              {!snap.readOnly && (
-                <>
-                  <button type="button" className="button board-save" disabled={busy} onClick={() => void addAll()}>
-                    {busy ? 'Adding...' : `Add all ${found.length}, grouped by stack`}
-                  </button>{' '}
-                  or <Link to="/apps?arrange=1">pick them one by one</Link>.
-                </>
-              )}
-            </span>
-          ) : audit.data ? (
-            <span>
-              No other containers are running yet. Start some, or add an app by hand in <Link to="/apps?arrange=1">Edit apps</Link>.
-            </span>
-          ) : (
-            <span>Looking for running containers...</span>
-          )}
-          {err && <span className="crit-text"> {err}</span>}
-        </li>
-        <li className="welcome-name">
-          <strong>Name it.</strong> What the header and the tab call it. Leave it empty for Patchboard.
-          <NameForm />
-        </li>
-        <li>
-          <strong>Integrations.</strong>{' '}
-          {connected ? (
-            <span>{connected === 1 ? 'One connected' : `${connected} connected`}. More in <Link to="/settings?tab=connections">Settings, Connections</Link>.</span>
-          ) : (
-            <span>
-              Connect Plex, Sonarr, your NAS and the rest in <Link to="/settings?tab=connections">Settings, Connections</Link>: an address and a key each. Their numbers
-              and problems show up here.
-            </span>
-          )}
-        </li>
-        <li>
-          <strong>Home.</strong> Start from a layout:{' '}
-          {STARTERS.filter((st) => !st.wall).map((st, i) => (
-            <span key={st.id}>
-              {i > 0 && ', '}
-              <button
-                type="button"
-                className="text-button in-sentence"
-                title={st.about}
-                onClick={async () => {
-                  await fetch(`/api/boards/${HOME_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(forThisServer(st.board, snap)) });
-                  location.reload();
-                }}
-              >
-                {st.name}
-              </button>
-            </span>
-          ))}
-          . Arrange board, at the foot of the board, changes any of it, and New board adds another.
-        </li>
-        <li>
-          <strong>Your look.</strong> <Link to="/settings">Settings</Link> has themes, accent colors, type and density.
-        </li>
-      </ol>
-      <p className="settings-note">
-        Coming from Homepage? <Link to="/settings?tab=connections&import=homepage">Import its services.yaml</Link> in Settings.
-      </p>
-    </section>
-  );
-}

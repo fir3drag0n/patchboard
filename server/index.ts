@@ -16,6 +16,7 @@ import { cleanBrand } from '../shared/brand.ts';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { appIconFor, clearAppIcon, saveAppIcon } from './appicon.ts';
 import { apiRoutes } from './api.ts';
+import { findPlaces, finishFirstRun, markExistingInstall } from './firstrun.ts';
 import { createKey, listKeys, revokeKey } from './apikeys.ts';
 import { radarrAdapter, sonarrAdapter, arrControl, type ArrControl } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
@@ -233,6 +234,7 @@ hub.start();
 whenTraktConnects(() => void hub.pollNow('trakt'));
 // Keys typed into API widgets before they moved to the key store.
 sealSavedBoards();
+markExistingInstall();
 console.log(`patchboard: ${config.demo ? 'DEMO mode, ' : ''}${adapters.map((a) => a.id).join(', ')}`);
 
 const app = new Hono();
@@ -281,6 +283,22 @@ app.use('/api/*', householdGuard());
 app.use('/api/*', requireAuth());
 app.use('/api/*', readOnlyGuard());
 const who = (c: Parameters<typeof currentUser>[0]) => currentUser(c) ?? '?';
+
+// First run (server/firstrun.ts): towns for the place search, and the sheet done.
+app.get('/api/places', async (c) => {
+  try {
+    return c.json({ places: await findPlaces(c.req.query('q') ?? '', c.req.query('lang') ?? 'en', config.demo) });
+  } catch {
+    return c.json({ error: "Can't search places right now. Try again, or set it later in Settings." }, 502);
+  }
+});
+app.post('/api/first-run/done', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  finishFirstRun();
+  hub.emitBrand(kvGet('brand') ?? {});
+  recordAudit(who(c), 'setup.first-run', 'patchboard');
+  return c.json({ ok: true });
+});
 
 // The read-only API for scripts and AI tools (server/api.ts), and its keys.
 app.route('/api/v1', apiRoutes({ snapshot: () => hub.snapshot(), reading: (w, unit) => panelReading(w, unit) }));

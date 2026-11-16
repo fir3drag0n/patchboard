@@ -40,11 +40,11 @@ For a read-only install or a small disk, use the `latest-slim` image. It
 skips the Docker CLI, so it can't update containers, and it is about 90 MB
 smaller. Either image idles at about 50 MB of memory.
 
-Open Patchboard and press **Add all**. It turns every running container into
-an app, grouped by compose stack. Coming from Homepage? Settings imports its
-`services.yaml`.
+Open Patchboard and one sheet asks for a name, an icon and your town, with
+the apps it found already ticked. Press **Open Patchboard** and your board is
+there. Coming from Homepage? Settings imports its `services.yaml`.
 
-![First run: Patchboard picks out the 21 of 30 running containers that look like apps and offers to add them all](docs/screenshots/first-run.webp)
+![First run: one sheet with the name, icon, town, language and units, and the apps Patchboard found](docs/screenshots/first-run.webp)
 
 Then connect what you run from Settings, Connections: press **Set up**,
 paste the address and key, test, save. It connects at once, and the server

@@ -72,7 +72,8 @@ function square(img: HTMLImageElement, size: number, mono: boolean): string {
   return c.toDataURL('image/png');
 }
 
-async function upload(file: File): Promise<string | null> {
+/** Draws every size of the icon from one image and saves it for every device. An error message, or null. */
+export async function uploadAppIcon(file: File): Promise<string | null> {
   const img = await load(file).catch(() => null);
   if (!img) return tr("This browser can't open that file as an image.");
   const body = { color: {} as Record<number, string>, mono: {} as Record<number, string> };
@@ -113,7 +114,7 @@ export function AppIconSection() {
     const file = input.files?.[0];
     if (!file) return;
     setBusy(true);
-    setErr((await upload(file).catch((e: Error) => e.message)) ?? '');
+    setErr((await uploadAppIcon(file).catch((e: Error) => e.message)) ?? '');
     setBusy(false);
     input.value = '';
   };

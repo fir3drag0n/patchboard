@@ -1248,6 +1248,8 @@ export interface Snapshot {
   features?: string[];
   /** Wake-on-LAN device names, from WOL_DEVICES. */
   wake?: string[];
+  /** Nobody has finished the first-run sheet on this server yet. */
+  firstRun?: boolean;
 }
 
 export type ServerEvent =

@@ -3,6 +3,7 @@
 // integration directly, so no key ever leaves the server.
 
 import { withIcon } from './appicon.ts';
+import { firstRunPending } from './firstrun.ts';
 import { boardList } from './boards.ts';
 import { readFileSync } from 'node:fs';
 import { emptyTrack, settle, type Track } from './transitions.ts';
@@ -350,6 +351,7 @@ export class Hub {
       pages: kvGet('pages') ?? {},
       brand: withIcon(kvGet('brand') ?? {}),
       boards: boardList(),
+      firstRun: firstRunPending() && !config.readOnly && !config.demo,
       features: [
         'diun',
         ...((dockerCli && composeMounted(this.containers())) || config.demo ? ['updates'] : []),
