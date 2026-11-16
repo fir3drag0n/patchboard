@@ -601,7 +601,11 @@ app.get('/api/feeds', async (c) => {
   if (config.demo) return c.json(demoFeedsResponse(status, categoryId, filter));
   if (!config.miniflux) return c.json({ error: 'Miniflux is not configured' }, 404);
   try {
-    return c.json(await listEntries({ status, limit: 150, categoryId, ...filter }));
+    const r = await listEntries({ status, limit: 150, categoryId, ...filter });
+    // The reader sees Miniflux as it is now: if the badge's count differs, fetch it again.
+    const unread = r.categories.reduce((n, cat) => n + cat.unread, 0);
+    if ((hub.snapshot().sources.miniflux?.data as { unread?: number } | null)?.unread !== unread) void hub.pollNow('miniflux');
+    return c.json(r);
   } catch (err) {
     return c.json({ error: (err as Error).message }, 502);
   }

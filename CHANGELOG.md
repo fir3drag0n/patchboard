@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Reading's count follows Miniflux:** articles you read in Miniflux or
+  another reader leave the badge within a minute, opening Reading brings it
+  up to date at once, and while Miniflux can't be reached the badge hides
+  instead of holding an old number.
 - **Bigger icons, bigger files:** the app icon choices in Look are larger
   tiles, with Upload as one of them, and Edit apps shows each app's icon
   larger. Icons can now be any photo or image up to 10 MB; Patchboard

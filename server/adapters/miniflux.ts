@@ -123,7 +123,8 @@ export function minifluxAdapter(): Adapter<MinifluxData> {
   return {
     id: 'miniflux',
     label: 'Feeds',
-    intervalMs: 5 * MINUTE,
+    // One small call: articles read in Miniflux or another reader leave the badge within a minute.
+    intervalMs: MINUTE,
     async fetch() {
       const r = await getJson<{ total: number; entries: RawEntry[] }>(
         `${base()}/v1/entries?status=unread&order=published_at&direction=desc&limit=10`,

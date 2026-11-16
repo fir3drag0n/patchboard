@@ -231,7 +231,9 @@ export function Shell() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const unreadFeeds = (snap?.sources.miniflux?.data as { unread: number } | null)?.unread ?? 0;
+  // A count from before Miniflux stopped answering is no count at all.
+  const feeds = snap?.sources.miniflux;
+  const unreadFeeds = feeds?.ok ? ((feeds.data as { unread: number } | null)?.unread ?? 0) : 0;
   const reading = !!snap?.sources.miniflux || !!snap?.demo;
   const phoneTabs = household ? ['/', '/upcoming', reading ? '/reading' : '/weather'] : ['/', '/server', '/stacks', reading ? '/reading' : '/upcoming'];
   const nav = household ? NAV.filter((n) => !adminPage(n.to)) : NAV;
