@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { SeerrData } from '../shared/types.ts';
+import type { MediaLibraries, MediaServerId, SeerrData, Stream } from '../shared/types.ts';
 import { fieldLabel } from '../shared/setup.ts';
 import { latestReleases, readFeeds } from './outside.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -52,6 +52,7 @@ import { calendarAdapter } from './adapters/calendar.ts';
 import { booksAdapter } from './adapters/books.ts';
 import { send } from './notify.ts';
 import { pendingIds, type SeerrClient, seerrClient } from './adapters/seerr.ts';
+import { mediaControl, plexSections } from './adapters/media-control.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
 import { adoptEnvironment, candidate, checkThresholds, describeThresholds, saveThresholds, savedThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
@@ -73,7 +74,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoRequestsApi, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
@@ -1132,6 +1133,74 @@ app.post('/api/requests/:id/:action', async (c) => {
   return c.json({ ok: true });
 });
 
+// The Media page: stop a stream, scan a library. Streams are the ones Home's
+// Right now shows (Tautulli for Plex, Jellyfin, Emby), so both always agree;
+// libraries are read live while the page is open.
+const MEDIA_SERVERS: MediaServerId[] = ['plex', 'jellyfin', 'emby'];
+const MEDIA_NAME: Record<MediaServerId, string> = { plex: 'Plex', jellyfin: 'Jellyfin', emby: 'Emby' };
+const mediaSource = (s: MediaServerId) => (s === 'plex' ? 'tautulli' : s);
+const controlOf = (s: MediaServerId) => (config.demo ? demoMediaControl(s) : mediaControl(s));
+const librarySeen = new Map<string, { at: number; name: string }>();
+
+app.get('/api/media/libraries', async (c) => {
+  const servers = await Promise.all(
+    MEDIA_SERVERS.flatMap((id) => {
+      const ctl = controlOf(id);
+      if (!ctl) return [];
+      return [
+        (async (): Promise<MediaLibraries['servers'][number]> => {
+          try {
+            const libraries = await ctl.libraries();
+            for (const l of libraries) librarySeen.set(`${id}:${l.id}`, { at: Date.now(), name: l.name });
+            return { id, name: MEDIA_NAME[id], libraries, canScan: !!ctl.scan };
+          } catch (err) {
+            return { id, name: MEDIA_NAME[id], libraries: [], error: (err as Error).message, canScan: !!ctl.scan };
+          }
+        })(),
+      ];
+    }),
+  );
+  return c.json({ servers } satisfies MediaLibraries);
+});
+
+app.post('/api/media/:server/stop/:session', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const server = c.req.param('server') as MediaServerId;
+  if (!MEDIA_SERVERS.includes(server)) return c.json({ error: 'Unknown server' }, 404);
+  const ctl = controlOf(server);
+  if (!ctl) return c.json({ error: `${MEDIA_NAME[server]} is not set up` }, 404);
+  const session = c.req.param('session');
+  // Only a stream Right now shows: nothing else can be stopped from here.
+  const stream = ((hub.snapshot().sources[mediaSource(server)]?.data as { streams?: Stream[] } | null)?.streams ?? []).find((s) => s.session === session);
+  if (!stream) return c.json({ error: 'That stream has already ended.' }, 404);
+  try {
+    await ctl.stop(session);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), 'media.stop', server, `${stream.user}: ${[stream.title, stream.subtitle].filter(Boolean).join(' ')}`);
+  void hub.pollNow(mediaSource(server));
+  return c.json({ ok: true });
+});
+
+app.post('/api/media/:server/scan/:library', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const server = c.req.param('server') as MediaServerId;
+  if (!MEDIA_SERVERS.includes(server)) return c.json({ error: 'Unknown server' }, 404);
+  const ctl = controlOf(server);
+  if (!ctl?.scan) return c.json({ error: server === 'plex' ? 'Scanning needs Plex’s address and token: Settings, Connections, Plex.' : `${MEDIA_NAME[server]} is not set up` }, 404);
+  const id = c.req.param('library');
+  const seen = librarySeen.get(`${server}:${id}`);
+  if (!seen || Date.now() - seen.at > 600_000) return c.json({ error: 'Reload the page, then scan.' }, 404);
+  try {
+    await ctl.scan(id);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), 'media.scan', server, seen.name);
+  return c.json({ ok: true });
+});
+
 // Proxmox: start, shut down or reboot a guest Proxmox itself reported.
 app.post('/api/proxmox/:vmid/:action', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
@@ -1464,6 +1533,10 @@ async function testIntegration(id: string): Promise<string> {
         : id === 'webhook'
           ? 'Your webhook took the test.'
           : 'Sent a test notification. Check your phone.';
+  }
+  if (id === 'plex') {
+    const n = (await plexSections()).length;
+    return `Connected: ${n} ${n === 1 ? 'library' : 'libraries'}.`;
   }
   if (id === 'dozzle') {
     await request(config.dozzleUrl!, {}, 8000);

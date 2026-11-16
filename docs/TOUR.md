@@ -258,6 +258,14 @@ the way, and requests it.
 
 ![Requests](screenshots/requests.webp)
 
+**Media:** Plex, Jellyfin and Emby together. Watching has every stream:
+who, on what device, direct play or transcoding, and the time left. Hold
+Stop to end one, and the viewer sees a note that you did. Libraries lists
+each library with how much it holds and when it was last scanned, with
+Scan beside it.
+
+![Media](screenshots/media.webp)
+
 **Logs:** live from Docker, each line stamped in your own time, whatever
 zone the container runs in.
 

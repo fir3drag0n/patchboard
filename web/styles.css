@@ -10906,6 +10906,13 @@ a.req-come:hover .req-title {
   .hold.is-holding::after {
     opacity: 0;
   }
+
+  /* At the end of a row the hint opens leftward, so it never leaves the page. */
+  :is(.lib-actions, .dlp-actions, .req-actions) .hold::after {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
 }
 
 /* Icons only means names on hover; a touch screen has no hover, so the
@@ -14771,4 +14778,41 @@ a.lib-title:hover {
 
 .mon-chart-wrap:has(> .is-thin) {
   margin-top: 0;
+}
+
+/* Media: a library row has no poster; a stream shows how far along it is. */
+.lib-row.no-art {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.media-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  max-width: 420px;
+}
+
+.media-progress > :first-child {
+  flex: 1;
+}
+
+.media-server + .media-server {
+  margin-top: 28px;
+}
+
+.media-server-name {
+  margin: 14px 0 6px;
+  font-size: 17px;
+  color: var(--head);
+}
+
+.media-scanning {
+  color: var(--accent);
+}
+
+@media (max-width: 760px) {
+  .lib-row.no-art {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
 }

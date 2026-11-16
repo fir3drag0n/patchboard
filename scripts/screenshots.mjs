@@ -316,6 +316,8 @@ try {
   await shoot(page, 'downloads');
   await go('/library', 2500);
   await shoot(page, 'library');
+  await go('/media', 2500);
+  await shoot(page, 'media');
   await go('/requests', 2500);
   await shoot(page, 'requests');
   await go('/');

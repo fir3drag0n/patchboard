@@ -106,6 +106,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'plex',
+    name: 'Plex',
+    adds: 'Scan a Plex library from the Media page, and stop a stream without Tautulli. Stopping needs Plex Pass.',
+    env: ['PLEX_URL', 'PLEX_TOKEN'],
+    where: 'Plex Web: open any title, the three dots, Get Info, View XML; the address ends in X-Plex-Token=. Copy what follows it.',
+    source: false,
+  },
+  {
     id: 'jellyfin',
     name: 'Jellyfin',
     adds: 'Who is watching, the moment it changes, recently added, Next up, what you watched lately and how big the library is, with posters that open the item in Jellyfin.',
@@ -617,7 +625,7 @@ export const INTEGRATIONS: Integration[] = [
 
 /** How Settings groups the list, in this order. Every integration sits in exactly one. */
 export const CATEGORIES: [name: string, ids: string[]][] = [
-  ['Media', ['tautulli', 'jellyfin', 'emby', 'trakt', 'overseerr', 'tracearr', 'immich', 'audiobookshelf', 'navidrome']],
+  ['Media', ['tautulli', 'plex', 'jellyfin', 'emby', 'trakt', 'overseerr', 'tracearr', 'immich', 'audiobookshelf', 'navidrome']],
   ['Downloads', ['sonarr', 'radarr', 'lidarr', 'readarr', 'prowlarr', 'bazarr', 'qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget']],
   ['Storage and servers', ['docker', 'dockerhosts', 'system', 'truenas', 'unraid', 'synology', 'qnap', 'proxmox', 'portainer', 'glances', 'beszel', 'scrutiny', 'nut', 'syncthing']],
   ['Monitoring', ['checks', 'uptimekuma', 'gatus', 'healthchecks', 'netdata', 'prometheus', 'speedtest', 'backups', 'diun', 'updates', 'runbook', 'dozzle']],

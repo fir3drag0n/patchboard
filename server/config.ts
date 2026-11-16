@@ -190,6 +190,7 @@ function build(str: Lookup) {
     sonarr: pair('SONARR_URL', 'SONARR_KEY'),
     radarr: pair('RADARR_URL', 'RADARR_KEY'),
     tautulli: pair('TAUTULLI_URL', 'TAUTULLI_KEY'),
+    plex: pair('PLEX_URL', 'PLEX_TOKEN'),
     jellyfin: withUser(pair('JELLYFIN_URL', 'JELLYFIN_KEY'), 'JELLYFIN_USER'),
     emby: withUser(pair('EMBY_URL', 'EMBY_KEY'), 'EMBY_USER'),
     miniflux: pair('MINIFLUX_URL', 'MINIFLUX_TOKEN'),

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **A Media page for Plex, Jellyfin and Emby:** Watching lists every
+  stream with who, on what device, direct play or transcoding, and time
+  left. Hold Stop to end one; the viewer sees a note that you did.
+  Libraries lists each library with how much it holds and when it was last
+  scanned, and Scan starts a scan. Plex streams come through Tautulli; add
+  Plex's own address and token in Settings, Connections to scan Plex
+  libraries. Stopping a Plex stream needs Plex Pass.
+- **Hold hints stay on screen:** the "Hold to…" note on a button at the end
+  of a row opens to the left, so the Library queue and Downloads no longer
+  scroll sideways.
 - **Read a chart by pointing at it:** hover any line, or tap it on a phone,
   and a small tag shows the value at that moment and when: CPU, memory,
   pool, response time, speed tests, hashrate, the car, markets, the

@@ -27,6 +27,9 @@ export interface Item {
 }
 
 export interface Session {
+  Id?: string;
+  DeviceName?: string;
+  Client?: string;
   UserName?: string;
   NowPlayingItem?: Item;
   PlayState?: { PositionTicks?: number; IsPaused?: boolean; PlayMethod?: string };
@@ -77,6 +80,8 @@ export function toStream(kind: MediaKind, s: Session): Stream | null {
     state: s.PlayState?.IsPaused ? 'paused' : 'playing',
     transcode: s.PlayState?.PlayMethod === 'Transcode' || s.TranscodingInfo?.IsVideoDirect === false,
     thumb: img(kind, it),
+    ...(s.Id ? { session: s.Id } : {}),
+    ...(s.DeviceName || s.Client ? { device: s.DeviceName || s.Client } : {}),
   };
 }
 

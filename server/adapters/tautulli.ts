@@ -27,6 +27,9 @@ interface Session {
   transcode_decision?: string;
   thumb?: string;
   grandparent_thumb?: string;
+  session_id?: string;
+  player?: string;
+  product?: string;
 }
 
 interface Added {
@@ -76,6 +79,8 @@ export function toTautulliStream(s: Session): Stream {
     state: (['playing', 'paused', 'buffering'].includes(s.state) ? s.state : 'playing') as Stream['state'],
     transcode: s.transcode_decision === 'transcode',
     thumb: img(ep ? s.grandparent_thumb : s.thumb),
+    ...(s.session_id ? { session: s.session_id } : {}),
+    ...(s.player || s.product ? { device: s.player || s.product } : {}),
   };
 }
 

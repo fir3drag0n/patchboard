@@ -493,6 +493,30 @@ export interface Stream {
   state: 'playing' | 'paused' | 'buffering';
   transcode: boolean;
   thumb?: string;
+  /** The server's session, to stop it from the Media page. */
+  session?: string;
+  /** The device or app it plays on. */
+  device?: string;
+}
+
+export type MediaServerId = 'plex' | 'jellyfin' | 'emby';
+
+/** A library on Plex, Jellyfin or Emby, for the Media page. */
+export interface MediaLibrary {
+  server: MediaServerId;
+  id: string;
+  name: string;
+  kind: 'movies' | 'shows' | 'music' | 'photos' | 'other';
+  /** Films, shows or albums in it, when the server says. */
+  count?: number;
+  scanning?: boolean;
+  scannedAt?: number;
+  canScan: boolean;
+}
+
+/** Each server's libraries, or why they couldn't be read. */
+export interface MediaLibraries {
+  servers: { id: MediaServerId; name: string; libraries: MediaLibrary[]; error?: string; canScan: boolean }[];
 }
 
 export interface RecentItem {

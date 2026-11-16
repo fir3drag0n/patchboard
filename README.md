@@ -142,6 +142,7 @@ boards, cameras and lights and none of the server controls.
 | **Stacks** | Every container by compose project, sortable by problems, CPU or memory. |
 | **Reading** | A Miniflux reader with search, feed and time filters, and keyboard navigation. |
 | **Upcoming** | Sonarr, Radarr and Trakt in one calendar, without doubles, with posters. |
+| **Media** | Plex, Jellyfin and Emby: who's watching, stop a stream, scan a library. |
 | **Downloads** | Every torrent and NZB in every client: pause, resume, remove, add. |
 | **Library** | Sonarr's shows and Radarr's films: monitor, search, what's missing, the queue, add new ones. |
 | **Requests** | Overseerr or Jellyseerr: approve, decline, see what's on the way, request something new. |

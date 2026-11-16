@@ -64,6 +64,7 @@ import type {
 import type { Adapter } from './adapters/adapter.ts';
 import type { DownloadManager } from './adapters/downloads.ts';
 import type { SeerrClient } from './adapters/seerr.ts';
+import type { MediaControl } from './adapters/media-control.ts';
 import { MINUTE, SECOND } from './adapters/adapter.ts';
 import { DEPENDS, demoBackups, demoChecks, demoMem, demoStats, demoTruenas, hash, IMAGES, PROJECTS } from './demo-ops.ts';
 
@@ -380,11 +381,15 @@ const demoPlaying = (fromPct: number, durationSec: number) => {
   return { progress: (pos / durationSec) * 100, positionSec: Math.round(pos), durationSec };
 };
 
+/** Streams stopped from the Media page; they stay gone until the demo restarts. */
+const demoStreamStopped = new Set<string>();
+const demoLibScan = new Map<string, number>();
+
 const demoPlex = (): TautulliData => ({
   streams: [
-    { user: 'Sam', title: 'Severance', subtitle: 'S02E05', ...demoPlaying(48, 3000), state: 'playing', transcode: false, thumb: poster('Severance') },
-    { user: 'Kit', title: 'Poor Things', ...demoTiming(81, 8460), state: 'paused', transcode: true, thumb: poster('Poor Things') },
-  ],
+    { user: 'Sam', title: 'Severance', subtitle: 'S02E05', ...demoPlaying(48, 3000), state: 'playing' as const, transcode: false, thumb: poster('Severance'), session: 'plex-1', device: 'Living room TV' },
+    { user: 'Kit', title: 'Poor Things', ...demoTiming(81, 8460), state: 'paused' as const, transcode: true, thumb: poster('Poor Things'), session: 'plex-2', device: 'iPad' },
+  ].filter((s) => !demoStreamStopped.has(s.session)),
   recent: [
     { id: 'p1', type: 'episode', title: 'The Bear', thumb: poster('The Bear'), subtitle: 'S04E03', addedAt: Date.now() - 3 * H },
     { id: 'p2', type: 'movie', title: 'Dune: Part Two', thumb: poster('Dune: Part Two'), subtitle: '2024', addedAt: Date.now() - 8 * H },
@@ -406,8 +411,36 @@ const demoPlex = (): TautulliData => ({
   library: { movies: 1204, shows: 212, episodes: 9387, songs: 18420 },
 });
 
+const DEMO_LIBRARIES: Record<'plex' | 'jellyfin', [string, string, 'movies' | 'shows' | 'music', number][]> = {
+  plex: [
+    ['1', 'Films', 'movies', 1204],
+    ['2', 'TV', 'shows', 212],
+    ['3', 'Music', 'music', 1630],
+  ],
+  jellyfin: [
+    ['a1', 'Movies', 'movies', 980],
+    ['a2', 'Shows', 'shows', 164],
+  ],
+};
+
+/** The Media page in demo mode: Stop ends a stream on Home too; Scan runs for a few seconds. */
+export function demoMediaControl(server: 'plex' | 'jellyfin' | 'emby'): MediaControl | undefined {
+  if (server === 'emby') return undefined;
+  return {
+    async stop(session) {
+      demoStreamStopped.add(session);
+    },
+    async libraries() {
+      return DEMO_LIBRARIES[server].map(([id, name, kind, count]) => ({ server, id, name, kind, count, scanning: (demoLibScan.get(`${server}:${id}`) ?? 0) > Date.now(), scannedAt: Date.now() - (kind === 'music' ? 3 * D : 4 * H), canScan: true }));
+    },
+    async scan(id) {
+      demoLibScan.set(`${server}:${id}`, Date.now() + 8000);
+    },
+  };
+}
+
 const demoJellyfin = (): MediaServerData => ({
-  streams: [{ user: 'Jo', title: 'Slow Horses', subtitle: 'S05E02', ...demoPlaying(22, 2700), state: 'playing', transcode: false, thumb: poster('Slow Horses') }],
+  streams: [{ user: 'Jo', title: 'Slow Horses', subtitle: 'S05E02', ...demoPlaying(22, 2700), state: 'playing' as const, transcode: false, thumb: poster('Slow Horses'), session: 'jf-1', device: 'Bedroom Shield' }].filter((s) => !demoStreamStopped.has(s.session)),
   recent: [
     { id: 'j1', type: 'episode', title: 'Silo', thumb: poster('Silo'), subtitle: 'S02E10', addedAt: Date.now() - 5 * H },
     // The same file on Plex too: Home shows it once, labeled Plex + Jellyfin.
