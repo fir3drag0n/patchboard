@@ -145,6 +145,17 @@ export function Icon({ name, icon, size = 22 }: { name: string; icon?: string; s
 const POSTER_TONES = ['#304251', '#3c3846', '#2d453f', '#4a3e31', '#283a48', '#45373b', '#384132'];
 
 /** Plex poster, or a typographic stand-in built from the title. */
+/** A list row led by a small poster: the Library and Requests pages. */
+export function PosterRow({ art, title, children, actions }: { art?: string; title: string; children: ReactNode; actions?: ReactNode }) {
+  return (
+    <li className="lib-row">
+      <Poster title={title} thumb={art} small />
+      <div className="lib-body">{children}</div>
+      {actions && <div className="lib-actions">{actions}</div>}
+    </li>
+  );
+}
+
 export function Poster({ title, thumb, small = false }: { title: string; thumb?: string; small?: boolean }) {
   const [broken, setBroken] = useState(false);
   if (thumb && !broken) {

@@ -247,6 +247,14 @@ you pick.
 
 ![Library](screenshots/library.webp)
 
+**Requests:** Overseerr's or Jellyseerr's requests. Waiting has every one
+that needs approval, with who asked and when, to approve or decline.
+On the way lists what's approved and not here yet. New request finds a
+film or show by name, shows whether it's already here, asked for or on
+the way, and requests it.
+
+![Requests](screenshots/requests.webp)
+
 **Logs:** live from Docker, each line stamped in your own time, whatever
 zone the container runs in.
 

@@ -40,7 +40,7 @@ try {
     return saved;
   };
   const before = await setup();
-  const paths = ['/', '/server', '/stacks', '/reading', '/upcoming', '/apps', '/downloads', '/library', '/library?view=queue', '/settings?tab=home', '/settings?tab=connections', '/settings?tab=connections&part=access', '/settings?tab=connections&part=apps', '/settings?tab=connections&part=backup'];
+  const paths = ['/', '/server', '/stacks', '/reading', '/upcoming', '/apps', '/downloads', '/library', '/library?view=queue', '/requests', '/requests?view=ask', '/settings?tab=home', '/settings?tab=connections', '/settings?tab=connections&part=access', '/settings?tab=connections&part=apps', '/settings?tab=connections&part=backup'];
   const go = async (path) => {
     await page.goto(base + path);
     await page.waitForFunction(() => !!document.querySelector('main h1, main h2'));

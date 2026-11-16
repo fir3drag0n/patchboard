@@ -12,7 +12,6 @@ logged in Activity; read-only and household devices only look.
   speed limits
 - [ ] Library, next: a show's seasons and episodes, Sonarr and Radarr
   history, and the calendar with search
-- [ ] Requests (Seerr): approve, decline, and ask for something new
 - [ ] Plex and Jellyfin: who's watching, stop a stream, scan a library
 - [ ] Pi-hole and AdGuard: the query log, allow or block a domain, pause
   blocking for a while

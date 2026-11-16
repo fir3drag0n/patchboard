@@ -726,6 +726,26 @@ export interface SeerrData {
   coming?: SeerrRequest[];
 }
 
+/** A page of requests on the Requests page: the newest hundred, and how many there are. */
+export interface RequestList {
+  total: number;
+  items: SeerrRequest[];
+}
+
+/** A film or show found to ask for, and how far along it already is. */
+export interface AskItem {
+  /** Its TMDB id. A show and a film can share one, so `kind` goes with it. */
+  key: number;
+  kind: 'movie' | 'tv';
+  title: string;
+  year?: number;
+  overview?: string;
+  art?: string;
+  state: 'new' | 'asked' | 'coming' | 'partial' | 'here' | 'blocked';
+  /** Its page in Overseerr or Jellyseerr. */
+  href?: string;
+}
+
 /** Pi-hole or AdGuard Home: the last day's queries and whether blocking is on. */
 export interface DnsData {
   kind: 'pihole' | 'adguard';

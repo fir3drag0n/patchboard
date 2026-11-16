@@ -4,6 +4,7 @@
 
 import { HoldButton } from '../components/Hold.tsx';
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { haActionFor, HA_WIDGETS, parseEntities } from '../../shared/ha.ts';
 import type { WidgetType } from '../../shared/board.ts';
 import { NAS_SOURCES } from '../../shared/types.ts';
@@ -1221,7 +1222,15 @@ export function RequestsWidget({ now }: { now: number }) {
           ))}
         </ul>
       )}
-      {data.requests.length > shown.length && <p className="req-more">{data.requests.length - shown.length} more waiting in Overseerr.</p>}
+      {data.pending > shown.length && (
+        <p className="req-more">
+          {snap?.household ? (
+            `${data.pending - shown.length} more waiting in Overseerr.`
+          ) : (
+            <Link to="/requests">{data.pending - shown.length} more waiting</Link>
+          )}
+        </p>
+      )}
       {done && (
         <p className="req-done" role="status" tabIndex={-1} id="req-done">
           {done}

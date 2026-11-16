@@ -1,6 +1,6 @@
 import { useModal } from '../lib/modal.ts';
 import { count } from '../lib/format.ts';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { setAppName, setIconVersion, setPageName, setStatus, getAppearance } from '../lib/appearance.ts';
 import { PullRefresh } from './PullRefresh.tsx';
@@ -38,6 +38,7 @@ const NAV = [
   { to: '/apps', label: 'Apps', desktop: true },
   { to: '/downloads', label: 'Downloads', desktop: true },
   { to: '/library', label: 'Library', desktop: true },
+  { to: '/requests', label: 'Requests', desktop: true },
 ];
 
 // "g" then a letter, as in Gmail and GitHub.
@@ -54,7 +55,7 @@ const GO: Record<string, [string, string]> = {
 
 // Pages for whoever runs the server. A household device doesn't see them;
 // it does see Server, which only shows how things stand.
-const ADMIN = ['/stacks', '/logs', '/apps', '/settings', '/c', '/downloads', '/library'];
+const ADMIN = ['/stacks', '/logs', '/apps', '/settings', '/c', '/downloads', '/library', '/requests'];
 export const adminPage = (path: string) => ADMIN.some((a) => path === a || path.startsWith(`${a}/`));
 
 const isTyping = (el: EventTarget | null) =>
@@ -67,8 +68,12 @@ export function Shell() {
   const [help, setHelp] = useState(false);
   // Every board counts as Home in the nav.
   const location = useLocation();
-  // Any change of page (a link in it, Back) closes the More sheet.
-  useEffect(() => setMoreOpen(false), [location.pathname]);
+  const [overOpen, setOverOpen] = useState(false);
+  // Any change of page (a link in it, Back) closes the More sheet and menu.
+  useEffect(() => {
+    setMoreOpen(false);
+    setOverOpen(false);
+  }, [location.pathname]);
   const navType = useNavigationType();
   // Back and Forward return to where you were. Pages load in pieces, so the
   // position is retried until the page is tall enough to hold it.
@@ -242,11 +247,53 @@ export function Shell() {
   const hasDownloads = ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget'].some((id) => snap?.sources[id as 'qbit']);
   // Library once Sonarr or Radarr is.
   const hasLibrary = !!(snap?.sources.sonarr || snap?.sources.radarr);
-  const nav = NAV.filter((n) => !(household && adminPage(n.to)) && (n.to !== '/downloads' || hasDownloads) && (n.to !== '/library' || hasLibrary));
+  // Requests once Overseerr or Jellyseerr is.
+  const hasRequests = !!snap?.sources.overseerr;
+  const nav = NAV.filter((n) => !(household && adminPage(n.to)) && (n.to !== '/downloads' || hasDownloads) && (n.to !== '/library' || hasLibrary) && (n.to !== '/requests' || hasRequests));
   const more: { to: string; label: string }[] = [...nav.filter((n) => !phoneTabs.includes(n.to)), { to: '/weather', label: 'Weather' }, { to: '/settings', label: 'Settings' }].filter(
     (m) => !phoneTabs.includes(m.to) && !(household && adminPage(m.to)),
   );
   const inMore = more.some((m) => location.pathname === m.to || location.pathname.startsWith(`${m.to}/`));
+
+  // A wide screen shows every page it has room for; the rest wrap out of
+  // sight and go under More. Measured, so it holds for any set of pages,
+  // any language and any name.
+  const navRef = useRef<HTMLElement>(null);
+  const [over, setOver] = useState<string[]>([]);
+  // The empty end of the nav's first line, which More moves back over.
+  const [slack, setSlack] = useState(0);
+  const navWords = nav.map((n) => t(n.label)).join('|');
+  useLayoutEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const measure = () => {
+      const links = [...el.querySelectorAll<HTMLElement>('[data-nav]')].filter((l) => l.offsetParent);
+      const top = links[0]?.offsetTop ?? 0;
+      const shown = links.filter((l) => l.offsetTop <= top + 4);
+      const out = links.filter((l) => l.offsetTop > top + 4).map((l) => l.dataset.nav!);
+      setOver((was) => (was.join() === out.join() ? was : out));
+      const last = shown.at(-1);
+      setSlack(out.length && last ? Math.max(0, Math.round(el.getBoundingClientRect().right - last.getBoundingClientRect().right)) : 0);
+    };
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    measure();
+    void document.fonts?.ready.then(measure);
+    return () => ro.disconnect();
+  }, [navWords]);
+  const overItems = nav.filter((n) => over.includes(n.to));
+  const inOver = overItems.some((m) => location.pathname === m.to || location.pathname.startsWith(`${m.to}/`));
+  useEffect(() => {
+    if (!overOpen) return;
+    const away = (e: PointerEvent) => !(e.target as Element).closest?.('.nav-over') && setOverOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOverOpen(false);
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('pointerdown', away);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [overOpen]);
 
   return (
     <div className="shell">
@@ -257,13 +304,14 @@ export function Shell() {
         <NavLink to="/" className="wordmark" aria-label={`${name}, home`}>
           <span title={name}>{name}</span>
         </NavLink>
-        <nav className="nav" aria-label="Views">
+        <nav className="nav" aria-label="Views" ref={navRef}>
           {nav.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
               end={n.end}
-              className={({ isActive }) => `nav-link ${phoneTabs.includes(n.to) ? '' : 'nav-desktop'} ${isActive || (n.to === '/' && onBoard) ? 'active' : ''}`}
+              data-nav={n.to}
+              className={({ isActive }) => `nav-link ${phoneTabs.includes(n.to) ? '' : 'nav-desktop'} ${over.includes(n.to) ? 'nav-wrapped' : ''} ${isActive || (n.to === '/' && onBoard) ? 'active' : ''}`}
             >
               {ICONS[n.to] && (
                 <svg className="nav-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -278,9 +326,28 @@ export function Shell() {
             <svg className="nav-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
               <path d={ICONS.more} />
             </svg>
-            <span>More</span>
+            <span>{t('More')}</span>
           </button>
         </nav>
+        {overItems.length > 0 && (
+          <div className="nav-over" style={slack ? { transform: `translateX(-${slack}px)` } : undefined}>
+            <button type="button" className={`nav-link ${inOver ? 'active' : ''}`} aria-expanded={overOpen} aria-controls="nav-over-list" onClick={() => setOverOpen((o) => !o)}>
+              {t('More')}
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            {overOpen && (
+              <div className="nav-over-list" id="nav-over-list">
+                {overItems.map((m) => (
+                  <NavLink key={m.to} to={m.to} className="nav-over-link">
+                    {t(m.label)}
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div className="topbar-end">
           {snap?.demo && <span className="pill demo-pill">{t('Demo data')}</span>}
           {household ? (

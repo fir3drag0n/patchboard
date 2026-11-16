@@ -51,7 +51,7 @@ import { audiobookshelfAdapter, navidromeAdapter } from './adapters/listening.ts
 import { calendarAdapter } from './adapters/calendar.ts';
 import { booksAdapter } from './adapters/books.ts';
 import { send } from './notify.ts';
-import { pendingIds, seerrClient } from './adapters/seerr.ts';
+import { pendingIds, type SeerrClient, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
 import { adoptEnvironment, candidate, checkThresholds, describeThresholds, saveThresholds, savedThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
@@ -73,7 +73,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoRequestsApi, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
@@ -122,14 +122,14 @@ type Made = {
   manage?: DownloadManager;
   arr?: ArrControl;
   dns?: DnsControl;
-  seerr?: (id: number, action: 'approve' | 'decline') => Promise<void>;
+  seerr?: Omit<SeerrClient, 'adapter'>;
 };
 const itemControls = new Map<DownloadClientId, (id: string, action: ItemAction) => Promise<void>>();
 const altSpeedControls = new Map<DownloadClientId, () => Promise<void>>();
 const downloadManagers = new Map<DownloadClientId, DownloadManager>();
 const arrControls = new Map<'sonarr' | 'radarr', ArrControl>();
 const dnsControls = new Map<'pihole' | 'adguard', DnsControl>();
-let seerrAct: ((id: number, action: 'approve' | 'decline') => Promise<void>) | null = null;
+let seerrApi: Omit<SeerrClient, 'adapter'> | null = null;
 
 /**
  * One factory per integration you can turn on. Each reads config when called,
@@ -193,7 +193,7 @@ const FACTORIES: Record<string, () => Made | null> = {
   overseerr: () => {
     if (!config.overseerr) return null;
     const c = seerrClient();
-    return { adapter: c.adapter, seerr: c.act };
+    return { adapter: c.adapter, seerr: c };
   },
 };
 
@@ -205,7 +205,7 @@ function realAdapters(): Adapter[] {
   downloadManagers.clear();
   arrControls.clear();
   dnsControls.clear();
-  seerrAct = null;
+  seerrApi = null;
   for (const [id, make] of Object.entries(FACTORIES)) {
     const m = make();
     if (!m) continue;
@@ -216,7 +216,7 @@ function realAdapters(): Adapter[] {
     if (m.manage) downloadManagers.set(id as DownloadClientId, m.manage);
     if (m.arr) arrControls.set(id as 'sonarr' | 'radarr', m.arr);
     if (m.dns) dnsControls.set(id as 'pihole' | 'adguard', m.dns);
-    if (m.seerr) seerrAct = m.seerr;
+    if (m.seerr) seerrApi = m.seerr;
   }
   return list;
 }
@@ -1054,23 +1054,79 @@ app.post('/api/dns/:id/:action', async (c) => {
   return c.json({ ok: true });
 });
 
-// Overseerr or Jellyseerr: approve or decline a request. Only requests
-// Patchboard last read as pending, so the route can't touch anything else.
+// Overseerr or Jellyseerr. The Requests page reads its lists straight from
+// the app while open, and acts only on what it was last sent.
+const requestsApi = () => (config.demo ? demoRequestsApi : seerrApi);
+const NO_SEERR = 'Overseerr or Jellyseerr is not set up';
+
+app.get('/api/requests/find', async (c) => {
+  const api = requestsApi();
+  if (!api) return c.json({ error: NO_SEERR }, 404);
+  const term = (c.req.query('q') ?? '').trim().slice(0, 100);
+  if (!term) return c.json([]);
+  try {
+    const found = await api.find(term);
+    for (const kind of ['movie', 'tv'] as const) libSeen.set(`requests:found-${kind}`, { at: Date.now(), ids: new Map(found.filter((f) => f.kind === kind).map((f) => [f.key, f.title])) });
+    return c.json(found);
+  } catch (err) {
+    return libFail(c, err);
+  }
+});
+
+app.get('/api/requests/:which', async (c) => {
+  const which = c.req.param('which');
+  if (which !== 'waiting' && which !== 'coming') return c.json({ error: 'Unknown list' }, 404);
+  const api = requestsApi();
+  if (!api) return c.json({ error: NO_SEERR }, 404);
+  try {
+    const got = await api.list(which);
+    libSeen.set(`requests:${which}`, { at: Date.now(), ids: new Map(got.items.map((r) => [r.id, r.title])) });
+    return c.json(got);
+  } catch (err) {
+    return libFail(c, err);
+  }
+});
+
+// Ask for a film or show just found. Seerr files it as the API key's user,
+// usually the admin, so it is approved and sent on at once.
+app.post('/api/requests/ask', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const api = requestsApi();
+  if (!api) return c.json({ error: NO_SEERR }, 404);
+  const b = (await c.req.json().catch(() => ({}))) as { kind?: unknown; key?: unknown };
+  const kind = b.kind === 'tv' ? 'tv' : b.kind === 'movie' ? 'movie' : null;
+  const key = Number(b.key);
+  const title = kind ? libName('requests', `found-${kind}`, key) : undefined;
+  if (!kind || !title) return c.json({ error: 'Find it again, then ask.' }, 404);
+  try {
+    await api.ask(kind, key);
+  } catch (err) {
+    return libFail(c, err);
+  }
+  recordAudit(who(c), 'requests.ask', kind, title);
+  void hub.pollNow('overseerr');
+  return c.json({ ok: true });
+});
+
+// Approve or decline a request: one the Home widget or the Requests page was
+// shown as waiting, so the route can't touch anything else.
 app.post('/api/requests/:id/:action', async (c) => {
   const id = Number(c.req.param('id'));
   const action = c.req.param('action');
   if (action !== 'approve' && action !== 'decline') return c.json({ error: 'Unknown action' }, 400);
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  const act = config.demo ? demoSeerrAct : seerrAct;
-  if (!act) return c.json({ error: 'Overseerr is not configured' }, 404);
-  if (!config.demo && !pendingIds.has(id)) return c.json({ error: 'That request is not waiting for approval' }, 404);
+  const api = requestsApi();
+  if (!api) return c.json({ error: NO_SEERR }, 404);
+  const listed = libName('requests', 'waiting', id);
+  if (!config.demo && !pendingIds.has(id) && !listed) return c.json({ error: 'That request is not waiting for approval' }, 404);
   try {
-    await act(id, action);
+    await api.act(id, action);
   } catch (err) {
     return c.json({ error: (err as Error).message }, 502);
   }
   pendingIds.delete(id);
-  const asked = (hub.snapshot().sources.overseerr?.data as SeerrData | null)?.requests.find((r) => r.id === id)?.title;
+  libSeen.get('requests:waiting')?.ids.delete(id);
+  const asked = listed ?? (hub.snapshot().sources.overseerr?.data as SeerrData | null)?.requests.find((r) => r.id === id)?.title;
   recordAudit(who(c), `requests.${action}`, String(id), asked);
   void hub.pollNow('overseerr');
   return c.json({ ok: true });

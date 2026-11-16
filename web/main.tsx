@@ -45,6 +45,7 @@ const router = createBrowserRouter([
           { path: '/apps', lazy: page(() => import('./views/Apps.tsx'), 'Apps') },
           { path: '/downloads', lazy: page(() => import('./views/Downloads.tsx'), 'Downloads') },
           { path: '/library', lazy: page(() => import('./views/Library.tsx'), 'Library') },
+          { path: '/requests', lazy: page(() => import('./views/Requests.tsx'), 'Requests') },
           { path: '/settings', lazy: page(() => import('./views/Settings.tsx'), 'Settings') },
           { path: '*', element: <NotFound /> },
         ],

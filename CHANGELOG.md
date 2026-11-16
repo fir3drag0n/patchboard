@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **A Requests page for Overseerr and Jellyseerr:** every request waiting
+  for approval, not just the five on Home, with Approve and Decline. On the
+  way lists what's approved and not here yet. New request finds a film or
+  show by name, says whether it's already here, asked for or on the way,
+  and requests it, every season of a show. When Seerr refuses, you see its
+  reason. The Home widget's "more waiting" line opens the page.
+- **Pages that don't fit go under More:** on a narrower screen, or with
+  Downloads, Library and Requests all set up, the top bar keeps the
+  Patchboard name whole and lists the rest under More.
 - **A Library page for Sonarr and Radarr:** every show and film with its
   poster, episodes on disk, size and monitoring. Switch monitoring or
   search from the row. Missing lists each monitored episode or film without

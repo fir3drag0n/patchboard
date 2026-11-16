@@ -17,6 +17,8 @@ import type {
   FrigateData,
   DnsData,
   SeerrData,
+  SeerrRequest,
+  AskItem,
   SpeedData,
   FeedFilter,
   ImmichData,
@@ -61,6 +63,7 @@ import type {
 } from '../shared/types.ts';
 import type { Adapter } from './adapters/adapter.ts';
 import type { DownloadManager } from './adapters/downloads.ts';
+import type { SeerrClient } from './adapters/seerr.ts';
 import { MINUTE, SECOND } from './adapters/adapter.ts';
 import { DEPENDS, demoBackups, demoChecks, demoMem, demoStats, demoTruenas, hash, IMAGES, PROJECTS } from './demo-ops.ts';
 
@@ -450,22 +453,75 @@ const demoRequests = [
 ];
 const demoDecided = new Set<number>();
 const demoApproved: number[] = [];
+const demoAsked: SeerrRequest[] = [];
 
-export async function demoSeerrAct(id: number, action?: 'approve' | 'decline'): Promise<void> {
+async function demoSeerrAct(id: number, action?: 'approve' | 'decline'): Promise<void> {
   demoDecided.add(id);
   if (action === 'approve') demoApproved.unshift(id);
 }
 
-function demoSeerr(): SeerrData {
-  const requests = demoRequests.filter((r) => !demoDecided.has(r.id)).map((r) => ({ ...r, href: tmdb(r.title, r.kind) }));
+function demoWaiting(): SeerrRequest[] {
+  return demoRequests.filter((r) => !demoDecided.has(r.id)).map((r) => ({ ...r, href: tmdb(r.title, r.kind) }));
+}
+
+function demoComing(): SeerrRequest[] {
   const approved = demoApproved.map((id) => demoRequests.find((r) => r.id === id)).filter((r) => !!r);
-  const coming = [
+  return [
+    ...demoAsked,
     ...approved.map((r) => ({ ...r, href: tmdb(r.title, r.kind) })),
     { id: 36, kind: 'movie' as const, title: 'Weapons', year: 2025, by: 'Kit', at: Date.now() - 3 * 24 * H, is4k: false, art: poster('Weapons'), href: tmdb('Weapons', 'movie') },
     { id: 33, kind: 'tv' as const, title: 'Severance', year: 2022, by: 'Sam', at: Date.now() - 6 * 24 * H, seasons: [2], is4k: false, art: poster('Severance'), href: tmdb('Severance', 'tv') },
   ];
+}
+
+function demoSeerr(): SeerrData {
+  const requests = demoWaiting();
+  const coming = demoComing();
   return { pending: requests.length, processing: coming.length, requests, coming };
 }
+
+// What Find knows: a few already here, some asked for, some new.
+const DEMO_FIND: (Omit<AskItem, 'state' | 'art' | 'href'> & { here?: 'here' | 'partial' })[] = [
+  { key: 250307, kind: 'tv', title: 'The Pitt', year: 2025, overview: 'A day in a Pittsburgh emergency room, one hour per episode.' },
+  { key: 111803, kind: 'tv', title: 'The White Lotus', year: 2021, overview: 'Guests and staff at a luxury resort over one week.' },
+  { key: 136315, kind: 'tv', title: 'The Bear', year: 2022, here: 'partial' },
+  { key: 100088, kind: 'tv', title: 'The Last of Us', year: 2023, here: 'here' },
+  { key: 83867, kind: 'tv', title: 'Andor', year: 2022 },
+  { key: 95396, kind: 'tv', title: 'Severance', year: 2022 },
+  { key: 666277, kind: 'movie', title: 'Past Lives', year: 2023, overview: 'Two childhood friends from Seoul meet again, decades later, in New York.' },
+  { key: 840430, kind: 'movie', title: 'The Holdovers', year: 2023, overview: 'A teacher spends Christmas at a New England boarding school with a student who has nowhere to go.' },
+  { key: 792307, kind: 'movie', title: 'Poor Things', year: 2023 },
+  { key: 1233413, kind: 'movie', title: 'Sinners', year: 2025 },
+  { key: 1078605, kind: 'movie', title: 'Weapons', year: 2025 },
+  { key: 872585, kind: 'movie', title: 'Oppenheimer', year: 2023, here: 'here' },
+  { key: 693134, kind: 'movie', title: 'Dune: Part Two', year: 2024, here: 'here' },
+];
+
+function demoFindState(f: (typeof DEMO_FIND)[number]): AskItem['state'] {
+  if (f.here) return f.here;
+  if (demoComing().some((r) => r.title === f.title)) return 'coming';
+  if (demoWaiting().some((r) => r.title === f.title)) return 'asked';
+  return 'new';
+}
+
+/** The Requests page in demo mode: approving moves a request to Coming, asking adds one there. */
+export const demoRequestsApi: Omit<SeerrClient, 'adapter'> = {
+  act: demoSeerrAct,
+  async list(which) {
+    const items = which === 'waiting' ? demoWaiting() : demoComing();
+    return { total: items.length, items };
+  },
+  async find(term) {
+    const needle = term.toLowerCase();
+    return DEMO_FIND.filter((f) => f.title.toLowerCase().includes(needle)).map(({ here: _, ...f }) => ({ ...f, state: demoFindState(DEMO_FIND.find((x) => x.key === f.key)!), art: poster(f.title), href: tmdb(f.title, f.kind) }) as AskItem);
+  },
+  async ask(kind, key) {
+    const f = DEMO_FIND.find((x) => x.key === key && x.kind === kind);
+    if (!f) throw new Error('Not found');
+    if (demoFindState(f) !== 'new' && demoFindState(f) !== 'partial') throw new Error('Request for this media already exists.');
+    demoAsked.unshift({ id: 900 + demoAsked.length, kind, title: f.title, year: f.year, by: 'You', at: Date.now(), is4k: false, art: poster(f.title), href: tmdb(f.title, kind), ...(kind === 'tv' ? { seasons: [1] } : {}) });
+  },
+};
 
 // ---------- Ad blocking ----------
 

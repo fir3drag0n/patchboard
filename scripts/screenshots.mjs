@@ -316,6 +316,8 @@ try {
   await shoot(page, 'downloads');
   await go('/library', 2500);
   await shoot(page, 'library');
+  await go('/requests', 2500);
+  await shoot(page, 'requests');
   await go('/');
   await page.keyboard.press('Control+k');
   await page.keyboard.type('plex');

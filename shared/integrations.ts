@@ -495,7 +495,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'overseerr',
     name: 'Overseerr or Jellyseerr',
-    adds: 'A Requests widget: what people asked for, with posters, and Approve or Decline on each.',
+    adds: 'A Requests widget: what people asked for, with posters, and Approve or Decline on each. The Requests page lists every request and asks for something new.',
     env: ['OVERSEERR_URL', 'OVERSEERR_KEY'],
     where: 'Settings, General, API Key, in Overseerr or Jellyseerr.',
     source: true,

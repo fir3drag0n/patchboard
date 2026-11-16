@@ -19,6 +19,8 @@ const result = (id: number, min: number, extra: Record<string, unknown> = {}) =>
 });
 let stResults: unknown[] = [];
 const decided: string[] = [];
+const asked: unknown[] = [];
+let searched = '';
 
 const server = createServer((req, res) => {
   const json = (v: unknown, status = 200) => res.writeHead(status, { 'Content-Type': 'application/json' }).end(JSON.stringify(v));
@@ -36,8 +38,9 @@ const server = createServer((req, res) => {
     if (url.pathname === '/os/api/v1/request' && url.searchParams.get('filter') === 'processing') {
       return json({ pageInfo: { page: 1, pages: 1, results: 1 }, results: [{ id: 5, status: 2, type: 'movie', is4k: false, createdAt: ago(60 * 24 * 3), media: { tmdbId: 200, mediaType: 'movie' }, requestedBy: { username: 'jo' } }] });
     }
-    if (url.pathname === '/os/api/v1/request') {
+    if (url.pathname === '/os/api/v1/request' && req.method === 'GET') {
       assert.equal(url.searchParams.get('filter'), 'pending');
+      assert.ok(['20', '100'].includes(url.searchParams.get('take')!));
       return json({
         pageInfo: { page: 1, pages: 1, results: 2 },
         results: [
@@ -45,6 +48,29 @@ const server = createServer((req, res) => {
           { id: 8, status: 1, is4k: true, createdAt: ago(10), media: { tmdbId: 200 }, requestedBy: { displayName: 'Sam R', plexUsername: 'samr' } },
         ],
       });
+    }
+    if (url.pathname === '/os/api/v1/search') {
+      searched = req.url!;
+      return json({
+        page: 1,
+        totalPages: 1,
+        results: [
+          { id: 300, mediaType: 'tv', name: 'The Pitt', firstAirDate: '2025-01-09', overview: 'An ER.', posterPath: '/pitt.jpg' },
+          { id: 200, mediaType: 'movie', title: 'Sinners', releaseDate: '2025-04-18', posterPath: '/sinners.jpg', mediaInfo: { status: 3 } },
+          { id: 9, mediaType: 'person', name: 'Someone' },
+        ],
+      });
+    }
+    if (url.pathname === '/os/api/v1/request' && req.method === 'POST') {
+      let body = '';
+      req.on('data', (d) => (body += d));
+      req.on('end', () => {
+        const b = JSON.parse(body);
+        asked.push(b);
+        if (b.mediaId === 200) json({ message: 'Request for this media already exists.' }, 409);
+        else json({ id: 12, status: 2 }, 201);
+      });
+      return;
     }
     if (url.pathname === '/os/api/v1/request/count') return json({ total: 9, movie: 5, tv: 4, pending: 2, approved: 6, declined: 1, processing: 3, available: 2 });
     if (url.pathname === '/os/api/v1/tv/100') return json({ name: 'The Studio', firstAirDate: '2025-03-26', posterPath: '/studio.jpg' });
@@ -103,4 +129,33 @@ test('Overseerr: pending requests with titles, years, seasons, requesters and pr
   await act(7, 'approve');
   await act(8, 'decline');
   assert.deepEqual(decided, ['7:approve', '8:decline']);
+});
+
+test('Overseerr: the Requests page lists every waiting request with its total', async () => {
+  const { list } = os.seerrClient();
+  const waiting = await list('waiting');
+  assert.deepEqual([waiting.total, waiting.items.map((r) => r.title)], [2, ['The Studio', 'Sinners']]);
+  const coming = await list('coming');
+  assert.deepEqual(coming.items.map((r) => r.title), ['Sinners']);
+});
+
+test('Overseerr: finding skips people and says how far along each title is', async () => {
+  const { find } = os.seerrClient();
+  const found = await find("Grey's (Anatomy)");
+  assert.ok(searched.includes('query=Grey%27s%20%28Anatomy%29'), 'punctuation is escaped for Seerr');
+  assert.deepEqual(
+    found.map((f) => [f.kind, f.key, f.title, f.year, f.state, f.art]),
+    [
+      ['tv', 300, 'The Pitt', 2025, 'new', '/api/art/tmdbtv/300'],
+      ['movie', 200, 'Sinners', 2025, 'coming', '/api/art/tmdb/200'],
+    ],
+  );
+});
+
+test('Overseerr: asking sends every season of a show, and a refusal comes back in its words', async () => {
+  const { ask } = os.seerrClient();
+  await ask('tv', 300);
+  assert.deepEqual(asked.at(-1), { mediaType: 'tv', mediaId: 300, seasons: 'all' });
+  await assert.rejects(ask('movie', 200), /already exists/);
+  assert.deepEqual(asked.at(-1), { mediaType: 'movie', mediaId: 200 });
 });

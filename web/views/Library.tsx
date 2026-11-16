@@ -3,17 +3,17 @@
 // Lists come straight from the app while the page is open; the queue
 // refreshes every few seconds while it's in view.
 
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ArrApp, ArrOptions, ArrQueueItem, FoundItem, LibraryItem, WantedList } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
-import { Empty, Meter, Poster } from '../components/ui.tsx';
+import { Empty, Meter, PosterRow as Row } from '../components/ui.tsx';
 import { agoLong, breakable, size } from '../lib/format.ts';
 import { msg, t as tr } from '../lib/i18n.ts';
+import { ACTION, call, useList } from '../lib/live-list.ts';
 import { useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 
-const ACTION = { 'X-Patchboard': 'action', 'Content-Type': 'application/json' };
 const QUEUE_EVERY_MS = 5000;
 const PAGE = 60;
 
@@ -36,47 +36,6 @@ const QUEUE_STATE: Record<ArrQueueItem['state'], string> = {
   warning: msg('Needs a look'),
   failed: msg('Failed'),
 };
-
-async function call<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, init);
-  const body = (await res.json().catch(() => ({}))) as T & { error?: string };
-  if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
-  return body;
-}
-
-/** One list from the app, loaded when asked for; the queue keeps itself fresh while in view. */
-function useList<T>(url: string | null, every = 0): { data: T | null; err: string; reload: () => void } {
-  const [data, setData] = useState<T | null>(null);
-  const [err, setErr] = useState('');
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    if (!url) return;
-    let gone = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const load = async () => {
-      clearTimeout(timer);
-      try {
-        const got = await call<T>(url);
-        if (gone) return;
-        setData(got);
-        setErr('');
-      } catch (e) {
-        if (!gone) setErr((e as Error).message);
-      }
-      if (!gone && every && document.visibilityState === 'visible') timer = setTimeout(() => void load(), every);
-    };
-    const onShow = () => every && document.visibilityState === 'visible' && void load();
-    document.addEventListener('visibilitychange', onShow);
-    void load();
-    return () => {
-      gone = true;
-      clearTimeout(timer);
-      document.removeEventListener('visibilitychange', onShow);
-    };
-  }, [url, every, n]);
-  useEffect(() => setData(null), [url]);
-  return { data, err, reload: useCallback(() => setN((x) => x + 1), []) };
-}
 
 export function Library() {
   const { snap } = useStore();
@@ -168,16 +127,6 @@ export function Library() {
 }
 
 type Act = (path: string, done: string, body?: object, after?: () => void) => Promise<void>;
-
-function Row({ art, title, children, actions }: { art?: string; title: string; children: ReactNode; actions?: ReactNode }) {
-  return (
-    <li className="lib-row">
-      <Poster title={title} thumb={art} small />
-      <div className="lib-body">{children}</div>
-      {actions && <div className="lib-actions">{actions}</div>}
-    </li>
-  );
-}
 
 function Items({ app, shows, ro, act }: { app: ArrApp; shows: boolean; ro: boolean; act: Act }) {
   const { data, err, reload } = useList<LibraryItem[]>(`/api/library/${app}/items`);
