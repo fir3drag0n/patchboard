@@ -108,7 +108,7 @@ export function SkyWidget({ now }: { now: number }) {
     <Section title="Sun and moon" className="sky">
       {!today?.sunrise ? (
         <Empty>
-          {t("The sun needs the weather's place.")} <SetupLink>{t('Set up weather')}</SetupLink>
+          {t("Sun and moon need a place. Set one for the weather.")} <SetupLink>{t('Set up weather')}</SetupLink>
         </Empty>
       ) : (
         <div className="sky-body">

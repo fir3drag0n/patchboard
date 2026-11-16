@@ -221,7 +221,7 @@ export interface Threshold {
 export const THRESHOLDS: Threshold[] = [
   { name: 'POOL_WARN_PCT', group: 'Storage', label: 'Warn when storage is', unit: '% full', kind: 'number', default: '85', min: 50, max: 99, hint: 'For every pool, volume or array.' },
   { name: 'POOL_CRIT_PCT', group: 'Storage', label: 'Alarm when storage is', unit: '% full', kind: 'number', default: '95', min: 50, max: 100, hint: 'Sent as an outage if you get notifications.' },
-  { name: 'DISK_WARN_C', group: 'Drives', label: 'Warn when a drive reaches', unit: '°C', kind: 'number', default: '50', min: 30, max: 90, hint: 'Hard drives run cooler than SSDs; 45 to 50 suits most hard drives.' },
+  { name: 'DISK_WARN_C', group: 'Drives', label: 'Warn when a drive reaches', unit: '°C', kind: 'number', default: '50', min: 30, max: 90, hint: 'Hard drives run cooler than SSDs; 45 to 50 °C suits most.' },
   { name: 'DISK_CRIT_C', group: 'Drives', label: 'Alarm when a drive reaches', unit: '°C', kind: 'number', default: '58', min: 30, max: 100, hint: 'Above this, drives wear fast. Check the airflow.' },
   { name: 'TIRE_LOW_PSI', group: 'Car', label: 'Warn when a tire is under', unit: 'psi', kind: 'number', default: '38', min: 0, max: 80, hint: "Tesla's own warning sits near 36. 0 turns this off." },
   { name: 'TIRE_SPREAD_PSI', group: 'Car', label: 'Or this far under the fullest tire', unit: 'psi', kind: 'number', default: '3', min: 0, max: 20, hint: 'Catches a slow leak before it gets low. 0 turns this off.' },

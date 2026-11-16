@@ -291,7 +291,7 @@ export function Settings() {
           ])}
         </div>
         <p className="settings-note">
-          {tr('An Apps widget can set its own in Arrange board.')}
+          {tr('An Apps widget can have its own look, set in Arrange board.')}
         </p>
       </Section>
 
