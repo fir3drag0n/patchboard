@@ -96,6 +96,7 @@ export function Settings() {
       <div className="page-head">
         <h1 className="page-title">{tr('Settings')}</h1>
       </div>
+      <FinishSetup />
       <div className="seg settings-tabs" role="tablist" aria-label={tr('Settings')} onKeyDown={tabKeys}>
         {TABS.map(([v, label]) => (
           <button key={v} type="button" role="tab" tabIndex={tab === v ? 0 : -1} aria-selected={tab === v} onClick={() => setTab(v)}>
@@ -337,6 +338,58 @@ export function Settings() {
       </div>
       <AppVersion />
     </div>
+  );
+}
+
+/**
+ * What first run left for later, in one quiet line at the top: the town for
+ * the weather and a password. Gone once both are set, or hidden here.
+ */
+function FinishSetup() {
+  const { snap } = useStore();
+  const [auth, setAuth] = useState<{ mode: string; locked?: boolean } | null>(null);
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem('pb-finish-hidden') === '1';
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    if (hidden || snap?.demo || snap?.readOnly) return;
+    void fetch('/api/auth/settings')
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setAuth)
+      .catch(() => {});
+  }, [hidden]);
+  if (!snap || hidden || snap.demo || snap.readOnly || snap.household) return null;
+  const items: [string, string][] = [];
+  if (!snap.sources.weather) items.push([tr('Set your town'), '/settings?tab=connections&setup=weather']);
+  if (auth?.mode === 'none' && !auth.locked) items.push([tr('Turn on a password'), '/settings?tab=connections&part=access']);
+  if (!items.length) return null;
+  return (
+    <p className="finish-setup">
+      <span>{tr('Finish setup')}</span>
+      {items.map(([label, to]) => (
+        <Link key={to} to={to}>
+          {label}
+        </Link>
+      ))}
+      <button
+        type="button"
+        className="text-button"
+        onClick={() => {
+          setHidden(true);
+          try {
+            localStorage.setItem('pb-finish-hidden', '1');
+          } catch {
+            /* comes back next visit */
+          }
+        }}
+      >
+        {tr('Hide')}
+      </button>
+    </p>
   );
 }
 

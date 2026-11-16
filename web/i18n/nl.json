@@ -921,5 +921,9 @@
  "Use at least 8 characters.": "Gebruik minstens 8 tekens.",
  "Where is it?": "Waar staat hij?",
  "Connect": "Verbinden",
- "Connect {name}": "{name} verbinden"
+ "Connect {name}": "{name} verbinden",
+ "Find your town": "Zoek je plaats",
+ "Finish setup": "Instellen afronden",
+ "Hide": "Verbergen",
+ "Set your town": "Plaats instellen"
 }

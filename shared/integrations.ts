@@ -62,7 +62,7 @@ export const INTEGRATIONS: Integration[] = [
     adds: 'Now, the next 24 hours, the week, sunrise and sunset; US weather alerts. Free, no key.',
     env: ['WEATHER_LAT', 'WEATHER_LON'],
     optional: ['WEATHER_LABEL'],
-    where: 'Your latitude and longitude. Open-Meteo provides the forecast and the National Weather Service the alerts.',
+    where: 'Find your town, or type its latitude and longitude. Open-Meteo provides the forecast and the National Weather Service the alerts.',
     source: true,
   },
   {

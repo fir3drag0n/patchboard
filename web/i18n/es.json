@@ -921,5 +921,9 @@
  "Use at least 8 characters.": "Usa al menos 8 caracteres.",
  "Where is it?": "¿Dónde está?",
  "Connect": "Conectar",
- "Connect {name}": "Conectar {name}"
+ "Connect {name}": "Conectar {name}",
+ "Find your town": "Busca tu ciudad",
+ "Finish setup": "Terminar la configuración",
+ "Hide": "Ocultar",
+ "Set your town": "Indica tu ciudad"
 }

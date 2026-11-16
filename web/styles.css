@@ -14039,3 +14039,24 @@ html[data-eink] .fr-sheet {
 .tile-connect:focus-visible {
   color: var(--accent);
 }
+
+/* Settings: what first run left for later, one quiet line. */
+.finish-setup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 18px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.finish-setup > span {
+  color: var(--ink-2);
+}
+
+.finish-setup .text-button {
+  margin-left: auto;
+}

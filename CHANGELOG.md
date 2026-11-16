@@ -28,6 +28,9 @@
   names and their aliases, so `portainer-ce`, `pms-docker` and
   `jellyfin-server` find theirs. Containers on Stacks get icons too. Tap an
   app's icon in Edit apps to upload your own.
+- **Weather by town:** Settings, Weather finds your town by name and fills
+  in its coordinates. Settings also keeps one quiet Finish setup line while
+  the town or a password is still to do.
 - **Connect where the app is:** a tile for Sonarr, Plex or any app with an
   integration shows Connect until you set it up, and it opens that setup.
 - **Plainer words:** a pass over the README, the docs and the app's own text

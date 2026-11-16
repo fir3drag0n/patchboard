@@ -3,6 +3,7 @@
 // shows as "Saved" with a blank field to replace it. Anything set in the
 // environment shows as locked, because the environment wins.
 
+import { PlacePicker } from './FirstRun.tsx';
 import { HoldButton } from './Hold.tsx';
 import { useEffect, useState } from 'react';
 import type { Integration } from '../../shared/integrations.ts';
@@ -114,6 +115,16 @@ export function IntegrationForm({
         if (!busy) void save();
       }}
     >
+      {/* Weather: find the town by name; the coordinates below fill in. */}
+      {integration.id === 'weather' && !readOnly && (
+        <div className="setup-field">
+          <span>{tr('Find your town')}</span>
+          <PlacePicker
+            place={null}
+            onPlace={(p) => p && setValues({ ...values, WEATHER_LAT: String(p.lat), WEATHER_LON: String(p.lon), WEATHER_LABEL: p.name })}
+          />
+        </div>
+      )}
       {setup.fields.map((f, idx) => (
         <label key={f.name} className="setup-field">
           <span>

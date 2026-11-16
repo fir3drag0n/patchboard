@@ -16,7 +16,7 @@ import { Icon } from './ui.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 
-interface Place {
+export interface Place {
   name: string;
   area: string;
   lat: number;
@@ -29,8 +29,8 @@ const post = async (url: string, method: string, body: unknown): Promise<string 
   return res.ok ? null : (((await res.json().catch(() => ({}))) as { error?: string }).error ?? `HTTP ${res.status}`);
 };
 
-/** The town search: type, pick one. */
-function PlacePicker({ place, onPlace }: { place: Place | null; onPlace: (p: Place | null) => void }) {
+/** The town search: type, pick one. Settings, Weather uses it too. */
+export function PlacePicker({ place, onPlace }: { place: Place | null; onPlace: (p: Place | null) => void }) {
   const [q, setQ] = useState('');
   const [found, setFound] = useState<Place[]>([]);
   const [err, setErr] = useState('');
@@ -63,7 +63,7 @@ function PlacePicker({ place, onPlace }: { place: Place | null; onPlace: (p: Pla
         <ul className="fr-places" role="listbox" aria-label={tr('Places')}>
           {found.map((p) => (
             <li key={`${p.lat},${p.lon}`}>
-              <button type="button" onClick={() => onPlace(p)}>
+              <button type="button" onClick={() => (onPlace(p), setQ(''), setFound([]))}>
                 {p.name}
                 <small>{p.area}</small>
               </button>
