@@ -1,0 +1,33 @@
+# Every push builds an edge- or dev- image named by its commit. Once a week,
+# those older than two weeks go, with the leftover platform and attestation
+# pieces no image points at any more. Releases (1.14.0, 1.14, 1), latest,
+# latest-slim, edge and dev always stay. Run it by hand for a dry run first.
+name: Clean up beta images
+
+on:
+  schedule:
+    - cron: '30 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: List what would go, and delete nothing
+        type: boolean
+        default: true
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
+        with:
+          package: patchboard
+          use-regex: true
+          delete-tags: '^(edge|dev)-[0-9a-f]{7,40}$'
+          exclude-tags: '^(latest|latest-slim|edge|dev|v?[0-9].*)$'
+          older-than: 14 days
+          delete-untagged: true
+          validate: true
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
