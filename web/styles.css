@@ -10202,6 +10202,54 @@ a.play:hover .play-title {
   padding: 12px 14px;
 }
 
+.search-widget {
+  position: relative;
+}
+
+/* The shortcuts that match what you've typed after "!". */
+.search-bangs {
+  position: absolute;
+  z-index: 5;
+  inset: calc(100% + 4px) 0 auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--float-shadow);
+}
+
+.search-bangs button {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-bangs code {
+  min-width: 5em;
+  color: var(--head);
+}
+
+.search-bangs span {
+  color: var(--ink-2);
+}
+
+.search-bangs [aria-selected='true'] button,
+.search-bangs button:hover {
+  background: var(--surface);
+}
+
 /* Clocks: place, time, and the day when it isn't today here. */
 .clock-list {
   display: grid;

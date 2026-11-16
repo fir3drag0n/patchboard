@@ -2,6 +2,8 @@
 // engine. Each one checks and cleans its own value, the same way on the
 // server (saving a board) and in the browser (the settings drawer).
 
+import { parseBangs } from './bangs.ts';
+
 export interface WidgetField {
   key: string;
   label: string;
@@ -126,6 +128,19 @@ export const searchUrlField: WidgetField = {
   hint: 'For Another site: an https address with %s where your words go.',
   placeholder: 'https://search.example.com/?q=%s',
   check: (raw) => (/^https:\/\/[^\s]{3,300}$/i.test(raw.trim()) && raw.includes('%s') ? raw.trim() : null),
+};
+
+/** Your own search shortcuts: "yt=https://...%s", one per line. */
+export const bangsField: WidgetField = {
+  key: 'bangs',
+  label: 'Shortcuts',
+  hint: 'One per line, such as yt=https://www.youtube.com/results?search_query=%s. Type !yt and your words to use it.',
+  placeholder: 'yt=https://www.youtube.com/results?search_query=%s',
+  multiline: true,
+  check: (raw) => {
+    const ok = parseBangs(raw);
+    return ok.length ? ok.map((b) => `${b.key}=${b.url}`).join('\n') : null;
+  },
 };
 
 /** Where a search goes. */

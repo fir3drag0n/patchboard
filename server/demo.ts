@@ -733,7 +733,7 @@ export function demoAdapters(): Adapter[] {
       load: [jitter(1.6, 0.4), 1.4, 1.2],
       cores: 12,
       uptimeSec: 19 * 86400 + 4 * 3600,
-      pool: { path: '/mnt/tank', usedPct: 87.2, usedBytes: 34.9e12, totalBytes: 40e12 },
+      pool: { path: '/mnt/sourpatchnas', usedPct: 87.2, usedBytes: 34.9e12, totalBytes: 40e12 },
       mem: demoMem(),
     })),
     demo<StatsData>('stats', 'Container stats', 15 * SECOND, () => demoStats(demoContainers())),

@@ -33,6 +33,11 @@
   the town or a password is still to do.
 - **Connect where the app is:** a tile for Sonarr, Plex or any app with an
   integration shows Connect until you set it up, and it opens that setup.
+- **Search shortcuts:** the Search widget takes `!` shortcuts. `!yt`,
+  `!w`, `!gh` and others are built in, your own apps with a search page
+  get theirs (`!sonarr`, `!jellyfin`, `!immich`), and the widget's
+  settings take your own. Type `!` to see the list; one Patchboard doesn't
+  know goes to DuckDuckGo.
 - **Color e-ink:** Look and Devices offer Color e-ink beside E-ink, for a
   Kaleido or Spectra panel: the still, paper page, with status, warnings,
   the accent and app icons in color again.

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { FeedItem, ReleaseInfo } from '../../shared/types.ts';
 import { searchUrl } from '../../shared/fields.ts';
+import { appBangs, type Bang, BUILT_IN, parseBangs, routeSearch } from '../../shared/bangs.ts';
 import { Empty, Icon, Section } from '../components/ui.tsx';
 import { agoLong } from '../lib/format.ts';
 import { useStore } from '../lib/store.tsx';
@@ -44,19 +45,64 @@ export function BookmarksWidget() {
 }
 
 export function SearchWidget({ config }: { config?: Record<string, string> }) {
+  const { snap } = useStore();
   const [words, setWords] = useState('');
+  const [pick, setPick] = useState(0);
+  // Yours first, then your apps', then the built-in ones.
+  const apps = snap?.catalog.groups.flatMap((g) => g.services) ?? [];
+  const bangs = [...parseBangs(config?.bangs ?? ''), ...appBangs(apps), ...BUILT_IN].filter((b, i, all) => all.findIndex((x) => x.key === b.key) === i);
+  // Typing "!" and a few letters lists the shortcuts that start with them.
+  const typing = /^!([a-z0-9]*)$/i.exec(words)?.[1]?.toLowerCase();
+  const offered = typing === undefined ? [] : bangs.filter((b) => b.key.startsWith(typing)).slice(0, 8);
+  const choose = (b: Bang) => (setWords(`!${b.key} `), setPick(0));
   return (
     <form
       className="search-widget"
       role="search"
       onSubmit={(e) => {
         e.preventDefault();
+        if (offered.length) return choose(offered[Math.min(pick, offered.length - 1)]);
         if (!words.trim()) return;
-        window.open(searchUrl(config, words.trim()), '_blank', 'noopener');
+        window.open(routeSearch(words.trim(), bangs, (q) => searchUrl(config, q)).url, '_blank', 'noopener');
         setWords('');
       }}
     >
-      <input className="field" type="search" value={words} onChange={(e) => setWords(e.target.value)} placeholder="Search the web" aria-label="Search the web" enterKeyHint="search" />
+      <input
+        className="field"
+        type="search"
+        value={words}
+        onChange={(e) => (setWords(e.target.value), setPick(0))}
+        onKeyDown={(e) => {
+          if (!offered.length) return;
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            setPick((p) => (p + (e.key === 'ArrowDown' ? 1 : offered.length - 1)) % offered.length);
+          } else if (e.key === 'Tab' && !e.shiftKey) {
+            e.preventDefault();
+            choose(offered[Math.min(pick, offered.length - 1)]);
+          }
+        }}
+        placeholder={t('Search, or ! for shortcuts')}
+        aria-label={t('Search the web')}
+        enterKeyHint="search"
+        role="combobox"
+        aria-expanded={offered.length > 0}
+        aria-controls="search-bangs"
+        aria-autocomplete="list"
+        autoComplete="off"
+      />
+      {offered.length > 0 && (
+        <ul className="search-bangs" id="search-bangs" role="listbox" aria-label={t('Shortcuts')}>
+          {offered.map((b, i) => (
+            <li key={b.key} role="option" aria-selected={i === Math.min(pick, offered.length - 1)}>
+              <button type="button" tabIndex={-1} onMouseDown={(e) => e.preventDefault()} onClick={() => choose(b)}>
+                <code>!{b.key}</code>
+                <span>{b.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </form>
   );
 }

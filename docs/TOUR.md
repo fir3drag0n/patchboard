@@ -213,7 +213,8 @@ progress and albums played lately on Audiobookshelf and Navidrome.
 ![Calendar, Notes, Books, Watched, Listening and This week on the board](screenshots/household.webp)
 
 **No setup needed:** Bookmarks puts your links on the board, Search sends
-words to the engine you pick, Clocks shows the time where your people are
+words to the engine you pick or, with `!yt`, `!sonarr` and the like, straight
+to a site or one of your apps, Clocks shows the time where your people are
 (or one big clock and the date), Feeds reads any RSS or Atom feed without a
 reader app, and Releases follows the newest version of the GitHub projects
 you name. Markets follows coins, stocks, funds, indexes and currencies with

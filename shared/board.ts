@@ -5,7 +5,7 @@
 // Runtime code is fine here: no Node or DOM use.
 
 import { HA_WIDGETS, parseEntities } from './ha.ts';
-import { camerasField, choresField, engineField, eventsField, feedsField, groupsField, reposField, searchUrlField, symbolsField, type WidgetField, zonesField } from './fields.ts';
+import { bangsField, camerasField, choresField, engineField, eventsField, feedsField, groupsField, reposField, searchUrlField, symbolsField, type WidgetField, zonesField } from './fields.ts';
 import { validateJsonConfig } from './jsonwidget.ts';
 
 export type WidgetType =
@@ -353,7 +353,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   proxmox: { name: 'Proxmox', about: 'Proxmox VE: each node and every VM and container, running or stopped.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   photos: { name: 'Photos', about: 'Immich: photos, videos and library size, and what Immich is working on.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   bookmarks: { name: 'Bookmarks', about: 'The links in Edit apps, Bookmarks, or brought over from Homepage, grouped as you keep them.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
-  search: { name: 'Search', about: 'A search box for DuckDuckGo, Google, Bing, Kagi, Startpage or any site you name. Opens the results in a new tab.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { title: false, fields: [engineField, searchUrlField] } },
+  search: { name: 'Search', about: 'A search box for DuckDuckGo, Google, Bing, Kagi, Startpage or any site you name, with ! shortcuts: !yt, !w, your own apps such as !sonarr, and any you add. Opens the results in a new tab.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { title: false, fields: [engineField, searchUrlField, bangsField] } },
   clocks: {
     name: 'Clocks',
     about: 'The time where your people are, with the day when it differs from yours. Big clock shows your own time and date across a wall tablet.',
