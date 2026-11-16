@@ -97,6 +97,7 @@ services.yaml.
 | `HOOK_TOKEN` | generated | What webhooks send when sign-in is on. Settings, Connections, Sign-in and keys shows Diun's address with it. |
 | `READ_ONLY` | `0` | `1` refuses every change and hides the controls for them. For one family phone or tablet, make it a household device instead ([SECURITY.md](../SECURITY.md)). |
 | `DOCKER_HOST` | empty | `tcp://host:port` of a Docker socket proxy, used instead of the socket. |
+| `DOCKER_HOSTS` | empty | Other machines running Docker, each a socket proxy: `pi=tcp://192.168.1.20:2375, nuc=tcp://192.168.1.21:2375`. Their containers are named like `pihole@pi`. Settings, Connections sets them too. |
 
 ## Alerts
 

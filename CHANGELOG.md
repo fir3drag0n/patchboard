@@ -33,6 +33,12 @@
   the town or a password is still to do.
 - **Connect where the app is:** a tile for Sonarr, Plex or any app with an
   integration shows Connect until you set it up, and it opens that setup.
+- **Several Docker hosts:** Settings, Connections, Other Docker hosts takes
+  your other machines, each through a Docker socket proxy
+  (`pi=tcp://192.168.1.20:2375`). Their containers join Stacks as their own
+  stacks, named like `pihole@pi`, with logs, history, alerts, start, stop and
+  restart; a host that stops answering raises an alert. Updates stay on
+  Patchboard's own host.
 - **Search shortcuts:** the Search widget takes `!` shortcuts. `!yt`,
   `!w`, `!gh` and others are built in, your own apps with a search page
   get theirs (`!sonarr`, `!jellyfin`, `!immich`), and the widget's

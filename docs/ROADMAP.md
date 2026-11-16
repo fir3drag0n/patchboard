@@ -4,7 +4,6 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Making it yours
 
-- [ ] Several Docker hosts
 
 ### Integrations
 

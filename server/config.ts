@@ -107,6 +107,8 @@ function build(str: Lookup) {
     dockerSocket: str('DOCKER_SOCKET') ?? '/var/run/docker.sock',
     /** tcp://host:port of a Docker socket proxy, used instead of the socket when set. */
     dockerHost: str('DOCKER_HOST'),
+    /** More machines running Docker: "pi=tcp://192.168.1.20:2375", each a socket proxy. */
+    dockerHosts: parseDockerHosts(str('DOCKER_HOSTS')),
 
     /** Refuse every change to the server: actions, updates, board edits. */
     readOnly: env.READ_ONLY === '1' || env.READ_ONLY === 'true',
@@ -336,6 +338,23 @@ export function withConfig<T>(candidate: Record<string, string>, fn: () => Promi
   return scoped.run(build(lookup(candidate)), fn);
 }
 
+
+export interface DockerHost {
+  /** What its containers are called after: pihole@pi. */
+  name: string;
+  host: string;
+  port: number;
+}
+
+/** "pi=tcp://192.168.1.20:2375, nuc=tcp://nuc.lan:2375": comma or line separated. */
+export function parseDockerHosts(raw: string | undefined): DockerHost[] {
+  const out: DockerHost[] = [];
+  for (const part of (raw ?? '').split(/[,\n]/)) {
+    const m = /^\s*([a-z0-9][a-z0-9-]{0,29})\s*=\s*(?:tcp|https?):\/\/([^\s:/]+)(?::(\d{1,5}))?\/?\s*$/i.exec(part);
+    if (m && !out.some((h) => h.name === m[1].toLowerCase())) out.push({ name: m[1].toLowerCase(), host: m[2], port: Number(m[3] ?? 2375) });
+  }
+  return out.slice(0, 10);
+}
 
 /** Where Docker API requests go: the unix socket, or a socket proxy over TCP. */
 export function dockerTarget(): { socketPath: string } | { host: string; port: number } {

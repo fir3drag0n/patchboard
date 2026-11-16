@@ -451,7 +451,7 @@ const EVERYTHING: Board = {
 export const EMPTY_BOARD: Board = { version: 1, columns: 3, widgets: [{ id: 'attention', type: 'attention', size: 'm' }] };
 
 const ID = /^[a-z0-9-]{1,40}$/;
-const CONTAINER = /^[\w.-]{1,128}$/;
+const CONTAINER = /^[\w.-]{1,128}(@[a-z0-9][a-z0-9-]{0,29})?$/;
 
 /** A clean board from untrusted input, or an error message. */
 export function validateBoard(input: unknown): { board: Board } | { error: string } {

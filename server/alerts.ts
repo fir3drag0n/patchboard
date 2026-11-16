@@ -91,6 +91,10 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
 
   const docker = data<DockerData>(sources, 'docker');
   const containers = docker?.containers ?? [];
+  // Another Docker host that stopped answering: its containers are unknown, not down.
+  for (const h of docker?.hosts ?? []) {
+    if (!h.ok) alerts.push({ id: `dockerhost-${h.name}`, level: 'critical', subject: h.name, ...say('Docker host {name} is down', { name: h.name }), detail: h.error, href: '/settings?tab=connections&setup=dockerhosts', source: 'docker' });
+  }
   // Stopped on purpose (scheduled, or from Patchboard) is not down: it never
   // absorbs a dependent's alert, so a real crash beside it still shows.
   const isDown = (name: string) => {

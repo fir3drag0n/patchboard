@@ -200,8 +200,15 @@ export function demoContainers(): Container[] {
         ...meta,
       };
     })
+    .concat(DEMO_PI)
     .sort((a, b) => a.name.localeCompare(b.name));
 }
+
+/** A second Docker host in the demo, a Raspberry Pi by the router, so Stacks shows one. */
+const DEMO_PI: Container[] = [
+  { id: '9a1b2c3d4e5f', name: 'pihole@pi', host: 'pi', image: 'pihole/pihole:latest', state: 'running', status: 'Up 12 days (healthy)', health: 'healthy', project: 'dns', service: 'pihole', created: Date.now() - 12 * D },
+  { id: '8b2c3d4e5f6a', name: 'homebridge@pi', host: 'pi', image: 'homebridge/homebridge:latest', state: 'running', status: 'Up 12 days', health: null, project: 'home', service: 'homebridge', created: Date.now() - 12 * D },
+];
 
 const sonarrUpcoming = (): ReleaseItem[] => [
   // Aired this morning and not downloaded yet: This week offers Search.
@@ -727,7 +734,7 @@ function withPower(d: ProxmoxData): ProxmoxData {
 
 export function demoAdapters(): Adapter[] {
   return [
-    demo<DockerData>('docker', 'Docker', 10 * SECOND, () => ({ containers: demoContainers() })),
+    demo<DockerData>('docker', 'Docker', 10 * SECOND, () => ({ containers: demoContainers(), hosts: [{ name: 'pi', ok: true, count: DEMO_PI.length }] })),
     demo<SystemData>('system', 'System', 5 * SECOND, () => ({
       cpuPct: jitter(14, 6),
       load: [jitter(1.6, 0.4), 1.4, 1.2],

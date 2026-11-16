@@ -119,7 +119,9 @@ logs beside them, and buttons to start, restart, update or roll back.
 
 **Stacks:** every container by compose project. Sort by problems, CPU or
 memory. Each stack folds to its header with Hide; on a phone the healthy
-ones start folded.
+ones start folded. Containers on your other machines, added under Other
+Docker hosts in Settings, show as their own stacks ("dns on pi") and are
+named like pihole@pi, with logs, history, start, stop and restart.
 
 ![Stacks](screenshots/stacks.webp)
 

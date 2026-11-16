@@ -30,6 +30,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'dockerhosts',
+    name: 'Other Docker hosts',
+    adds: 'Containers on your other machines join Stacks, alerts, history and logs, named like pihole@pi, with start, stop and restart. Updates stay on Patchboard\'s own host.',
+    env: ['DOCKER_HOSTS'],
+    where: 'On each machine, run a Docker socket proxy such as tecnativa/docker-socket-proxy (CONTAINERS=1, and POST=1 for start, stop and restart), then name it here: pi=tcp://192.168.1.20:2375.',
+    source: false,
+  },
+  {
     id: 'system',
     name: 'This host',
     adds: 'CPU, memory and uptime with 24 hours of history.',
@@ -611,7 +619,7 @@ export const INTEGRATIONS: Integration[] = [
 export const CATEGORIES: [name: string, ids: string[]][] = [
   ['Media', ['tautulli', 'jellyfin', 'emby', 'trakt', 'overseerr', 'tracearr', 'immich', 'audiobookshelf', 'navidrome']],
   ['Downloads', ['sonarr', 'radarr', 'lidarr', 'readarr', 'prowlarr', 'bazarr', 'qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget']],
-  ['Storage and servers', ['docker', 'system', 'truenas', 'unraid', 'synology', 'qnap', 'proxmox', 'portainer', 'glances', 'beszel', 'scrutiny', 'nut', 'syncthing']],
+  ['Storage and servers', ['docker', 'dockerhosts', 'system', 'truenas', 'unraid', 'synology', 'qnap', 'proxmox', 'portainer', 'glances', 'beszel', 'scrutiny', 'nut', 'syncthing']],
   ['Monitoring', ['checks', 'uptimekuma', 'gatus', 'healthchecks', 'netdata', 'prometheus', 'speedtest', 'backups', 'diun', 'updates', 'runbook', 'dozzle']],
   ['Network', ['unifi', 'tailscale', 'pihole', 'adguard', 'wake']],
   ['Home and life', ['homeassistant', 'frigate', 'tessie', 'bitaxe', 'weather', 'calendar', 'fastmail', 'miniflux', 'hardcover', 'goodreads', 'paperless', 'nextcloud', 'gitea']],

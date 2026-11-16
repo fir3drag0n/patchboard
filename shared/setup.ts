@@ -46,6 +46,7 @@ export const UI_SETUP = new Set([
   'synology',
   'qnap',
   'portainer',
+  'dockerhosts',
   'netdata',
   'prometheus',
   'bitaxe',
@@ -104,6 +105,7 @@ const LABELS: [RegExp, string][] = [
   [/^GLANCES_URL$/, 'Addresses'],
   [/^BITAXE_URL$/, 'Miner addresses'],
   [/^NUT_HOST$/, 'NUT server'],
+  [/^DOCKER_HOSTS$/, 'Hosts'],
   [/^CALENDAR_URLS$/, 'Calendar addresses'],
   [/^GOODREADS_USER$/, 'Goodreads user ID'],
   [/^HARDCOVER_TOKEN$/, 'API token'],
@@ -140,6 +142,7 @@ export function fieldLabel(name: string): string {
 }
 
 const HINTS: Record<string, string> = {
+  DOCKER_HOSTS: 'pi=tcp://192.168.1.20:2375, nuc=tcp://192.168.1.21:2375',
   WOL_DEVICES: 'Name=MAC pairs, comma-separated: NAS=aa:bb:cc:dd:ee:ff,Desktop=00:11:22:33:44:55',
   TRUENAS_URL: 'wss://truenas.local/api/current',
   PROXMOX_URL: 'https://pve.local:8006',

@@ -18,6 +18,12 @@ export function iconUrl(icon?: string): string | undefined {
   return `${ICONS}/svg/${icon}.svg`;
 }
 
+/** A container's stack on Stacks: its compose project, and its host when it's another machine's. */
+export function stackKey(project: string | undefined, host?: string): string {
+  const p = project ?? 'Standalone';
+  return host ? `${p} on ${host}` : p;
+}
+
 export function containerMap(snap: Snapshot | null): Map<string, Container> {
   const list = (snap?.sources.docker?.data as { containers: Container[] } | null)?.containers ?? [];
   return new Map(list.map((c) => [c.name, c]));

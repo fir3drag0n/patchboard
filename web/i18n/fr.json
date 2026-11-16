@@ -930,5 +930,6 @@
  "Standard": "Standard",
  "Search the web": "Rechercher sur le web",
  "Search, or ! for shortcuts": "Rechercher, ou ! pour les raccourcis",
- "Shortcuts": "Raccourcis"
+ "Shortcuts": "Raccourcis",
+ "Containers on your other machines join Stacks, alerts, history and logs, named like pihole@pi, with start, stop and restart. Updates stay on Patchboard's own host.": "Les conteneurs de vos autres machines rejoignent Stacks, les alertes, l'historique et les journaux, nommés comme pihole@pi, avec démarrage, arrêt et redémarrage. Les mises à jour restent sur l'hôte de Patchboard."
 }

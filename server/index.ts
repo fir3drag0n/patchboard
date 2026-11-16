@@ -4,7 +4,7 @@ import { fieldLabel } from '../shared/setup.ts';
 import { latestReleases, readFeeds } from './outside.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { isIP } from 'node:net';
-import { request } from './http.ts';
+import { getJson, request } from './http.ts';
 import { join } from 'node:path';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
@@ -670,7 +670,8 @@ app.get('/api/logs/:name', (c) => {
   });
 });
 
-const NAME = /^[\w.-]+$/;
+// A container, or one on another Docker host: pihole@pi.
+const NAME = /^[\w.-]{1,128}(@[a-z0-9][a-z0-9-]{0,29})?$/;
 
 // The Monitor page's feed: warning and error lines from every running
 // container, one shared set of followers for every screen watching.
@@ -694,7 +695,7 @@ app.get('/api/containers/:name', async (c) => {
   if (!NAME.test(name)) return c.json({ error: 'Bad container name' }, 400);
   if (config.demo) {
     const d = demoInspect(name, hub.containers());
-    if (d) d.update = { ok: true };
+    if (d) d.update = name.includes('@') ? { ok: false, reason: "Updates run on Patchboard's own host." } : { ok: true };
     return d ? c.json(d) : c.json({ error: 'No such container' }, 404);
   }
   try {
@@ -1179,6 +1180,21 @@ app.delete('/api/setup/integrations/:id', (c) => {
 
 /** One fetch with the candidate settings, summed up in a line. Runs inside withConfig. */
 async function testIntegration(id: string): Promise<string> {
+  if (id === 'dockerhosts') {
+    const hosts = config.dockerHosts;
+    if (!hosts.length) throw new Error('No host read. Use name=tcp://address:port, such as pi=tcp://192.168.1.20:2375.');
+    const lines = await Promise.all(
+      hosts.map(async (h) => {
+        try {
+          const v = await getJson<{ Version?: string }>(`http://${h.host}:${h.port}/version`, {}, 6000);
+          return `${h.name}: Docker ${v.Version ?? ''}`.trim();
+        } catch (err) {
+          throw new Error(`${h.name} didn't answer at ${h.host}:${h.port}. ${(err as Error).message}`);
+        }
+      }),
+    );
+    return `${lines.join(', ')}.`;
+  }
   if (id === 'wake') {
     const n = config.wake.devices.length;
     if (!n) throw new Error('No machine parsed. Use Name=aa:bb:cc:dd:ee:ff, comma-separated.');

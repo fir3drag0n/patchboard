@@ -50,7 +50,7 @@ const ICON = /^(https?:\/\/[^\s"'<>]{1,400}|\/api\/icons\/[a-f0-9]{16}\.(png|jpg
 
 /** True when an icon would pass the layout check. */
 export const okIcon = (s: string): boolean => ICON.test(s);
-const CONTAINER = /^[\w.-]{1,128}$/;
+const CONTAINER = /^[\w.-]{1,128}(@[a-z0-9][a-z0-9-]{0,29})?$/;
 const isUrl = (s: unknown) => {
   if (typeof s !== 'string' || s.length > 500) return false;
   try {

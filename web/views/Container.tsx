@@ -34,7 +34,7 @@ import { Empty, Icon, Ident, Section } from '../components/ui.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
 import { ago, agoLong, pct, plural, shortDate, size, speed } from '../lib/format.ts';
 import { lineClass, logTime, useLogStream } from '../lib/logs.ts';
-import { checkFor, containerMap, ctrState, isExternal, serviceFor } from '../lib/services.ts';
+import { checkFor, containerMap, ctrState, isExternal, serviceFor, stackKey } from '../lib/services.ts';
 import { useNow, useSource, useStore } from '../lib/store.tsx';
 import { locale } from '../lib/region.ts';
 
@@ -141,7 +141,7 @@ export function ContainerPage() {
                   </Row>
                   {d.project && (
                     <Row k="Stack">
-                      <Link to={`/stacks#${d.project}`} className="ident">
+                      <Link to={`/stacks#${encodeURIComponent(stackKey(d.project, ctr?.host))}`} className="ident">
                         {d.project}
                       </Link>
                       {d.service && <span className="ledger-aside">service {d.service}</span>}
@@ -175,7 +175,7 @@ export function ContainerPage() {
   );
   return (
     <div className="page detail">
-      <Crumbs project={ctr.project} />
+      <Crumbs project={ctr.project} host={ctr.host} />
       <header className="detail-head">
         {/* On a phone the header opens up: name, then state and Start, then these links. */}
         <div className="detail-id">
@@ -208,7 +208,8 @@ export function ContainerPage() {
                 Add as an app
               </Link>
             ))}
-          {dozzle && (
+          {/* Dozzle reads Patchboard's own Docker, not another host's. */}
+          {dozzle && !ctr.host && (
             <a className="text-button" href={dozzle === '#' ? '#' : `${dozzle}/container/${ctr.id}`} target="_blank" rel="noreferrer">
               Dozzle
             </a>
@@ -321,15 +322,15 @@ function AnswersRow({ name, now }: { name: string; now: number }) {
   );
 }
 
-function Crumbs({ project }: { project?: string }) {
+function Crumbs({ project, host }: { project?: string; host?: string }) {
   return (
     <nav className="crumbs" aria-label="Breadcrumb">
       <Link to="/stacks">Stacks</Link>
       {project && (
         <>
           <span aria-hidden>/</span>
-          <Link to={`/stacks#${project}`} className="mono">
-            {project}
+          <Link to={`/stacks#${encodeURIComponent(stackKey(project, host))}`} className="mono">
+            {host ? stackKey(project, host) : project}
           </Link>
         </>
       )}
@@ -373,7 +374,7 @@ function Resources({ name, cpu, mem }: { name: string; cpu?: number; mem?: numbe
       <div className="metrics">
         <div className="metric">
           <span className="metric-num">{cpu == null ? '...' : pct(cpu)}</span>
-          <span className="metric-label">CPU, share of the server{cpuPeak != null && `. Peak ${pct(cpuPeak)}`}</span>
+          <span className="metric-label">{name.includes('@') ? `CPU, share of ${name.split('@').pop()}` : 'CPU, share of the server'}{cpuPeak != null && `. Peak ${pct(cpuPeak)}`}</span>
           <Spark data={cpuSeries} label={`${name} CPU, last 24 hours`} />
         </div>
         <div className="metric">

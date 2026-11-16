@@ -930,5 +930,6 @@
  "Standard": "Standaard",
  "Search the web": "Zoeken op het web",
  "Search, or ! for shortcuts": "Zoeken, of ! voor snelkoppelingen",
- "Shortcuts": "Snelkoppelingen"
+ "Shortcuts": "Snelkoppelingen",
+ "Containers on your other machines join Stacks, alerts, history and logs, named like pihole@pi, with start, stop and restart. Updates stay on Patchboard's own host.": "Containers op je andere machines verschijnen in Stacks, waarschuwingen, geschiedenis en logs, met namen als pihole@pi, en je kunt ze starten, stoppen en herstarten. Updates blijven op de host van Patchboard."
 }

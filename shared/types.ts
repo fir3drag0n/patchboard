@@ -99,10 +99,22 @@ export interface Container {
   dependsOn?: string[];
   /** patchboard.* and homepage.* catalog labels (name, group, href, icon...), prefix dropped. */
   labels?: Record<string, string>;
+  /** Another Docker host it runs on; its name then ends in @host. Absent on Patchboard's own. */
+  host?: string;
+}
+
+export interface DockerHostState {
+  name: string;
+  ok: boolean;
+  error?: string;
+  /** Containers it has. */
+  count?: number;
 }
 
 export interface DockerData {
   containers: Container[];
+  /** Other Docker hosts, when any are set up. */
+  hosts?: DockerHostState[];
 }
 
 export interface SystemData {

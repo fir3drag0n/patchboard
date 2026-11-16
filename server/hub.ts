@@ -358,6 +358,7 @@ export class Hub {
         ...(config.docsPath || config.demo ? ['runbook'] : []),
         ...(config.dozzleUrl || config.demo ? ['dozzle'] : []),
         ...(config.wake.devices.length || config.demo ? ['wake'] : []),
+        ...(config.dockerHosts.length || config.demo ? ['dockerhosts'] : []),
         ...(config.notify.ntfy || config.demo ? ['ntfy'] : []),
         ...(config.notify.gotify ? ['gotify'] : []),
         ...(config.notify.pushover ? ['pushover'] : []),

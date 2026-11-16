@@ -4,14 +4,32 @@
 
 import { redact } from '../redact.ts';
 import http from 'node:http';
-import type { Container, ContainerDetail, ContainerStats, DockerData, StatsData } from '../../shared/types.ts';
+import type { Container, ContainerDetail, ContainerStats, DockerData, DockerHostState, StatsData } from '../../shared/types.ts';
 import { config, dockerTarget } from '../config.ts';
 import { type Adapter, SECOND } from './adapter.ts';
 import { pickLabels } from '../labels.ts';
 
-function dockerGet(path: string, signal?: AbortSignal): Promise<http.IncomingMessage> {
+type Target = { socketPath: string } | { host: string; port: number };
+
+/**
+ * "pihole@pi": a container on another Docker host is named after it, so the
+ * rest of Patchboard (routes, alerts, history, logs) needs no host of its
+ * own. Docker never allows @ in a name, so nothing local can collide.
+ */
+export function targetOf(name: string): { target: Target; bare: string; host?: string } {
+  const at = name.lastIndexOf('@');
+  if (at > 0) {
+    const host = name.slice(at + 1);
+    const h = config.dockerHosts.find((x) => x.name === host);
+    if (!h) throw new Error(`No Docker host called ${host}`);
+    return { target: { host: h.host, port: h.port }, bare: name.slice(0, at), host };
+  }
+  return { target: dockerTarget(), bare: name };
+}
+
+function dockerGet(path: string, signal?: AbortSignal, target: Target = dockerTarget()): Promise<http.IncomingMessage> {
   return new Promise((resolve, reject) => {
-    const req = http.get({ ...dockerTarget(), path, signal }, (res) => {
+    const req = http.get({ ...target, path, signal }, (res) => {
       if ((res.statusCode ?? 500) >= 400) {
         res.resume();
         reject(new Error(`Docker API ${res.statusCode}`));
@@ -26,8 +44,8 @@ function dockerGet(path: string, signal?: AbortSignal): Promise<http.IncomingMes
   });
 }
 
-async function dockerJson<T>(path: string): Promise<T> {
-  const res = await dockerGet(path);
+async function dockerJson<T>(path: string, target: Target = dockerTarget()): Promise<T> {
+  const res = await dockerGet(path, undefined, target);
   const chunks: Buffer[] = [];
   for await (const chunk of res) chunks.push(chunk as Buffer);
   return JSON.parse(Buffer.concat(chunks).toString('utf8')) as T;
@@ -69,11 +87,11 @@ function parseHealth(status: string): Container['health'] {
  */
 const startedFrom = new Map<string, string>();
 
-async function imageName(c: RawContainer): Promise<string | null> {
+async function imageName(c: RawContainer, target: Target = dockerTarget()): Promise<string | null> {
   if (!c.Image.startsWith('sha256:')) return null;
   if (!startedFrom.has(c.Id)) {
     try {
-      startedFrom.set(c.Id, (await dockerJson<{ Config: { Image: string } }>(`/containers/${c.Id}/json`)).Config.Image);
+      startedFrom.set(c.Id, (await dockerJson<{ Config: { Image: string } }>(`/containers/${c.Id}/json`, target)).Config.Image);
     } catch {
       return null;
     }
@@ -82,11 +100,30 @@ async function imageName(c: RawContainer): Promise<string | null> {
   return name.startsWith('sha256:') ? null : name;
 }
 
+let hostStates: DockerHostState[] = [];
+
+/** Every container: Patchboard's own host, then each other host's, named name@host. */
 export async function listContainers(): Promise<Container[]> {
-  const raw = await dockerJson<RawContainer[]>('/containers/json?all=1');
-  const names = new Map(await Promise.all(raw.filter((c) => c.Image.startsWith('sha256:')).map(async (c) => [c.Id, await imageName(c)] as const)));
-  for (const id of startedFrom.keys()) if (!raw.some((c) => c.Id === id)) startedFrom.delete(id);
-  const nameOf = (c: RawContainer) => (c.Names[0] ?? c.Id).replace(/^\//, '');
+  const local = await listFrom(dockerTarget());
+  const remote = await Promise.all(
+    config.dockerHosts.map(async (h) => {
+      try {
+        const list = await listFrom({ host: h.host, port: h.port }, h.name);
+        return { state: { name: h.name, ok: true, count: list.length }, list };
+      } catch (err) {
+        return { state: { name: h.name, ok: false, error: (err as Error).message }, list: [] as Container[] };
+      }
+    }),
+  );
+  hostStates = remote.map((r) => r.state);
+  return [...local, ...remote.flatMap((r) => r.list)].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+async function listFrom(target: Target, host?: string): Promise<Container[]> {
+  const raw = await dockerJson<RawContainer[]>('/containers/json?all=1', target);
+  const names = new Map(await Promise.all(raw.filter((c) => c.Image.startsWith('sha256:')).map(async (c) => [c.Id, await imageName(c, target)] as const)));
+  if (!host) for (const id of startedFrom.keys()) if (!raw.some((c) => c.Id === id)) startedFrom.delete(id);
+  const nameOf = (c: RawContainer) => (c.Names[0] ?? c.Id).replace(/^\//, '') + (host ? `@${host}` : '');
   // depends_on names compose services; resolve them to container names in the same project.
   const byService = new Map(raw.map((c) => [`${c.Labels?.[PROJECT]}/${c.Labels?.[SERVICE]}`, nameOf(c)]));
   return raw
@@ -111,9 +148,9 @@ export async function listContainers(): Promise<Container[]> {
         ...(c.Labels?.['com.docker.compose.oneoff'] === 'True' ? { oneoff: true } : {}),
         dependsOn: deps.length ? deps : undefined,
         labels: pickLabels(c.Labels),
+        ...(host ? { host } : {}),
       };
-    })
-    .sort((a, b) => a.name.localeCompare(b.name));
+    });
 }
 
 export function dockerAdapter(): Adapter<DockerData> {
@@ -121,7 +158,10 @@ export function dockerAdapter(): Adapter<DockerData> {
     id: 'docker',
     label: 'Docker',
     intervalMs: 10 * SECOND,
-    fetch: async () => ({ containers: await listContainers() }),
+    fetch: async () => {
+      const containers = await listContainers();
+      return config.dockerHosts.length ? { containers, hosts: hostStates } : { containers };
+    },
   };
 }
 
@@ -148,7 +188,7 @@ export function statsAdapter(): Adapter<StatsData> {
       await Promise.all(
         running.map(async (c) => {
           try {
-            const s = await dockerJson<RawStats>(`/containers/${c.id}/stats?stream=false&one-shot=true`);
+            const s = await dockerJson<RawStats>(`/containers/${c.id}/stats?stream=false&one-shot=true`, targetOf(c.name).target);
             const cpu = s.cpu_stats?.cpu_usage?.total_usage ?? 0;
             const sys = s.cpu_stats?.system_cpu_usage ?? 0;
             next.set(c.name, { cpu, sys });
@@ -207,15 +247,16 @@ function hostBinding(binds: { HostIp: string; HostPort: string }[] | null): stri
  * variables are where secrets live, and the browser never needs them.
  */
 export async function inspectContainer(name: string, all: Container[]): Promise<ContainerDetail> {
-  const r = await dockerJson<RawInspect>(`/containers/${encodeURIComponent(name)}/json`);
+  const { target, bare, host } = targetOf(name);
+  const r = await dockerJson<RawInspect>(`/containers/${encodeURIComponent(bare)}/json`, target);
   let imageCreated: number | null = null;
   try {
-    imageCreated = time((await dockerJson<{ Created: string }>(`/images/${encodeURIComponent(r.Image)}/json`)).Created);
+    imageCreated = time((await dockerJson<{ Created: string }>(`/images/${encodeURIComponent(r.Image)}/json`, target)).Created);
   } catch {
     // The image may have been removed since; not worth failing the page.
   }
   const labels = r.Config.Labels ?? {};
-  const cname = r.Name.replace(/^\//, '');
+  const cname = r.Name.replace(/^\//, '') + (host ? `@${host}` : '');
   const me = all.find((c) => c.name === cname);
   const running = r.State.Status === 'running';
   return {
@@ -254,9 +295,16 @@ export type ContainerAction = 'start' | 'stop' | 'restart';
 
 /** Start, stop or restart a container. Stop and restart give it 10 s to exit cleanly. */
 export function containerAction(name: string, action: ContainerAction): Promise<void> {
+  let where: ReturnType<typeof targetOf>;
+  try {
+    where = targetOf(name);
+  } catch (err) {
+    return Promise.reject(err);
+  }
+  const { target, bare } = where;
   return new Promise((resolve, reject) => {
     const req = http.request(
-      { ...dockerTarget(), path: `/containers/${encodeURIComponent(name)}/${action}${action === 'start' ? '' : '?t=10'}`, method: 'POST' },
+      { ...target, path: `/containers/${encodeURIComponent(bare)}/${action}${action === 'start' ? '' : '?t=10'}`, method: 'POST' },
       (res) => {
         res.resume();
         // 304: already in that state, which is fine.
@@ -332,11 +380,13 @@ export async function followLogs(
   onLine: (line: { stream: 'out' | 'err'; text: string; at?: number }) => void,
   signal: AbortSignal,
 ): Promise<void> {
-  const inspect = await dockerJson<{ Config: { Tty: boolean } }>(`/containers/${encodeURIComponent(name)}/json`);
+  const { target, bare } = targetOf(name);
+  const inspect = await dockerJson<{ Config: { Tty: boolean } }>(`/containers/${encodeURIComponent(bare)}/json`, target);
   const tty = inspect.Config.Tty;
   const res = await dockerGet(
-    `/containers/${encodeURIComponent(name)}/logs?follow=1&stdout=1&stderr=1&timestamps=1&tail=${tail}`,
+    `/containers/${encodeURIComponent(bare)}/logs?follow=1&stdout=1&stderr=1&timestamps=1&tail=${tail}`,
     signal,
+    target,
   );
 
   let buf = Buffer.alloc(0);

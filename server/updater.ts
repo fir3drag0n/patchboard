@@ -148,6 +148,8 @@ export function helperArgs(o: { sock: string; dir: string; files: string[]; imag
 
 /** Whether a container can be updated from Patchboard, and why not. */
 export async function eligibility(c: Container): Promise<UpdateEligibility> {
+  // An update recreates from the compose files, which live on that other machine.
+  if (c.host) return { ok: false, reason: `Updates run on Patchboard's own host. Update ${c.name.replace(/@[^@]+$/, '')} on ${c.host}.` };
   if (!runner.cli) return { ok: false, reason: 'This is the slim image, which has no Docker CLI. Use the full image to update from Patchboard.' };
   if (c.name === (await whoAmI()) && !(await selfSocket())) {
     return { ok: false, reason: 'Updating Patchboard from here needs the Docker socket mounted. Behind a socket proxy, run docker compose pull and up -d in its folder.' };

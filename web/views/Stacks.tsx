@@ -9,13 +9,15 @@ import { HealthStrip } from '../components/Squares.tsx';
 import { Icon } from '../components/ui.tsx';
 import { useJson } from '../lib/api.ts';
 import { pct, plural, size } from '../lib/format.ts';
-import { containerMap, ctrState, type JackState, serviceFor, statusLine } from '../lib/services.ts';
+import { containerMap, ctrState, stackKey, type JackState, serviceFor, statusLine } from '../lib/services.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 import { CustomizePage } from '../components/PageCustomize.tsx';
 import { RowUpdate } from '../components/Updater.tsx';
 
 const LOOSE = 'Standalone';
+/** Its stack: the compose project, with the host's name when it's another machine's. */
+const stackOf = (c: Container) => stackKey(c.project, c.host);
 type SortKey = 'problems' | 'name' | 'cpu' | 'memory';
 const rank: Record<JackState, number> = { down: 0, warn: 1, idle: 2, up: 3, none: 4 };
 
@@ -57,9 +59,9 @@ export function Stacks() {
 
   const groups = new Map<string, Container[]>();
   const hiddenStacks = new Set(snap.pages?.stacks?.hideStacks ?? []);
-  const stackNames = [...new Set([...all.map((c) => c.project ?? LOOSE), ...hiddenStacks])].sort();
+  const stackNames = [...new Set([...all.map(stackOf), ...hiddenStacks])].sort();
   for (const c of all.filter(match)) {
-    const key = c.project ?? LOOSE;
+    const key = stackOf(c);
     if (hiddenStacks.has(key)) continue;
     groups.set(key, [...(groups.get(key) ?? []), c]);
   }
@@ -68,7 +70,8 @@ export function Stacks() {
   const cpuOf = (list: Container[]) => list.reduce((n, c) => n + (s[c.name]?.cpu ?? 0), 0);
   const memOf = (list: Container[]) => list.reduce((n, c) => n + (s[c.name]?.memBytes ?? 0), 0);
   const ordered = [...groups].sort(([a, la], [b, lb]) => {
-    if (a === LOOSE || b === LOOSE) return a === LOOSE ? 1 : -1;
+    // Loose containers last, on any host.
+    if (a.startsWith(LOOSE) !== b.startsWith(LOOSE)) return a.startsWith(LOOSE) ? 1 : -1;
     if (sort === 'name') return a.localeCompare(b);
     if (sort === 'cpu') return cpuOf(lb) - cpuOf(la) || a.localeCompare(b);
     if (sort === 'memory') return memOf(lb) - memOf(la) || a.localeCompare(b);
@@ -85,8 +88,8 @@ export function Stacks() {
   }
 
   // Totals cover the stacks this page shows; hidden ones are named as hidden.
-  const shownCtrs = all.filter((c) => !hiddenStacks.has(c.project ?? LOOSE));
-  const hiddenCount = [...hiddenStacks].filter((h) => all.some((c) => (c.project ?? LOOSE) === h)).length;
+  const shownCtrs = all.filter((c) => !hiddenStacks.has(stackOf(c)));
+  const hiddenCount = [...hiddenStacks].filter((h) => all.some((c) => stackOf(c) === h)).length;
   const totalCpu = shownCtrs.reduce((n, c) => n + (s[c.name]?.cpu ?? 0), 0);
   const totalMem = shownCtrs.reduce((n, c) => n + (s[c.name]?.memBytes ?? 0), 0);
   const running = shownCtrs.filter((c) => c.state === 'running').length;
