@@ -143,7 +143,7 @@ function PoolSection({ pool, snapshots, now }: { pool: Pool; snapshots: number |
       </div>
       <Meter label={`Storage used on ${pool.name}`} value={pool.usedPct} level={level} />
       <p className="forecast-line">{forecast(h['pool.used'], pool, now)}</p>
-      <Spark data={h['pool.used']} height={40} min={Math.min(...(h['pool.used'] ?? [[0, 0]]).map((p) => p[1])) * 0.98} label="Pool used, last 90 days" />
+      <Spark data={h['pool.used']} height={40} format={size} min={Math.min(...(h['pool.used'] ?? [[0, 0]]).map((p) => p[1])) * 0.98} label="Pool used, last 90 days" />
       <dl className="ledger">
         <Row k="Health">
           <span className={pool.healthy ? '' : 'crit-text'}>
@@ -374,7 +374,7 @@ function Resources({ sys, nas }: { sys: SystemData | null; nas: TruenasData | nu
         <span className="metric-label">
           CPU, load {sys.load.map((l) => l.toFixed(2)).join(' ')}
         </span>
-        <Spark data={h.cpu} max={100} label="CPU, last 24 hours" />
+        <Spark data={h.cpu} max={100} format={pct} label="CPU, last 24 hours" />
       </div>
       {m && (
         <div className="metric">
@@ -390,7 +390,7 @@ function Resources({ sys, nas }: { sys: SystemData | null; nas: TruenasData | nu
               { value: Math.max(0, m.available), tone: 'faint', title: `Free ${size(m.available)}` },
             ]}
           />
-          <Spark data={h['mem.used']} label="Memory in use, last 24 hours" />
+          <Spark data={h['mem.used']} format={size} label="Memory in use, last 24 hours" />
         </div>
       )}
       {nas?.net && (

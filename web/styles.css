@@ -12459,6 +12459,10 @@ a.jack .jack-socket {
     margin-top: 8px;
   }
 
+  .mon-chart-wrap {
+    margin-top: 8px;
+  }
+
   .mon-chart.is-thin {
     height: 30px;
   }
@@ -14695,4 +14699,76 @@ a.lib-title:hover {
   .lib-actions {
     justify-content: flex-start;
   }
+}
+
+/* Point at a chart line: a dot on it and a small tag above with the value
+   and when. The tag never takes room from the page. */
+.mon-chart-wrap,
+.header-chart-plot {
+  position: relative;
+  display: block;
+}
+
+.mon-chart-wrap {
+  margin-top: 5px;
+}
+
+.mon-chart-wrap > .mon-chart {
+  margin-top: 0;
+}
+
+.tip-dot {
+  position: absolute;
+  z-index: 2;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: var(--head);
+  box-shadow: 0 0 0 2px var(--bg);
+  pointer-events: none;
+}
+
+.tip-tag {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  z-index: 3;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 7px;
+  transform: translateX(-50%);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--float-shadow);
+  font: 500 11.5px/1.2 var(--f-body);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.tip-tag b {
+  color: var(--head);
+  font-weight: 600;
+}
+
+.tip-tag span {
+  color: var(--ink-3);
+}
+
+.tip-tag[data-side='start'] {
+  transform: translateX(-12px);
+}
+
+.tip-tag[data-side='end'] {
+  transform: translateX(calc(-100% + 12px));
+}
+
+.spark-wrap.is-pointed .spark-now {
+  opacity: 0.3;
+}
+
+.mon-chart-wrap:has(> .is-thin) {
+  margin-top: 0;
 }

@@ -455,7 +455,7 @@ export function SpeedWidget({ now }: { now: number }) {
               </p>
             )}
           </div>
-          <Spark data={data.runs.map((r) => [r.at, r.down] as [number, number])} height={28} label="Download speed, last 24 hours" />
+          <Spark data={data.runs.map((r) => [r.at, r.down] as [number, number])} height={28} format={(v) => `${Math.round(v)} Mbps`} label="Download speed, last 24 hours" />
           <p className="speed-seen">
             {failed ? <span className="warn-text">The last test failed. </span> : null}
             Tested {agoLong(l.at, now)}{l.server ? ` against ${l.server}` : ''}

@@ -4,6 +4,7 @@
 // temperatures; and one feed of container events and the warning and error
 // lines from every container's log. Terminal-styled whatever the theme.
 
+import { readingTime, useChartTip } from '../components/ChartTip.tsx';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import type { BackupRun, BackupsData, ChangeEvent, Container, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
@@ -126,13 +127,13 @@ export function Monitor() {
 
       <section className="mon-charts" aria-label="Live">
         <Tile k="cpu" label={tr('cpu')} value={sys ? pct(sys.cpuPct) : '--'}>
-          <LiveChart lines={[{ points: cpuLine }]} max={100} label="CPU, live" />
+          <LiveChart lines={[{ points: cpuLine }]} max={100} format={pct} label="CPU, live" />
         </Tile>
         <Tile k="mem" label={tr('memory')} value={mem ? size(memUsed) : '--'} note={mem ? tr('of {total}, {arc} zfs cache', { total: size(mem.total), arc: size(mem.arc) }) : undefined}>
-          <LiveChart lines={[{ points: memLine }]} max={mem?.total} label="Memory in use, live" />
+          <LiveChart lines={[{ points: memLine }]} max={mem?.total} format={size} label="Memory in use, live" />
         </Tile>
         <Tile k="net" label={tr('network')} value={netIn != null ? speed(netIn) : '--'} note={netOut != null ? tr('in, {out} out', { out: speed(netOut) }) : undefined}>
-          <LiveChart lines={[{ points: rxLine }, { points: txLine, quiet: true }]} max={netMax} label="Network in and out, live" />
+          <LiveChart lines={[{ points: rxLine }, { points: txLine, quiet: true }]} max={netMax} format={speed} label="Network in and out, live" />
         </Tile>
         <Tile k="pool" label={pool ? tr('pool {name}', { name: pool.name.toLowerCase() }) : tr('pool')} value={pool ? `${Math.round(pool.usedPct)}%` : '--'} tone={poolLevel} note={pool ? tr('{free} free of {size}', { free: size(pool.freeBytes), size: size(pool.sizeBytes) }) : undefined}>
           {pool && (
@@ -142,7 +143,7 @@ export function Monitor() {
               <b style={{ left: `${limits.poolCritPct}%` }} />
             </div>
           )}
-          {pool && (poolHistory['pool.used']?.length ?? 0) > 2 && <LiveChart lines={[{ points: poolHistory['pool.used']!, quiet: true }]} label="Pool used, last 30 days" thin />}
+          {pool && (poolHistory['pool.used']?.length ?? 0) > 2 && <LiveChart lines={[{ points: poolHistory['pool.used']!, quiet: true }]} format={size} label="Pool used, last 30 days" thin />}
         </Tile>
       </section>
 
@@ -373,17 +374,29 @@ function useLive(history: Series | undefined, value: number | null, updatedAt: n
 }
 
 /** A filled line, scaled to `max`; a second, quieter line for comparisons (network out). */
-function LiveChart({ lines, max, label, thin }: { lines: { points: Series; quiet?: boolean }[]; max?: number; label: string; thin?: boolean }) {
+function LiveChart({ lines, max, label, thin, format }: { lines: { points: Series; quiet?: boolean }[]; max?: number; label: string; thin?: boolean; format: (v: number) => string }) {
   const W = 100;
   const H = 36;
   const top = max ?? Math.max(1, ...lines.flatMap((l) => l.points.map((p) => p[1])));
+  const yOf = (v: number) => H - Math.min(1, v / top) * (H - 2) - 1;
   const path = (pts: Series) => {
     if (pts.length < 2) return '';
     const t0 = pts[0][0];
     const span = pts[pts.length - 1][0] - t0 || 1;
-    return pts.map((p, i) => `${i ? 'L' : 'M'}${(((p[0] - t0) / span) * W).toFixed(2)},${(H - Math.min(1, p[1] / top) * (H - 2) - 1).toFixed(2)}`).join(' ');
+    return pts.map((p, i) => `${i ? 'L' : 'M'}${(((p[0] - t0) / span) * W).toFixed(2)},${yOf(p[1]).toFixed(2)}`).join(' ');
   };
+  // Pointing reads the first line, and the quiet one beside it (out, for the network).
+  const main = lines[0]?.points ?? [];
+  const t0 = main[0]?.[0] ?? 0;
+  const span = (main[main.length - 1]?.[0] ?? 1) - t0 || 1;
+  const xs = main.map((p) => (p[0] - t0) / span);
+  const tip = useChartTip(xs, (i) => {
+    const [t, v] = main[i];
+    const other = lines[1]?.points.reduce<[number, number] | null>((best, q) => (!best || Math.abs(q[0] - t) < Math.abs(best[0] - t) ? q : best), null);
+    return { x: xs[i], y: yOf(v) / H, text: other ? `${format(v)} / ${format(other[1])}` : format(v), when: readingTime(t, span) };
+  });
   return (
+    <span className="mon-chart-wrap" {...tip.handlers}>
     <svg className={`mon-chart ${thin ? 'is-thin' : ''}`} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={label}>
       {lines.map((l, i) => {
         const d = path(l.points);
@@ -396,6 +409,8 @@ function LiveChart({ lines, max, label, thin }: { lines: { points: Series; quiet
         );
       })}
     </svg>
+    {tip.overlay}
+    </span>
   );
 }
 

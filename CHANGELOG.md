@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Read a chart by pointing at it:** hover any line, or tap it on a phone,
+  and a small tag shows the value at that moment and when: CPU, memory,
+  pool, response time, speed tests, hashrate, the car, markets, the
+  weather strip and the Monitor page. It goes when you move off, or after a
+  moment on a phone.
 - **A Requests page for Overseerr and Jellyseerr:** every request waiting
   for approval, not just the five on Home, with Approve and Decline. On the
   way lists what's approved and not here yet. New request finds a film or

@@ -1082,5 +1082,6 @@
  "Waiting": "In attesa",
  "Waiting for approval": "In attesa di approvazione",
  "More": "Altro",
- "A Requests widget: what people asked for, with posters, and Approve or Decline on each. The Requests page lists every request and asks for something new.": "Un widget Richieste: cosa hanno chiesto le persone, con le locandine, e Approva o Rifiuta su ognuna. La pagina Richieste mostra ogni richiesta e ne fa di nuove."
+ "A Requests widget: what people asked for, with posters, and Approve or Decline on each. The Requests page lists every request and asks for something new.": "Un widget Richieste: cosa hanno chiesto le persone, con le locandine, e Approva o Rifiuta su ognuna. La pagina Richieste mostra ogni richiesta e ne fa di nuove.",
+ "{temp}°, {rain}% rain": "{temp}°, {rain}% di pioggia"
 }

@@ -24,6 +24,9 @@ client is doing, with a Pause button per client. Recently added merges every ser
 Jellyfin both added shows once, labeled Plex + Jellyfin, even when the two
 name it a little differently.
 
+Point at any line on a chart, or tap it on a phone, to read the value at
+that moment and when, in a small tag above the line.
+
 Hover, focus or tap a playback row in Right now to see its artwork and
 playback details. The preview shows artwork, never a live video frame. Time
 played and remaining appear when the service reports them; Navidrome shows

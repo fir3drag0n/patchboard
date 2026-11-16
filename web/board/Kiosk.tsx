@@ -68,7 +68,7 @@ export function MarketsWidget({ board, id, config }: { board: string; id: string
                   {name}
                 </span>
                 <span className="market-line">
-                  <Spark data={line.map((v, i) => [i, v] as [number, number])} min={lo - pad} max={hi + pad} height={big ? 40 : 22} label={`${name}, ${q.span ? spanWords(q.span) : ''}`} />
+                  <Spark data={line.map((v, i) => [i, v] as [number, number])} min={lo - pad} max={hi + pad} height={big ? 40 : 22} format={(v) => (q.currency ? money(v, q.currency) : String(v))} label={`${name}, ${q.span ? spanWords(q.span) : ''}`} />
                 </span>
                 <span className="market-price">{q.currency ? money(q.price, q.currency, q.span === '30d' ? 4 : undefined) : q.price}</span>
                 {q.change !== undefined && (

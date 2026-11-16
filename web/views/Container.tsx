@@ -316,7 +316,7 @@ function AnswersRow({ name, now }: { name: string; now: number }) {
       )}
       <span className="ledger-aside mono">{ck.target}</span>
       <span className="ledger-spark">
-        <Spark data={h[`svc.ms:${name}`]} height={18} label={`${name} response time, last 24 hours`} />
+        <Spark data={h[`svc.ms:${name}`]} height={18} format={(v) => `${Math.round(v)} ms`} label={`${name} response time, last 24 hours`} />
       </span>
     </Row>
   );
@@ -375,12 +375,12 @@ function Resources({ name, cpu, mem }: { name: string; cpu?: number; mem?: numbe
         <div className="metric">
           <span className="metric-num">{cpu == null ? '...' : pct(cpu)}</span>
           <span className="metric-label">{name.includes('@') ? `CPU, share of ${name.split('@').pop()}` : 'CPU, share of the server'}{cpuPeak != null && `. Peak ${pct(cpuPeak)}`}</span>
-          <Spark data={cpuSeries} label={`${name} CPU, last 24 hours`} />
+          <Spark data={cpuSeries} format={pct} label={`${name} CPU, last 24 hours`} />
         </div>
         <div className="metric">
           <span className="metric-num">{mem == null ? '...' : size(mem)}</span>
           <span className="metric-label">Memory{memPeak != null && `. Peak ${size(memPeak)}`}</span>
-          <Spark data={memSeries} label={`${name} memory, last 24 hours`} />
+          <Spark data={memSeries} format={size} label={`${name} memory, last 24 hours`} />
         </div>
       </div>
     </Section>

@@ -1,6 +1,7 @@
 // Home: exceptions and changes, not inventory. Healthy things collapse into
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
+import { useChartTip } from '../components/ChartTip.tsx';
 import { HeaderServer } from '../components/HeaderServer.tsx';
 import { StreamRow } from '../components/StreamRow.tsx';
 import { HOME_ID } from '../../shared/board.ts';
@@ -223,13 +224,23 @@ function HeaderWeatherChart({ weather, clock24, unit }: { weather: WeatherData; 
   const x = (i: number) => 4 + (i / Math.max(1, hours.length - 1)) * 192;
   const points = hours.map((h, i) => `${x(i)},${y(h.temp)}`).join(' ');
   const rain = Math.max(...hours.map((h) => h.precipPct));
+  const xs = hours.map((_, i) => x(i) / 200);
+  const tip = useChartTip(xs, (i) => ({
+    x: xs[i],
+    y: y(hours[i].temp) / 50,
+    text: hours[i].precipPct ? t('{temp}°, {rain}% rain', { temp: deg(hours[i].temp, unit), rain: hours[i].precipPct }) : `${deg(hours[i].temp, unit)}°`,
+    when: i === 0 ? t('Now') : new Date(hours[i].time).toLocaleTimeString(locale(), { hour: 'numeric', hour12: !clock24 }),
+  }));
   return (
     <span className="header-weather-chart">
       <span className="header-chart-caption"><span>Next {hours.length} hours · °{unit === 'c' ? 'C' : 'F'}</span><span>Rain {rain}%</span></span>
-      <svg viewBox="0 0 200 50" preserveAspectRatio="none" role="img" aria-label={`Temperature ${deg(low, unit)} to ${deg(high, unit)} degrees. Chance of rain up to ${rain} percent.`}>
-        {hours.map((h, i) => <rect key={h.time} className="header-rain" x={x(i) - 2} y={49 - h.precipPct * 0.16} width="4" height={Math.max(0.5, h.precipPct * 0.16)} />)}
-        <polyline className="header-temperature" points={points} vectorEffect="non-scaling-stroke" />
-      </svg>
+      <span className="header-chart-plot" {...tip.handlers}>
+        <svg viewBox="0 0 200 50" preserveAspectRatio="none" role="img" aria-label={`Temperature ${deg(low, unit)} to ${deg(high, unit)} degrees. Chance of rain up to ${rain} percent.`}>
+          {hours.map((h, i) => <rect key={h.time} className="header-rain" x={x(i) - 2} y={49 - h.precipPct * 0.16} width="4" height={Math.max(0.5, h.precipPct * 0.16)} />)}
+          <polyline className="header-temperature" points={points} vectorEffect="non-scaling-stroke" />
+        </svg>
+        {tip.overlay}
+      </span>
       <span className="header-hour-labels">
         {hours.filter((_, i) => i === 0 || i === Math.floor(hours.length / 2) || i === hours.length - 1).map((h, i) => (
           <span key={h.time}><b>{deg(h.temp, unit)}°</b> {i === 0 ? t('Now') : new Date(h.time).toLocaleTimeString(locale(), { hour: 'numeric', hour12: !clock24 })}</span>

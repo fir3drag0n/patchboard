@@ -1182,7 +1182,7 @@ export function Vitals({ compact = false }: { compact?: boolean }) {
         <Link to="/server#cpu" className="vw" title="CPU by hour, and what's using it" aria-label={`CPU ${pct(sys.cpuPct)}`}>
           <Roll className="vw-num" value={pct(sys.cpuPct)} />
           <span className="vw-label">{t('CPU')}</span>
-          <Spark data={h.cpu} max={100} height={compact ? 16 : 22} label="CPU, last 24 hours" />
+          <Spark data={h.cpu} max={100} height={compact ? 16 : 22} format={pct} label="CPU, last 24 hours" />
         </Link>
         {m && (
           <Link to="/server#resources" className="vw" title="What memory goes to" aria-label={`Memory in use ${size(used)}`}>
@@ -1258,7 +1258,7 @@ function ContainerWidget({ name }: { name: string }) {
         )}
       </div>
       )}
-      {running && <Spark data={h[`ctr.cpu:${name}`]} height={20} label={`${name} CPU, last 24 hours`} />}
+      {running && <Spark data={h[`ctr.cpu:${name}`]} height={20} format={pct} label={`${name} CPU, last 24 hours`} />}
       <HealthStrip states={up?.containers[name]} days={up?.days ?? []} label={`${name}, last 14 days`} />
     </section>
   );

@@ -212,6 +212,7 @@ export function MinersWidget() {
                     min={Math.max(0, Math.min(...(day[minerKey(m.name)] ?? [[0, 0]]).map((p) => p[1])) * 0.95)}
                     max={Math.max(...(day[minerKey(m.name)] ?? [[0, 1]]).map((p) => p[1])) * 1.02}
                     height={26}
+                    format={hashrate}
                     label={`${m.name} hashrate, last 24 hours`}
                   />
                   <p className="speed-seen">

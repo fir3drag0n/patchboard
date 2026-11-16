@@ -80,7 +80,7 @@ export function CarWidget() {
                   {c.chargeKw ? ` at ${c.chargeKw} kW` : ''}. Limit {c.limit}%.
                 </p>
                 <div className="car-chart">
-                  <Spark data={week[carKey('battery', c.vin)]} min={0} max={100} height={36} label={`${c.name} charge, last 7 days`} />
+                  <Spark data={week[carKey('battery', c.vin)]} min={0} max={100} height={36} format={(v) => `${Math.round(v)}%`} label={`${c.name} charge, last 7 days`} />
                   <span className="car-chart-label">Charge, last 7 days</span>
                 </div>
               </div>
@@ -104,9 +104,9 @@ export function CarWidget() {
                 </div>
                 {(inside?.length ?? 0) > 1 && (
                   <div className="car-chart car-chart-pair">
-                    <Spark data={inside} min={lo} max={hi} height={30} label={`${c.name} inside temperature, last 24 hours`} />
+                    <Spark data={inside} min={lo} max={hi} height={30} format={(v) => `${deg(v, unit)}° inside`} label={`${c.name} inside temperature, last 24 hours`} />
                     <span className="car-chart-outside">
-                      <Spark data={outside} min={lo} max={hi} height={30} label={`${c.name} outside temperature, last 24 hours`} />
+                      <Spark data={outside} min={lo} max={hi} height={30} format={(v) => `${deg(v, unit)}° outside`} label={`${c.name} outside temperature, last 24 hours`} />
                     </span>
                     <span className="car-chart-label">Inside, and outside dashed, last 24 hours</span>
                   </div>
@@ -128,6 +128,7 @@ export function CarWidget() {
                   <div className="car-chart">
                     <Lines
                       height={34}
+                      format={(v) => `${tire(v)} ${metric ? 'bar' : 'psi'}`}
                       label={`${c.name} tire pressures, last 7 days`}
                       lines={TIRES.map((t) => ({ data: week[carKey(`tire.${t}`, c.vin)], label: TIRE_NAMES[t], className: soft.includes(t) ? 'is-soft' : undefined }))}
                     />
