@@ -72,8 +72,8 @@ change, a week before it's released. `dev` is work in progress.
 ## What you get
 
 **Alerts.** The top of Home says "All quiet" or "6 things need you", with
-each problem on its own line, linked to its fix. The browser tab counts
-them too. A container that crashed overnight still shows under Changes in
+each problem on its own line, linked to its fix. The browser tab shows the
+count too. A container that crashed overnight still shows under Changes in
 the morning. Turn on ntfy, Gotify, Pushover, Discord, email or a webhook,
 and a problem that lasts two minutes reaches you, then again when it clears.
 
@@ -121,9 +121,9 @@ doors stay read-only for everyone.
 ![Shopping list, thermostat, shades, people and chores on one board](docs/screenshots/family.webp)
 
 **Your language and region.** Dates, times, numbers and prices follow your
-part of the world, from 28 regions. Patchboard speaks German, Spanish,
+part of the world, from 28 regions. Patchboard comes in German, Spanish,
 French, Italian, Dutch and Brazilian Portuguese as well as English, Settings
-and problem titles included, and another language is one file.
+and problem titles included. Adding a language takes one file.
 
 **Playback.** Hover, focus or tap a playback row for its artwork, details and
 a link to its app, with time left when the service reports it.
@@ -155,14 +155,14 @@ Press `Ctrl K` or `/` to jump to any app, page, container or article.
 |---|---|
 | ![Hosts, storage, power, drives, Proxmox, Docker hosts and the network](docs/screenshots/machines.webp) | ![Calendar, notes, books, Watched, Listening and This week](docs/screenshots/household.webp) |
 
-**[Take the tour](docs/TOUR.md):** every page, every editor, every theme and
-the phone views.
+**[Take the tour](docs/TOUR.md):** the pages, editors, themes and phone
+views.
 
 ## Docs
 
-- [TOUR.md](docs/TOUR.md): every screen.
+- [TOUR.md](docs/TOUR.md): each screen, with screenshots.
 - [INTEGRATIONS.md](docs/INTEGRATIONS.md): getting apps and numbers onto Patchboard.
-- [CONFIGURATION.md](docs/CONFIGURATION.md): every setting, the catalog file, mounts, themes.
+- [CONFIGURATION.md](docs/CONFIGURATION.md): settings, the catalog file, mounts, themes.
 - [SECURITY.md](SECURITY.md): what it can do and how to narrow it.
 - [examples/](examples/): the plain compose file and a hardened one.
 - [RELEASING.md](docs/RELEASING.md): branches, tags, images and how a release ships.
@@ -199,6 +199,6 @@ Wikimedia Commons under the licenses credited in `server/demo.ts`.
 
 ## License
 
-AGPL-3.0, copyright 2026 Nathan Nicholas. Run it, change it and share it.
-If you hand out a changed version, or run one for other people over
-a network, share its source under the same license. See [LICENSE](LICENSE).
+AGPL-3.0, copyright 2026 Nathan Nicholas. You may run, change and share it.
+If you hand out a changed version, or run one for other people over a
+network, share its source under the same license. See [LICENSE](LICENSE).

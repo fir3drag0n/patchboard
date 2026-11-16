@@ -10,8 +10,8 @@
   can read what needs you, the containers, the server and any widget's
   number. Make a key per tool in Settings, Connections, Sign-in and keys;
   it opens nothing else and changes nothing. `/api/v1/mcp` lets Claude and
-  other MCP clients ask "is Plex running?" directly. docs/API.md has the
-  endpoints and setup lines.
+  other MCP clients ask "is Plex running?". docs/API.md has the endpoints
+  and setup lines.
 - **The setup file in YAML:** Settings, Connections, Backup downloads your
   boards, apps, page settings, notes and thresholds as YAML too, for a file
   you can read, edit and keep in git. Import takes JSON or YAML.
@@ -19,7 +19,7 @@
   counts as low and how far under the others a tire may drift. 0 turns
   either check off.
 - **Showcase mode is gone:** it was for taking screenshots of this project,
-  and the demo already covers that.
+  and the demo covers that.
 - **Settings in your language:** Settings and the problem titles the server
   writes now come in German, Spanish, French, Italian, Dutch and Brazilian
   Portuguese too. Notifications and the API stay in English.

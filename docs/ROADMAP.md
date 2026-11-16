@@ -7,9 +7,6 @@ What comes next. CHANGELOG.md has what has shipped.
 - [ ] A search box with `!` shortcuts
 - [ ] Several Docker hosts
 
-### Wall screens and small displays
-
-
 ### Integrations
 
 - [ ] Bambu Lab printers: the print, its progress and time left

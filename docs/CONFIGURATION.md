@@ -28,8 +28,8 @@ Look, and back up your setup from Connections, Backup: one file with the
 boards, apps, page settings, notes and thresholds, as JSON or as YAML you can
 read and edit. Import takes either.
 
-If you keep config in git, files still work. Any variable below, in
-the compose file's `environment:` or an `env_file`, wins over the UI and
+If you keep config in git, files still work. Any variable below, in the
+compose file's `environment:` or an `env_file`, wins over the UI and
 shows there as locked; `config/services.yaml` and Docker labels list apps
 underneath your UI changes. See [INTEGRATIONS.md](INTEGRATIONS.md) for those.
 After you change a variable, recreate the container with
@@ -46,13 +46,14 @@ Patchboard can take both over, so the UI is the one place you change things.
 
 1. **Settings, Connections, Integrations: Save them in Patchboard.**
    Patchboard copies every integration value in your `.env` into its
-   encrypted store. The `.env` keeps winning while it still has them, so nothing
-   changes yet. Each field it copied now reads "Saved here too".
+   encrypted store. The `.env` keeps winning while it still has them, so
+   nothing changes yet. Each field it copied now reads "Saved here too".
 2. **Settings, Connections, Apps: Copy into Patchboard.** Every app in
    `services.yaml` becomes one saved in Patchboard, with its group, order,
    short name, icon, check and one-shot flag, and the links join the
    Elsewhere row. Patchboard never edits the file.
-3. **Turn on a password** in Settings, Connections, Sign-in and keys, if you had `AUTH=password`.
+3. **Turn on a password** in Settings, Connections, Sign-in and keys, if you
+   had `AUTH=password`.
 4. **Remove what was copied:** the `.env` (or all of it but the time zone),
    `services.yaml` and the `./config` mount, and the folder variables for
    mounts at /pool, /docs and /logs.
@@ -100,8 +101,7 @@ services.yaml.
 ## Alerts
 
 Settings, Alerts sets when storage, drives and links count as trouble, for
-every device. Each has a default that suits most setups. The same names work
-as environment variables, which win and show there as locked.
+every device. The same names work as environment variables, which win and show there as locked.
 
 | Setting | Default | |
 |---|---|---|
@@ -190,10 +190,10 @@ dash.example.com {
 
 ## The catalog file
 
-Optional. Most installs add apps with one click and Edit apps. If you want
+Optional: you can add apps with one click and Edit apps instead. To keep
 the list in git, `config/services.yaml` lists apps in groups, plus
-bookmarks. Settings, Connections, Apps, Download
-services.yaml gives you your current apps as a starting file.
+bookmarks. Settings, Connections, Apps, Download services.yaml gives you
+your current apps as a starting file.
 
 | Field | |
 |---|---|

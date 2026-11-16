@@ -39,8 +39,8 @@ have no slim build.
 
 Changes land on `main` and run as `edge` for about a week. A release then
 tags what has been running, every five to seven days, with the week's
-changes grouped in one set of notes. Nothing reaches `latest` that hasn't run
-on a real server first.
+changes grouped in one set of notes. Every release reaches `latest` after
+running on a real server.
 
 Each `edge` and `dev` image carries the commit it was built from, so its
 version reads `1.13.0+edge.4f2c1a9` and Settings shows "1.13.0, edge
@@ -70,7 +70,7 @@ few bold leads, as 1.0.0 and 1.1.0 do.
    `npm run build`, and `npm run screenshots` when the change shows on screen.
    Run `npm run test:ui` for Home, Fit or board keyboard changes, and
    `npm run test:a11y` for accessible names, reflow and high-contrast graphics.
-   Run `npm run test:zoom` for actual browser zoom and enlarged-text checks.
+   Run `npm run test:zoom` for browser zoom and enlarged-text checks.
    See [Accessibility checks](ACCESSIBILITY.md) for coverage and manual checks.
 5. Run `npm run release:check -- v1.2.0`. It checks the tag against
    `package.json` and both lockfile versions, and requires one matching,

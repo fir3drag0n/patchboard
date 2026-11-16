@@ -6,31 +6,29 @@ they match the current code.
 ## Home
 
 The default header puts status beside full server graphs, then the time and
-date above the weather in a centered card. All three header cards share one
-surface and line up along their top and bottom edges. On a desktop, the
-quiet status stays on one line. Edit header, at the foot of Home, opens Settings,
-Home: four checkboxes, with sizing and forecasts in Sizes and forecast
+date above the weather in a centered card. On a desktop, the quiet status
+stays on one line. Edit header, at the foot of Home, opens Settings, Home:
+four checkboxes, with sizing and forecasts in Sizes and forecast
 details. Header preferences apply to this device. Arrange board controls the
 shared widget layout and leaves saved boards as they are.
 
-The version sits at the foot of Home, on the left. It reads "Update to v1.2.0" when a
-newer release is out, and "What's new in v1.2.0" once after you update.
+The version sits at the foot of Home, on the left. It reads "Update to
+v1.2.0" when a newer release is out, and "What's new in v1.2.0" once after you update.
 Either opens what each release changed, with Update right there when
 Patchboard can update itself. If your compose file pins an exact version, it
 tells you which tag to switch to instead.
 
 Below the header sits a board of widgets on the columns you choose. Right
-now shows who is watching Plex, Jellyfin or Emby and what each download client is doing, with a Pause button
-per client. Recently added merges every server newest first. A file Plex and
+now shows who is watching Plex, Jellyfin or Emby and what each download
+client is doing, with a Pause button per client. Recently added merges every server newest first. A file Plex and
 Jellyfin both added shows once, labeled Plex + Jellyfin, even when the two
 name it a little differently.
 
 Hover, focus or tap a playback row in Right now to see its artwork and
 playback details. The preview shows artwork, never a live video frame. Time
 played and remaining appear when the service reports them; Navidrome shows
-no progress it doesn't have. Open the app from the preview. Close it with Escape, Close or a
-tap outside. Service colors identify Plex, Jellyfin, Emby, Audiobookshelf
-and Navidrome; Tracearr has its own marker for aggregate activity.
+no progress it doesn't have. Open the app from the preview. Close it with
+Escape, Close or a tap outside.
 
 ![Home with the compact header](screenshots/home.webp)
 
@@ -38,8 +36,8 @@ and Navidrome; Tracearr has its own marker for aggregate activity.
 
 ![Playback details on hover, focus or tap](screenshots/playback-preview.webp)
 
-**Status** stays explicit: the header names problems, and the tab title counts
-what needs you, as in "(2) Patchboard", and its icon carries a dot.
+**Status:** the header names problems, the tab title counts what needs you,
+as in "(2) Patchboard", and the tab icon carries a dot.
 
 **Needs attention** sits in Home's header, with problem links wrapping under
 the status line, worst first. Three show, and the rest wait in a panel a
@@ -62,13 +60,12 @@ Live lines for CPU, memory and network; CPU and memory as a hundred squares
 each; the pool against its alert lines; a square per container; every
 backup across 14 nights; the CPU week; disk temperatures; and a feed of
 container events and the warning and error lines from every container's log.
-It keeps its own terminal look whatever the theme: gray, a muted blue, or
-color, where each part keeps one cool hue and only trouble turns warm. Jump
-to finds it, or open `/monitor`. For a wall tablet, make it a household
+It keeps its own terminal look whatever the theme, in gray, a muted blue or
+color. Jump to finds it, or open `/monitor`. For a wall tablet, make it a household
 device in Settings, Devices and set it to open the Monitor: change that, the
 color, the night hours it dims through, or its theme, density, units and
-language from your desk, and the tablet follows within a second. A tap brightens a dimmed
-screen for two minutes. Give it more pages, the Monitor, wall boards,
+language from your desk, and the tablet follows within a second. A tap
+brightens a dimmed screen for two minutes. Give it more pages, the Monitor, wall boards,
 Server or Weather, and a swipe moves between them, with dots at the bottom
 to show where it is; it can also turn them by itself every half minute to
 ten minutes, waiting three minutes after anyone touches it. Set its Screen
@@ -79,7 +76,7 @@ Kindle e-reader's built-in browser is too old to run Patchboard.
 
 **One number, for a small screen:** a widget's settings have Show as.
 Detailed is the whole widget; Compact keeps the top three and drops the
-small print; One number shows the figure that matters, as large as the card
+small print; One number shows a single figure, as large as the card
 allows, with a faint line of its last day where there is one. Server picks
 CPU, memory, storage or uptime; Internet picks download, upload or ping;
 Markets shows the first price on its list, so one coin is one line. For a
@@ -155,8 +152,8 @@ right there; Escape, Close or switching tabs ends it.
 week, what it's doing (charging, full in an hour, at 11 kW), the inside and
 outside temperatures with a line of the last day, and the four tires around
 the car, with a soft one named. Settings, Alerts sets when a tire counts as
-soft, or turns the warning off. Patchboard records each reading
-Tessie has, without waking the car, so the lines fill in from the day you
+soft, or turns the warning off. Patchboard records each reading Tessie
+has, without waking the car, so the lines fill in from the day you
 set it up. Set the widget to One number for the battery, the range or the
 lowest tire.
 
@@ -187,10 +184,9 @@ Shopping list or Chores, with a box to add to it and a tap to tick an item
 off. Thermostat shows the temperature inside and sets it with minus and plus.
 Shades opens, stops and closes blinds, while garage doors and gates only show
 their state. People shows who's home. Rooms gives each temperature sensor a
-strip of its last day. Chores needs no Home Assistant: name
-the jobs and how often (Water the plants=7), and it counts the days since
-each and starts over at Done. A household
-tablet on the fridge can do all of it.
+strip of its last day. Chores needs no Home Assistant: name the jobs and
+how often (Water the plants=7), and it counts the days since each and
+starts over at Done. A household tablet on the fridge can do all of it.
 
 ![Shopping list, thermostat, shades, people and chores on one board](screenshots/family.webp)
 
@@ -334,7 +330,7 @@ colors.
 
 The tab bar holds Home, Server, Stacks and Reading (Upcoming until Miniflux
 is set up). More opens every other page and Settings. Every button and link
-takes a full fingertip. Installed on the home screen, pull the page down to
+is big enough for a fingertip. Installed on the home screen, pull the page down to
 reload it. Tap an alert without a link to read why. Pages don't zoom on a
 phone, pinch or double tap; Density in Settings, Look makes everything
 bigger.
@@ -351,8 +347,8 @@ grouped by compose stack.
 ![First run](screenshots/first-run.webp)
 
 If you're coming from Homepage, paste its `services.yaml` in Settings,
-Connections, and your apps, groups, icons and links come over. Its widget keys stay
-behind; Patchboard names the integrations worth connecting instead.
+Connections, and your apps, groups, icons and links come over. Its widget
+keys stay behind; Patchboard names the integrations worth connecting instead.
 
 ![Import from Homepage](screenshots/import-homepage.webp)
 
@@ -360,8 +356,8 @@ behind; Patchboard names the integrations worth connecting instead.
 
 Server details are in the header by default, including CPU history, memory,
 storage, uptime and the Details link. With NUT connected, the UPS joins
-them: its charge, and "On battery, 23 min left" when the power is out. Use Edit header on Home to turn
-parts off for this device. If your saved board still has a Server card,
+them: its charge, and "On battery, 23 min left" when the power is out. Use
+Edit header on Home to turn parts off for this device. If your saved board still has a Server card,
 Arrange board can remove that copy.
 
 ![Server graphs with status and time above weather](screenshots/home-header-server.webp)

@@ -1,8 +1,8 @@
 # Contributing
 
-Bug reports, integration requests and pull requests are welcome. This file
-covers how to run Patchboard locally, the checks a change has to pass, and
-what a new integration or widget needs.
+Bug reports, integration requests and pull requests are welcome. Below:
+running Patchboard locally, the checks a change has to pass, and what a new
+integration or widget needs.
 
 ## Run it
 
@@ -36,13 +36,14 @@ CI runs these checks, builds the image, scans history for committed keys,
 and fails when code changes without a CHANGELOG.md entry. The pull request
 template has the rest of the checklist.
 
-Some house rules:
+House rules:
 
 - **The server runs TypeScript directly** on Node 24. Only erasable syntax
   works: no enums, namespaces or constructor parameter properties. Imports
   end in `.ts`.
 - **Docs ship with the code,** in the same pull request: README, the
-  matching file in `docs/`, CHANGELOG.md and the example compose files. Run `npm run screenshots` when the change shows on screen.
+  matching file in `docs/`, CHANGELOG.md and the example compose files.
+  Run `npm run screenshots` when the change shows on screen.
 - **Check every screen size.** Look at a change at 1440 by 900, 1920 by 1080
   and a 390-pixel phone. Pages should fit a desktop screen with little or no
   scrolling, and nothing on a phone should scroll sideways.

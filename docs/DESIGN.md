@@ -26,11 +26,11 @@ one click.
 
 ## In the interface
 
-- **Exceptions, not inventory.** A healthy app gets an icon and a quiet
-  number. Space goes to what's broken, new, in progress or upcoming. On
-  Home's icon rack a healthy app is just its icon; one with a problem also
-  shows its name, so trouble is never an unnamed dot. A widget
-  stays neutral until a threshold is crossed. History squares follow the
+- **Exceptions first.** A healthy app gets an icon and a quiet number.
+  Space goes to what's broken, new, in progress or upcoming. On Home's icon
+  rack a healthy app shows only its icon; one with a problem also shows its
+  name, so trouble is never an unnamed dot. A widget stays neutral until a
+  threshold is crossed. History squares follow the
   same rule: a healthy day is ink, and only a bad day takes color. The
   header, the tab title, Needs attention and Jump to count trouble from
   one list, so they always agree.
@@ -38,12 +38,12 @@ one click.
   Plex gold, Jellyfin purple, Emby green, Audiobookshelf amber, Navidrome
   cyan and Tracearr blue. This is a narrow exception to healthy-neutral
   color. App icons keep their own colors by default too, because you
-  recognize Plex or Sonarr by its mark; Settings, Look turns them gray. Paused and buffering states keep explicit text. Previews show
-  artwork, never imply live video, and omit progress the service does not
+  recognize Plex or Sonarr by its mark; Settings, Look turns them gray.
+  Paused and buffering states keep explicit text. Previews show artwork, never imply live video, and omit progress the service does not
   report. Hover, Enter (or Down) and a tap reach the same details; Tab
   always moves on. A playing bar moves every second; a paused one holds.
-- **Everything goes somewhere.** A row, a number or a poster that leads
-  nowhere doesn't earn its space.
+- **Everything links somewhere.** A row, number or poster that leads
+  nowhere doesn't belong on screen.
 - **Compact header.** Status, server graphs, and time above weather form
   three matching cards with aligned edges. Time and weather share one
   centered card; weather has no box of its own. Quiet status stays on one
@@ -79,16 +79,15 @@ one click.
   the rest under Tools with Reset apart from Save. Hidden header widgets
   stay out of the grid. Dragging assigns a starting column and relative
   vertical position, so neighboring columns stay put; narrower screens
-  clamp the column.
-  Dotted editing outlines surround card content and leave the gutters clear.
+  clamp the column. Dotted editing outlines surround card content and leave the gutters clear.
 - **Surfaces and corners.** Cards sit one tonal step above the page with a
   hairline edge and, in dark themes, a faint top light; only floating
   layers (sheets, Jump to, previews) cast a shadow. Corners step down as
   shapes nest: 14px cards and sheets, 10px tiles and icon wells, 8px
   controls and rows, 6px chips. Selection is a soft accent wash; trouble
   is a tinted outline plus its colored status line, never a side bar.
-- **Motion.** Hover and press take 120ms, things that appear
-  200ms, sheets 280ms, all easing out. Buttons, tiles and app icons give
+- **Motion.** Hover and press take 120ms, things that appear 200ms, sheets
+  280ms, all easing out. Buttons, tiles and app icons give
   a little when pressed. A playing bar glides between its once-a-second
   updates. Reduced motion turns all of it off.
 - **Two control sizes.** Buttons and Settings choices are 36 pixels tall;
@@ -99,10 +98,10 @@ one click.
   and focus returns to the opener. The background is inert while a drawer
   is open. Skip to content bypasses the navigation. Each app group is one
   Tab stop with arrow keys inside it, so the widgets below are a few
-  presses away, not dozens.
+  presses away.
 - **Arriving at a section.** A link to part of a page scrolls there and
-  marks the section's heading and rule in the accent until you scroll,
-  click or type. No glow and no fade.
+  marks the section's heading and rule in the accent, with no glow or
+  fade, until you scroll, click or type.
 - **Words:** plain, short, active. No em dashes. Name the thing.
 
 ## Architecture
@@ -126,9 +125,8 @@ one click.
   refreshes every 5 seconds only while it's on screen and the tab is in
   front, swapped in whole so it never flickers. Tapping a camera opens it
   live: Frigate's motion-JPEG feed passed straight through, one chunk at a
-  time, at most three at once, ending when
-  the view closes, the tab goes to the back, or ten minutes pass. Patchboard
-  never decodes a frame, so a camera costs bandwidth, not memory.
+  time, at most three at once, ending when the view closes, the tab goes to
+  the back, or ten minutes pass. Patchboard never decodes a frame, so a camera costs bandwidth, not memory.
 - **Server-sent events** push changes to every open tab.
 - **SQLite** (`node:sqlite`) holds what integrations can't supply: container
   history, minute samples, the boards, the app layout, page settings, keys and
@@ -158,8 +156,8 @@ and sends each one's template and values beside it (`say()` in
 
 To add a language, copy `web/i18n/fr.json` to the new code, translate each
 value, keep every `{value}` its English has, and add the code to `LANGUAGES`
-and the file to `CATALOGS` in `web/lib/i18n.ts`. `npm run i18n:check` lists any string the catalog is
-missing, any it no longer needs, and any `{value}` changed; CI runs it.
+and the file to `CATALOGS` in `web/lib/i18n.ts`. `npm run i18n:check`
+lists any string the catalog is missing, any it no longer needs, and any `{value}` changed; CI runs it.
 
 ## Themes
 
@@ -168,7 +166,7 @@ tokens and a type pairing. `web/lib/appearance.ts` turns it into CSS
 variables on `<html>`, and every rule in `web/styles.css` uses those tokens.
 Keep `ok`, `warn` and `crit` apart from `accent`, and quiet text (`ink3`) at
 4.5:1 or better on `bg`. No text goes below 11px: labels and `<small>`
-  shrink with their line down to that floor. The inline script in
+shrink with their line down to that floor. The inline script in
 `web/index.html` paints the saved theme before the page loads; keep it in
 step with `appearance.ts`.
 
@@ -177,7 +175,7 @@ step with `appearance.ts`.
 Patchboard's one status mark is a light in a patch-panel socket, the same
 socket the patch-bay launcher plugs apps into. A quiet glow means live,
 amber means stale, red means down and glows, and a dark socket means idle.
-Every board widget wears one before its name: its integration's health, or
+Every board widget shows one before its name: its integration's health, or
 for a widget built from several, whether Patchboard itself is live, so a
 dropped connection turns the whole board amber at once. Right now, Changes,
 Logs, a container's state line and every alert (Needs attention, weather,
@@ -185,14 +183,13 @@ TrueNAS) use the same light at list size, in place of a colored stripe. An
 app's light follows the alerts that name it, so Home, Apps and Needs
 attention never disagree. A stop stays red only while it's unexplained: a
 container that runs again, a scheduled job, or one you stopped from
-Patchboard goes quiet. Color still
-means trouble; only the top bar's Live light is green.
+Patchboard goes quiet. Color still means trouble; only the top bar's Live light is green.
 
 ## Purposeful identity
 
 Every element helps you understand the server or act on it. Status,
-welcome, empty and error states carry no illustrations.
-Status uses explicit text, counts and consistent severity indicators. Healthy
+welcome, empty and error states carry no illustrations. Status uses
+explicit text, counts and consistent severity indicators. Healthy
 states stay quiet; recovery actions stay visible.
 
 The app icon is a P: an open bowl in the tile's ink and a blue tab under its
@@ -208,9 +205,9 @@ white on black, or black on white for this device. With E-ink on, the icon,
 the install manifest and the tab icon take the black-and-white twin of the
 choice (Dark is white on black, Light black on white), and the status bar
 goes white. iOS can darken home-screen icons while the phone stays in light
-mode, which a page can't detect, so a choice beats a guess here. Dark reads on any home screen; a phone in dark mode can
-darken a light icon until its P disappears.
-The Apple touch icon and install manifest follow that choice before the bundle
+mode, which a page can't detect, so Patchboard asks instead of guessing.
+Dark reads on any home screen; a phone in dark mode can darken a light icon
+until its P disappears. The Apple touch icon and install manifest follow that choice before the bundle
 loads. Installed home-screen icons may keep their original artwork; badge
 counts report trouble where supported. The mark lives in
 `scripts/make-icons.mjs`; `npm run icons` redraws every size from it.

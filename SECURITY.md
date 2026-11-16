@@ -46,16 +46,16 @@ cookie arrives on the redirect back from the provider. Changes still need the
 Marking articles read still works.
 
 For one device instead of everyone, make it a household device: Settings,
-Devices, Make a link, then open the link once on that phone or tablet. It sees the boards, cameras, the Server
-and Monitor pages, reading and calendar. It can switch the Home Assistant
-lights and scenes pinned to a board, set a pinned thermostat, move pinned
-shades, keep a pinned to-do list and mark chores done: the things a family
-reaches for on a kitchen tablet. Locks, garage doors and alarms stay
-read-only to it, as to everyone. From the logs it gets only the Monitor
-feed: warning and error lines, masked like every log line, at most twelve a
-minute from each container. The server refuses every other change from it, and
-refuses the reads meant for you: logs, container pages, settings, keys and
-the activity log. A route added later stays closed to it until it's allowed
+Devices, Make a link, then open the link once on that phone or tablet. It
+sees the boards, cameras, the Server and Monitor pages, reading and
+calendar. It can switch the Home Assistant lights and scenes pinned to a
+board, set a pinned thermostat, move pinned shades, keep a pinned to-do list
+and mark chores done. Locks, garage doors and alarms stay read-only to it,
+as to everyone. From the logs it gets only the Monitor feed: warning and
+error lines, masked like every log line, at most twelve a minute from each
+container. The server refuses every other change from it, and refuses the
+reads meant for you: logs, container pages, settings, keys and the activity
+log. A route added later stays closed to it until it's allowed
 by name.
 
 The link is the credential, and it signs the device in even when sign-in is
@@ -105,14 +105,13 @@ container creation, which comes close to full access.
   the GitHub container registry about its image and reads its release notes
   from GitHub, at most once an hour; neither request carries anything about
   you.
-  App icons named from the dashboard-icons set are fetched once (and again
-  monthly, in case the set redrew one) from
-  jsDelivr and kept in `DATA_DIR`, so your browser gets them from
-  Patchboard. Fonts ship inside the image. Article pictures in Reading load
+  Patchboard fetches app icons named from the dashboard-icons set from
+  jsDelivr once (and again monthly, in case the set redrew one) and keeps
+  them in `DATA_DIR`, so your browser gets them from Patchboard. Fonts ship inside the image. Article pictures in Reading load
   through Patchboard too, from public addresses only, so publishers never
   see your browser. The one thing your browser loads from elsewhere is an
-  icon you give as a full address. No key or address rides along on any of
-  those.
+  icon you give as a full address. None of those requests carries a key or
+  an address.
 - **Notifications are opt-in and go where you point them.** With a notifier
   set up, an alert's title and detail (a container name, a disk
   temperature) go to that service. A self-hosted ntfy, Gotify or webhook
@@ -140,8 +139,8 @@ container creation, which comes close to full access.
   its own reveals nothing. Anyone who can read both files, or the running
   process, can read the keys, the same as an env file; protect `DATA_DIR`
   the same way.
-- **Setting up an integration in the UI gets the same guards as any change:** sign-in
-  when it's on, the action header, refused under `READ_ONLY`, recorded in
+- **Setting up an integration in the UI gets the same guards as any
+  change:** sign-in when it's on, the action header, refused under `READ_ONLY`, recorded in
   Activity. An environment variable always wins and shows as locked.
   Settings can turn a password on, and change or remove it with the current
   one. A reverse proxy, OIDC, Docker access and folder mounts come only from
@@ -157,8 +156,8 @@ container creation, which comes close to full access.
   header or URL moves to the encrypted key store when the board is saved,
   leaving a reference behind, so a board, a browser and a setup file never
   hold it. Error messages never include URLs, because some APIs put keys in
-  the query string. Patchboard proxies Plex and calendar
-  artwork for the same reason.
+  the query string. Patchboard proxies Plex and calendar artwork for the
+  same reason.
 - **Fetching on your behalf is fenced.** The server fetches only addresses
   it already holds: URLs saved in a board or the app layout, and pictures
   from articles it served. The browser asks by id. API numbers follow no
