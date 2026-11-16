@@ -782,7 +782,6 @@
  "tested the connection to": "testou a conexão com",
  "Testing...": "Testando...",
  "Text": "Texto",
- "That file isn't JSON. Pick one saved with Download setup.": "Esse arquivo não é JSON. Escolha um salvo com Baixar configuração.",
  "That isn't a Patchboard settings string. Use Copy settings on the other device.": "Isso não é um texto de ajustes do Patchboard. Use Copiar ajustes no outro dispositivo.",
  "The Ad blocking widget for AdGuard Home: queries and blocks, and Pause for 5, 30 or 60 minutes.": "O widget de Bloqueio de anúncios para o AdGuard Home: consultas e bloqueios, e Pausar por 5, 30 ou 60 minutos.",
  "The API and MCP": "A API e o MCP",
@@ -898,5 +897,6 @@
  "Or this far under the fullest tire": "Ou esta diferença abaixo do pneu mais cheio",
  "psi": "psi",
  "Tesla's own warning sits near 36. 0 turns this off.": "O aviso da própria Tesla fica perto de 36. 0 desativa.",
- "Warn when a tire is under": "Avisar quando um pneu estiver abaixo de"
+ "Warn when a tire is under": "Avisar quando um pneu estiver abaixo de",
+ "As YAML": "Como YAML"
 }

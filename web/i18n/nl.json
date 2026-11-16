@@ -782,7 +782,6 @@
  "tested the connection to": "testte de verbinding met",
  "Testing...": "Testen...",
  "Text": "Tekst",
- "That file isn't JSON. Pick one saved with Download setup.": "Dat bestand is geen JSON. Kies er een dat is opgeslagen met Instellingenbestand downloaden.",
  "That isn't a Patchboard settings string. Use Copy settings on the other device.": "Dat is geen Patchboard-instellingentekst. Gebruik Instellingen kopiëren op het andere apparaat.",
  "The Ad blocking widget for AdGuard Home: queries and blocks, and Pause for 5, 30 or 60 minutes.": "De Advertentieblokkering-widget voor AdGuard Home: verzoeken en blokkades, en Pauzeren voor 5, 30 of 60 minuten.",
  "The API and MCP": "De API en MCP",
@@ -898,5 +897,6 @@
  "Or this far under the fullest tire": "Of zoveel onder de hardste band",
  "psi": "psi",
  "Tesla's own warning sits near 36. 0 turns this off.": "Tesla's eigen waarschuwing ligt rond 36. 0 zet dit uit.",
- "Warn when a tire is under": "Waarschuwen bij bandenspanning onder"
+ "Warn when a tire is under": "Waarschuwen bij bandenspanning onder",
+ "As YAML": "Als YAML"
 }

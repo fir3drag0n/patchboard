@@ -24,7 +24,9 @@ Edit header, at the foot of Home, opens these controls. Header choices
 never rewrite a saved board. New boards don't repeat the server details in
 the grid; saved Server widgets stay where you put them. Arrange board changes
 widgets and placement for every device. You export appearance from Settings,
-Look, and back up your setup from Connections.
+Look, and back up your setup from Connections, Backup: one file with the
+boards, apps, page settings, notes and thresholds, as JSON or as YAML you can
+read and edit. Import takes either.
 
 If you keep config in git, files still work. Any variable below, in
 the compose file's `environment:` or an `env_file`, wins over the UI and

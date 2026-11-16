@@ -13,6 +13,7 @@ import { streamSSE } from 'hono/streaming';
 import type { Adapter } from './adapters/adapter.ts';
 import type { ArrData, ContainerDetail, HaEntity, ProxmoxData, QbitData } from '../shared/types.ts';
 import { cleanBrand } from '../shared/brand.ts';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { appIconFor, clearAppIcon, saveAppIcon } from './appicon.ts';
 import { apiRoutes } from './api.ts';
 import { createKey, listKeys, revokeKey } from './apikeys.ts';
@@ -1516,7 +1517,9 @@ app.put('/api/brand', async (c) => {
   return c.json({ brand: b });
 });
 
+// The whole setup as one file, JSON or YAML (?format=yaml). Import takes either.
 app.get('/api/setup', (c) => {
+  const yaml = c.req.query('format') === 'yaml';
   const body = {
     patchboard: 'setup',
     version: 1,
@@ -1529,15 +1532,30 @@ app.get('/api/setup', (c) => {
     notes: kvGet('board-notes') ?? {},
     thresholds: savedThresholds(),
   };
+  const name = `patchboard-setup-${new Date().toISOString().slice(0, 10)}`;
+  if (yaml)
+    return c.body(`# Patchboard setup. Import it in Settings, Connections, Backup.\n# Keys and integrations aren't in it.\n${stringifyYaml(body, { lineWidth: 0 })}`, 200, {
+      'Content-Type': 'application/yaml; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${name}.yaml"`,
+    });
   return c.body(JSON.stringify(body, null, 2), 200, {
     'Content-Type': 'application/json',
-    'Content-Disposition': `attachment; filename="patchboard-setup-${new Date().toISOString().slice(0, 10)}.json"`,
+    'Content-Disposition': `attachment; filename="${name}.json"`,
   });
 });
 
 app.put('/api/setup', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  const raw = (await c.req.json().catch(() => null)) as { patchboard?: string; board?: unknown; boards?: unknown; apps?: unknown; pages?: unknown; brand?: unknown; notes?: unknown; thresholds?: unknown } | null;
+  const text = await c.req.text();
+  if (text.length > 5 * 1024 * 1024) return c.json({ error: 'A setup file can be up to 5 MB' }, 413);
+  // YAML reads JSON too, so one parser takes either file.
+  let parsed: unknown = null;
+  try {
+    parsed = parseYaml(text, { maxAliasCount: 50 });
+  } catch {
+    return c.json({ error: "Patchboard can't read that file as JSON or YAML." }, 400);
+  }
+  const raw = (parsed && typeof parsed === 'object' ? parsed : null) as { patchboard?: string; board?: unknown; boards?: unknown; apps?: unknown; pages?: unknown; brand?: unknown; notes?: unknown; thresholds?: unknown } | null;
   if (!raw || raw.patchboard !== 'setup') return c.json({ error: "That isn't a Patchboard setup file." }, 400);
   // Check everything before changing anything.
   const board = raw.board ? validateBoard(raw.board) : null;

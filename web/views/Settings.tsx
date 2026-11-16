@@ -1107,19 +1107,16 @@ function SetupFile() {
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
   /** A file read and waiting for the hold that replaces everything with it. */
-  const [pending, setPending] = useState<{ name: string; body: unknown } | null>(null);
+  const [pending, setPending] = useState<{ name: string; body: string } | null>(null);
   const load = async (f: File) => {
     setMsg('');
     setErr('');
-    try {
-      setPending({ name: f.name, body: JSON.parse(await f.text()) });
-    } catch {
-      setErr(tr("That file isn't JSON. Pick one saved with Download setup."));
-    }
+    // The server reads JSON or YAML and checks the whole file before it changes anything.
+    setPending({ name: f.name, body: await f.text() });
   };
   const replace = async () => {
     if (!pending) return;
-    const res = await fetch('/api/setup', { method: 'PUT', headers: ACTION, body: JSON.stringify(pending.body) });
+    const res = await fetch('/api/setup', { method: 'PUT', headers: { ...ACTION, 'Content-Type': 'text/plain' }, body: pending.body });
     setPending(null);
     if (!res.ok) return setErr(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `HTTP ${res.status}`);
     setMsg(tr('Replaced. Every open tab shows the new boards.'));
@@ -1133,10 +1130,13 @@ function SetupFile() {
         <a className="button button-quiet" href="/api/setup" download>
           {tr('Download setup')}
         </a>
+        <a className="button button-quiet" href="/api/setup?format=yaml" download>
+          {tr('As YAML')}
+        </a>
         {!readOnly && (
           <>
             <button type="button" className="button button-quiet" onClick={() => fileInput.current?.click()}>{tr('Import a setup file')}</button>
-            <input ref={fileInput} type="file" accept="application/json,.json" hidden onChange={(e) => {
+            <input ref={fileInput} type="file" accept="application/json,.json,.yaml,.yml,application/yaml,text/yaml" hidden onChange={(e) => {
               const f = e.target.files?.[0];
               // Cleared, so choosing the same file again after Cancel still counts.
               e.target.value = '';

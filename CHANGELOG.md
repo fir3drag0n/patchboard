@@ -12,6 +12,9 @@
   it opens nothing else and changes nothing. `/api/v1/mcp` lets Claude and
   other MCP clients ask "is Plex running?" directly. docs/API.md has the
   endpoints and setup lines.
+- **The setup file in YAML:** Settings, Connections, Backup downloads your
+  boards, apps, page settings, notes and thresholds as YAML too, for a file
+  you can read, edit and keep in git. Import takes JSON or YAML.
 - **Tire warnings on your terms:** Settings, Alerts sets the pressure that
   counts as low and how far under the others a tire may drift. 0 turns
   either check off.
