@@ -1587,11 +1587,11 @@ function SettingsDrawer({
           )}
           {viewsOf(w.type).length > 0 && (
             <div className="ws-row">
-              <span>Show as</span>
-              <span className="seg" role="group" aria-label="Show as">
+              <span>{t('Show as')}</span>
+              <span className="seg" role="group" aria-label={t('Show as')}>
                 {viewsOf(w.type).map(([v, label]) => (
                   <button key={v} type="button" aria-pressed={(cfg.view ?? '') === v} onClick={() => set('view', v)}>
-                    {label}
+                    {t(label)}
                   </button>
                 ))}
               </span>

@@ -2,6 +2,7 @@
 // the bookmarks. Edit apps changes all of it in place: order, groups, names,
 // what's hidden, icons, and apps added without touching services.yaml.
 
+import { t } from '../lib/i18n.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -111,7 +112,7 @@ export function Apps() {
         {!draft && <input className="field" type="search" placeholder="Filter apps" aria-label="Filter apps" value={q} onChange={(e) => setQ(e.target.value)} autoFocus={!matchMedia('(pointer: coarse)').matches} />}
       </div>
       {draft ? (
-        <div className="arrange-bar" role="toolbar" aria-label="Edit apps" tabIndex={-1}>
+        <div className="arrange-bar" role="toolbar" aria-label={t('Edit apps')} tabIndex={-1}>
           <p>Drag apps to reorder them or into another group, and groups by their grip. Type over a group's name to rename it. Each app's ⋯ menu edits, hides or moves it.</p>
           <span className="arrange-actions">
             {error && <span className="crit-text">{error}</span>}
@@ -145,7 +146,7 @@ export function Apps() {
           </div>
           {!snap.readOnly && (
             <button type="button" className="button button-quiet" onClick={() => void startEditing()}>
-              Edit apps
+              {t('Edit apps')}
             </button>
           )}
         </div>
@@ -172,7 +173,7 @@ export function Apps() {
           {!snap.readOnly && (
             <p className="settings-note">
               <button type="button" className="text-button" onClick={() => void startEditing()}>
-                Edit apps
+                {t('Edit apps')}
               </button>{' '}
               to add any of these in one click.
             </p>
