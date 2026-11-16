@@ -4,8 +4,8 @@
 [![Release](https://img.shields.io/github/v/release/sourpatchdad/patchboard)](https://github.com/sourpatchdad/patchboard/releases)
 [![License: AGPL-3.0](https://img.shields.io/github/license/sourpatchdad/patchboard)](LICENSE)
 
-A self-hosted start page that tells you what's broken. It reads the Docker
-socket, finds your apps, and puts a stopped container, a full pool or a stuck
+A self-hosted homelab dashboard and start page that tells you what's broken.
+It reads the Docker socket, finds your apps, and puts a stopped container, a full pool or a stuck
 download at the top, one click from the fix.
 
 ![Patchboard's Home on one 1920 by 1080 screen: what needs you, the server, a rack of apps, Right now, the week's releases, reading and what changed](docs/screenshots/home.webp)
