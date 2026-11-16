@@ -13,6 +13,7 @@ import { streamSSE } from 'hono/streaming';
 import type { Adapter } from './adapters/adapter.ts';
 import type { ArrData, ContainerDetail, HaEntity, ProxmoxData, QbitData } from '../shared/types.ts';
 import { cleanBrand } from '../shared/brand.ts';
+import { appIconFor, clearAppIcon, saveAppIcon } from './appicon.ts';
 import { radarrAdapter, sonarrAdapter, arrControl, type ArrControl } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
 import { fastmailAdapter } from './adapters/fastmail.ts';
@@ -1600,6 +1601,25 @@ app.get('/api/art/:src/:id', async (c) => {
   return got ? c.body(got.body, 200, { 'Content-Type': got.type, 'Cache-Control': 'private, max-age=86400' }) : c.body(null, 404);
 });
 
+// Your own app icon, drawn at every size by the browser that uploads it.
+app.put('/api/app-icon', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (Number(c.req.header('content-length') ?? 0) > 3 * 1024 * 1024) return c.json({ error: 'The icon came out over 2 MB. Try a simpler image.' }, 413);
+  const r = saveAppIcon(await c.req.json().catch(() => null));
+  if ('error' in r) return c.json({ error: r.error }, 400);
+  recordAudit(who(c), 'app-icon.set', 'look', r.icon);
+  hub.emitBrand(kvGet('brand') ?? {});
+  return c.json(r);
+});
+
+app.delete('/api/app-icon', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  clearAppIcon();
+  recordAudit(who(c), 'app-icon.clear', 'look');
+  hub.emitBrand(kvGet('brand') ?? {});
+  return c.json({ ok: true });
+});
+
 // Uploaded icons. Named by content hash, so the same file uploads once and
 // can be cached forever. Served with a sandboxing CSP: an SVG opened directly
 // can't run script.
@@ -1877,6 +1897,12 @@ app.use('/*', async (c, next) => {
   await next();
   if (c.req.path.startsWith('/api/') || c.res.headers.has('Cache-Control')) return;
   c.res.headers.set('Cache-Control', c.req.path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache');
+});
+// An uploaded app icon answers at the P's addresses.
+app.use('/*', async (c, next) => {
+  const icon = c.req.method === 'GET' ? appIconFor(c.req.path) : null;
+  if (!icon) return next();
+  return c.body(new Uint8Array(icon), 200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-cache' });
 });
 app.use('/*', serveStatic({ root: config.staticDir }));
 app.get('*', (c) => {

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Your own app icon:** upload a logo in Settings, Look, App icon, and it
+  replaces the P in the tab, on the home screen and in the install, on every
+  device. Patchboard draws every size and a black-and-white one for e-ink.
+  Use the P brings the P back.
+
 ## 1.14.0 (2026-11-15)
 
 - **Needs attention can leave a board:** any board but Home can remove it, so

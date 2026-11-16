@@ -290,8 +290,17 @@ async function statusIcon(level: 'critical' | 'warn', src = '/favicon.png'): Pro
   return c.toDataURL('image/png');
 }
 
+/** An uploaded app icon's version, so a new upload replaces the old one in the tab at once. */
+let iconVersion = '';
+export function setIconVersion(v: string | undefined): void {
+  if ((v ?? '') === iconVersion) return;
+  iconVersion = v ?? '';
+  applyIcon(current.appIcon, resolvedScheme(current), current.eink || einkOn());
+}
+
 function applyIcon(choice: AppIcon, scheme: 'dark' | 'light', eink = false): void {
   const f = iconFiles(choice, scheme, eink);
+  if (iconVersion) for (const k of ['favicon', 'touch'] as const) f[k] += `?v=${iconVersion}`;
   const set = (sel: string, href: string) => {
     const el = document.querySelector<HTMLLinkElement>(sel);
     if (el && el.getAttribute('href') !== href) el.setAttribute('href', href);

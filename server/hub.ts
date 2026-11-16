@@ -2,6 +2,7 @@
 // and pushed to every open browser over SSE. The browser never talks to an
 // integration directly, so no key ever leaves the server.
 
+import { withIcon } from './appicon.ts';
 import { boardList } from './boards.ts';
 import { readFileSync } from 'node:fs';
 import { emptyTrack, settle, type Track } from './transitions.ts';
@@ -300,7 +301,7 @@ export class Hub {
   }
 
   emitBrand(brand: import('../shared/types.ts').Brand): void {
-    this.emit({ type: 'brand', brand });
+    this.emit({ type: 'brand', brand: withIcon(brand) });
   }
 
   /** A board was added, saved or deleted: every tab redraws its tabs, and any tab showing `changed` reloads it. */
@@ -347,7 +348,7 @@ export class Hub {
       self: { version: APP_VERSION, container: config.demo ? 'patchboard' : selfContainer, ...(config.demo ? { check: { at: Date.now(), state: 'current' as const } } : selfCheckStatus() ? { check: selfCheckStatus() } : {}) },
       limits: { poolWarnPct: config.poolWarnPct, poolCritPct: config.poolCritPct, diskWarnC: config.diskWarnC, diskCritC: config.diskCritC },
       pages: kvGet('pages') ?? {},
-      brand: kvGet('brand') ?? {},
+      brand: withIcon(kvGet('brand') ?? {}),
       boards: boardList(),
       features: [
         'diun',

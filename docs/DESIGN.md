@@ -207,3 +207,10 @@ The Apple touch icon and install manifest follow that choice before the bundle
 loads. Installed home-screen icons may keep their original artwork; badge
 counts report trouble where supported. The mark lives in
 `scripts/make-icons.mjs`; `npm run icons` redraws every size from it.
+
+An uploaded icon replaces the P on every device. The browser that uploads it
+draws each size, in color and in black and white, so the server needs no
+image library; it checks the PNGs and answers the P's addresses with them
+(`server/appicon.ts`). A picture that fills its frame is cropped square; a
+logo with a clear background sits inside a margin, on black if it's light and
+on white if it's dark. Each device then picks color or black and white.

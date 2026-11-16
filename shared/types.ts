@@ -1328,4 +1328,6 @@ export interface SelfCheck {
 export interface Brand {
   /** Empty means Patchboard. */
   name?: string;
+  /** The uploaded app icon's version, while one replaces the P. */
+  icon?: string;
 }

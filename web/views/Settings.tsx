@@ -16,6 +16,7 @@ import { IntegrationForm } from '../components/IntegrationSetup.tsx';
 import { HomepageImport } from '../components/HomepageImport.tsx';
 import { SignIn } from '../components/SignIn.tsx';
 import { BrandName } from '../components/BrandName.tsx';
+import { AppIconSection } from '../components/AppIcon.tsx';
 import { type SetupIntegration, THRESHOLDS, type ThresholdState } from '../../shared/setup.ts';
 import {
   ACCENTS,
@@ -136,28 +137,7 @@ export function Settings() {
         {a.theme === 'custom' && <p className="settings-note">A custom theme turns light or dark with its background color.</p>}
       </Section>
 
-      <Section title="App icon">
-        <div className="choice-row icon-choices">
-          {(
-            [
-              ['dark', 'Dark', '/icon-192.png'],
-              ['light', 'Light', '/icon-light-192.png'],
-              ['auto', 'Match the mode', a.scheme === 'light' || (a.scheme === 'auto' && matchMedia('(prefers-color-scheme: light)').matches) ? '/icon-light-192.png' : '/icon-192.png'],
-              ['mono-dark', 'White on black', '/icon-mono-dark-192.png'],
-              ['mono', 'Black on white', '/icon-mono-192.png'],
-            ] as const
-          ).map(([v, label, src]) => (
-            <button key={v} type="button" className="icon-choice" aria-pressed={a.appIcon === v} onClick={() => setAppearance({ appIcon: v })}>
-              <img src={src} alt="" width={44} height={44} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-        <p className="settings-note">
-          For Add to Home Screen or Install on this device. A phone keeps the icon it had when you added it: to change it, remove the
-          app and add it again. With dark home-screen icons on an iPhone, pick a dark one.
-        </p>
-      </Section>
+      <AppIconSection />
 
       {!a.eink && (
       <Section title="Accent">

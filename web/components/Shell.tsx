@@ -2,7 +2,7 @@ import { useModal } from '../lib/modal.ts';
 import { count } from '../lib/format.ts';
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
-import { setAppName, setPageName, setStatus, getAppearance } from '../lib/appearance.ts';
+import { setAppName, setIconVersion, setPageName, setStatus, getAppearance } from '../lib/appearance.ts';
 import { PullRefresh } from './PullRefresh.tsx';
 import { useStore } from '../lib/store.tsx';
 import { Palette } from './Palette.tsx';
@@ -184,6 +184,7 @@ export function Shell() {
   worstAlert.current = ['critical', 'warn', 'info'].map((l) => snap?.alerts.find((x) => x.level === l && x.href)).find(Boolean);
   const name = snap?.brand?.name || 'Patchboard';
   useEffect(() => setAppName(name), [name]);
+  useEffect(() => setIconVersion(snap?.brand?.icon), [snap?.brand?.icon]);
   // Each page names itself in the tab, so history and tabs tell them apart.
   useEffect(() => {
     const p = location.pathname;

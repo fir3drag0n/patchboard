@@ -4,7 +4,6 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Making it yours
 
-- [ ] Your own app icon, such as your server's logo, in place of the P
 - [ ] A setup file in YAML, to export and import everything at once
 - [ ] A search box with `!` shortcuts
 - [ ] Several Docker hosts
