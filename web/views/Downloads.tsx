@@ -2,16 +2,19 @@
 // you can do to each. Lists come straight from the clients while the page is
 // open and visible, every few seconds; the snapshot keeps only its summary.
 // Pause and resume are a tap. Removing is a hold: once for the entry, or
-// again from the other button for the entry and its files.
+// again from the other button for the entry and its files. Details opens a
+// torrent: its files with Skip, Normal or High, its own speed limits, and
+// its category.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { DownloadClientId, DownloadEntry, DownloadList, DownloadState, EntryAction } from '../../shared/types.ts';
+import type { DownloadClientId, DownloadEntry, DownloadList, DownloadState, EntryAction, FilePriority, TorrentDetail } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { Empty, Meter } from '../components/ui.tsx';
 import { type DownloadClient, PauseButton, useDownloadClients } from '../lib/downloads.tsx';
 import { agoLong, breakable, eta, size, speed } from '../lib/format.ts';
 import { msg, t as tr } from '../lib/i18n.ts';
+import { call, useList } from '../lib/live-list.ts';
 import { useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 
@@ -210,6 +213,7 @@ export function Downloads() {
 }
 
 function EntryRow({ r, many, ro, busy, onAct }: { r: Row; many: boolean; ro: boolean; busy: boolean; onAct: (a: EntryAction) => void }) {
+  const [open, setOpen] = useState(false);
   const unfinished = r.progress < 1 && !r.history;
   const canPause = !r.history && ['downloading', 'stalled', 'queued', 'seeding', 'checking'].includes(r.state);
   const canResume = !r.history && (r.state === 'paused' || (r.state === 'errored' && r.kind === 'torrent'));
@@ -242,8 +246,15 @@ function EntryRow({ r, many, ro, busy, onAct }: { r: Row; many: boolean; ro: boo
       </div>
       {r.error && <p className="dlp-error crit-text">{r.error}</p>}
       </div>
-      {!ro && (
+      {(r.kind === 'torrent' || !ro) && (
         <div className="dlp-actions">
+          {r.kind === 'torrent' && (
+            <button type="button" className="text-button" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+              {open ? tr('Hide details') : tr('Details')}
+            </button>
+          )}
+          {!ro && (
+          <>
           {canResume && (
             <button type="button" className="button button-quiet" disabled={busy} onClick={() => onAct('resume')}>
               {tr('Resume')}
@@ -272,10 +283,147 @@ function EntryRow({ r, many, ro, busy, onAct }: { r: Row; many: boolean; ro: boo
               </HoldButton>
             </>
           )}
+          </>
+          )}
         </div>
       )}
       </div>
+      {open && <TorrentPanel r={r} ro={ro} />}
     </li>
+  );
+}
+
+const PRIORITY: [FilePriority, string][] = [
+  ['skip', msg('Skip')],
+  ['normal', msg('Normal')],
+  ['high', msg('High')],
+];
+const MB = 1_000_000;
+
+/** One torrent opened up: category, its own speed limits, and each file with its priority. */
+function TorrentPanel({ r, ro }: { r: Row; ro: boolean }) {
+  const base = `/api/downloads/${r.client.id}/entries/${encodeURIComponent(r.id)}`;
+  const { data, err, reload } = useList<TorrentDetail>(`${base}/detail`);
+  const [busy, setBusy] = useState(false);
+  const [said, setSaid] = useState('');
+  const [fail, setFail] = useState('');
+  const [down, setDown] = useState('');
+  const [up, setUp] = useState('');
+  const mbs = (b: number) => (b > 0 ? String(Math.round((b / MB) * 10) / 10) : '');
+  useEffect(() => {
+    if (!data) return;
+    setDown(mbs(data.limits.down));
+    setUp(mbs(data.limits.up));
+  }, [data]);
+
+  async function set(what: 'files' | 'category' | 'limits', body: object, done: string) {
+    setBusy(true);
+    setSaid('');
+    setFail('');
+    try {
+      await call(`${base}/set/${what}`, { method: 'POST', headers: { ...ACTION, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      setSaid(done);
+      reload();
+    } catch (e) {
+      setFail((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (err) return <p className="crit-text dlp-panel">{err}</p>;
+  if (!data) return <div className="dlp-panel dlp-loading" aria-busy="true" />;
+  const bytes = (v: string) => Math.round((Number(v.replace(',', '.')) || 0) * MB);
+  const changed = bytes(down) !== data.limits.down || bytes(up) !== data.limits.up;
+  return (
+    <div className="dlp-panel">
+      <div className="dlp-settings">
+        {data.categories && (
+          <label className="dlp-setting">
+            <span>{tr('Category')}</span>
+            <select className="field" disabled={ro || busy} value={data.category ?? ''} onChange={(e) => void set('category', { category: e.target.value }, tr('Category set.'))}>
+              <option value="">{tr('None')}</option>
+              {data.categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <form
+          className="dlp-limits"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void set('limits', { limits: { down: bytes(down), up: bytes(up) } }, tr('Speed limits saved.'));
+          }}
+        >
+          <label className="dlp-setting">
+            <span>{tr('Download limit, MB/s')}</span>
+            <input className="field" inputMode="decimal" placeholder={tr('None')} value={down} disabled={ro} onChange={(e) => setDown(e.target.value)} />
+          </label>
+          <label className="dlp-setting">
+            <span>{tr('Upload limit, MB/s')}</span>
+            <input className="field" inputMode="decimal" placeholder={tr('None')} value={up} disabled={ro} onChange={(e) => setUp(e.target.value)} />
+          </label>
+          {!ro && (
+            <button type="submit" className="button button-quiet" disabled={busy || !changed}>
+              {tr('Save')}
+            </button>
+          )}
+        </form>
+      </div>
+      {said && (
+        <p className="req-done" role="status">
+          {said}
+        </p>
+      )}
+      {fail && (
+        <p className="crit-text" role="alert">
+          {fail}
+        </p>
+      )}
+      <div className="dlp-files-head">
+        <span className="lib-total">{tr('{n} files', { n: data.files.length })}</span>
+        {!ro && data.files.length > 1 && (
+          <select
+            className="field"
+            aria-label={tr('Set every file to')}
+            value=""
+            disabled={busy}
+            onChange={(e) => e.target.value && void set('files', { files: data.files.map((f) => f.index), priority: e.target.value }, tr('Every file set to {priority}.', { priority: tr(PRIORITY.find((p) => p[0] === e.target.value)![1]) }))}
+          >
+            <option value="">{tr('Set every file to…')}</option>
+            {PRIORITY.map(([p, label]) => (
+              <option key={p} value={p}>
+                {tr(label)}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+      <ul className="dlp-files">
+        {data.files.map((f) => (
+          <li key={f.index} className={f.priority === 'skip' ? 'is-skipped' : ''}>
+            <div className="dlp-file">
+              <span className="dlp-file-name">{breakable(f.name)}</span>
+              <span className="lib-total">{f.progress < 1 && f.priority !== 'skip' ? tr('{pct}% of {size}', { pct: Math.floor(f.progress * 100), size: size(f.size) }) : size(f.size)}</span>
+            </div>
+            {ro ? (
+              <span className="lib-total">{tr(PRIORITY.find((p) => p[0] === f.priority)![1])}</span>
+            ) : (
+              <select className="field" aria-label={tr('Priority of {name}', { name: f.name })} value={f.priority} disabled={busy} onChange={(e) => void set('files', { files: [f.index], priority: e.target.value }, tr('{name} set to {priority}.', { name: f.name, priority: tr(PRIORITY.find((p) => p[0] === e.target.value)![1]) }))}>
+                {PRIORITY.map(([p, label]) => (
+                  <option key={p} value={p}>
+                    {tr(label)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

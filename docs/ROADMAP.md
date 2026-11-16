@@ -8,8 +8,6 @@ One page per app with everything it's doing, and its everyday actions, so
 you open the app itself only for its rare settings. Every action is
 logged in Activity; read-only and household devices only look.
 
-- [ ] Downloads, next: a torrent's files, priority, category and its own
-  speed limits
 - [ ] Library, next: a show's seasons and episodes, Sonarr and Radarr
   history, and the calendar with search
 - [ ] Media, next: Plex without Tautulli (Right now and Recently added from

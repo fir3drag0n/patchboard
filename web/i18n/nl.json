@@ -1167,5 +1167,22 @@
  "Turned on {name}.": "{name} aangezet.",
  "Usenet": "Usenet",
  "Indexers on the Library page, with how each has done, which are failing, Test and Turn off. Health errors in Needs attention, and a word on the Prowlarr tile and the Media managers widget.": "Indexers op de pagina Bibliotheek: hoe elk het doet, welke falen, Testen en Uitzetten. Statusfouten in Vraagt aandacht, en een melding op de Prowlarr-tegel en in de Mediabeheer-widget.",
- "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Ondertitels op de pagina Bibliotheek: wat nog ondertitels mist en in welke talen, met Zoeken. Ontbrekende ondertitels op de Bazarr-tegel en in de Mediabeheer-widget, statusproblemen in Vraagt aandacht."
+ "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Ondertitels op de pagina Bibliotheek: wat nog ondertitels mist en in welke talen, met Zoeken. Ontbrekende ondertitels op de Bazarr-tegel en in de Mediabeheer-widget, statusproblemen in Vraagt aandacht.",
+ "{n} files": "{n} bestanden",
+ "{name} set to {priority}.": "{name} op {priority} gezet.",
+ "{pct}% of {size}": "{pct}% van {size}",
+ "Category": "Categorie",
+ "Category set.": "Categorie ingesteld.",
+ "Download limit, MB/s": "Downloadlimiet, MB/s",
+ "Every file set to {priority}.": "Alle bestanden op {priority} gezet.",
+ "Hide details": "Details verbergen",
+ "High": "Hoog",
+ "None": "Geen",
+ "Normal": "Normaal",
+ "Priority of {name}": "Prioriteit van {name}",
+ "Set every file to": "Alle bestanden zetten op",
+ "Set every file to…": "Alle bestanden zetten op…",
+ "Skip": "Overslaan",
+ "Speed limits saved.": "Snelheidslimieten opgeslagen.",
+ "Upload limit, MB/s": "Uploadlimiet, MB/s"
 }

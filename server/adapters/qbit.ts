@@ -4,6 +4,7 @@ import type { DownloadEntry, DownloadState, QbitData, QueueItem } from '../../sh
 import { config } from '../config.ts';
 import { HttpError, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
+import type { FilePriority, TorrentDetail, TorrentFile } from '../../shared/types.ts';
 import { type DownloadControl, type DownloadManager, type ItemAction, trackerHost } from './downloads.ts';
 
 interface Torrent {
@@ -87,6 +88,33 @@ export function fromQbit(t: QbitFull): DownloadEntry {
 
 export function qbitAdapter(): Adapter<QbitData> {
   return qbitClient().adapter;
+}
+
+interface QbitFile {
+  index?: number;
+  name: string;
+  size: number;
+  progress: number;
+  priority: number;
+}
+
+/** qBittorrent: 0 skip, 1 normal, 6 high, 7 highest. */
+const QB_PRIORITY: Record<FilePriority, number> = { skip: 0, normal: 1, high: 6 };
+
+export function fromQbitDetail(files: QbitFile[], props: { dl_limit?: number; up_limit?: number }, category: string | undefined, categories: string[]): TorrentDetail {
+  const many = files.length > 1;
+  return {
+    files: files.map((f, i): TorrentFile => ({
+      index: f.index ?? i,
+      name: many ? f.name.replace(/^[^/]+\//, '') : f.name,
+      size: f.size,
+      progress: f.progress,
+      priority: f.priority === 0 ? 'skip' : f.priority >= 6 ? 'high' : 'normal',
+    })),
+    limits: { down: Math.max(0, props.dl_limit ?? 0), up: Math.max(0, props.up_limit ?? 0) },
+    category: category ?? '',
+    categories: categories.sort((a, b) => a.localeCompare(b)),
+  };
 }
 
 export function qbitClient(): { adapter: Adapter<QbitData>; control: DownloadControl; item: (hash: string, action: ItemAction) => Promise<void>; altSpeed: () => Promise<void>; manage: DownloadManager } {
@@ -188,6 +216,25 @@ export function qbitClient(): { adapter: Adapter<QbitData>; control: DownloadCon
       else body.append('torrents', new Blob([new Uint8Array(what.file.data)], { type: 'application/x-bittorrent' }), what.file.name);
       const text = (await (await send('/api/v2/torrents/add', { method: 'POST', body })).text()).trim();
       if (text === 'Fails.') throw new Error("qBittorrent didn't take it: not a torrent, or already there");
+    },
+    async detail(entry) {
+      const h = encodeURIComponent(entry.id);
+      const [files, props, cats] = await Promise.all([
+        get<QbitFile[]>(`/api/v2/torrents/files?hash=${h}`),
+        get<{ dl_limit?: number; up_limit?: number }>(`/api/v2/torrents/properties?hash=${h}`),
+        get<Record<string, unknown>>('/api/v2/torrents/categories').catch(() => ({})),
+      ]);
+      return fromQbitDetail(files, props, entry.category, Object.keys(cats));
+    },
+    async change(entry, change) {
+      const h = `hash=${encodeURIComponent(entry.id)}`;
+      const hs = `hashes=${encodeURIComponent(entry.id)}`;
+      if ('files' in change) await form('/api/v2/torrents/filePrio', `${h}&id=${change.files.join('|')}&priority=${QB_PRIORITY[change.priority]}`);
+      else if ('category' in change) await form('/api/v2/torrents/setCategory', `${hs}&category=${encodeURIComponent(change.category)}`);
+      else {
+        await form('/api/v2/torrents/setDownloadLimit', `${hs}&limit=${Math.round(change.limits.down)}`);
+        await form('/api/v2/torrents/setUploadLimit', `${hs}&limit=${Math.round(change.limits.up)}`);
+      }
     },
   };
 

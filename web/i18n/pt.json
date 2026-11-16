@@ -1167,5 +1167,22 @@
  "Turned on {name}.": "{name} ligado.",
  "Usenet": "Usenet",
  "Indexers on the Library page, with how each has done, which are failing, Test and Turn off. Health errors in Needs attention, and a word on the Prowlarr tile and the Media managers widget.": "Indexadores na página Biblioteca: como cada um está indo, quais estão falhando, Testar e Desligar. Falhas de integridade em Precisa de atenção, com um aviso no bloco do Prowlarr e no widget Gerenciadores de mídia.",
- "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Legendas na página Biblioteca: o que ainda não tem legendas e em quais idiomas, com Buscar. Legendas ausentes no bloco do Bazarr e no widget Gerenciadores de mídia, com falhas de integridade em Precisa de atenção."
+ "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Legendas na página Biblioteca: o que ainda não tem legendas e em quais idiomas, com Buscar. Legendas ausentes no bloco do Bazarr e no widget Gerenciadores de mídia, com falhas de integridade em Precisa de atenção.",
+ "{n} files": "{n} arquivos",
+ "{name} set to {priority}.": "{name} definido como {priority}.",
+ "{pct}% of {size}": "{pct}% de {size}",
+ "Category": "Categoria",
+ "Category set.": "Categoria definida.",
+ "Download limit, MB/s": "Limite de download, MB/s",
+ "Every file set to {priority}.": "Todos os arquivos definidos como {priority}.",
+ "Hide details": "Ocultar detalhes",
+ "High": "Alta",
+ "None": "Nenhuma",
+ "Normal": "Normal",
+ "Priority of {name}": "Prioridade de {name}",
+ "Set every file to": "Definir todos os arquivos como",
+ "Set every file to…": "Definir todos os arquivos como…",
+ "Skip": "Pular",
+ "Speed limits saved.": "Limites de velocidade salvos.",
+ "Upload limit, MB/s": "Limite de upload, MB/s"
 }

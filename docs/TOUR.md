@@ -236,7 +236,8 @@ Pause and resume are a tap; remove is a hold, and a torrent can go with
 its files or without them. Paste a magnet link or a web address, or add a
 .torrent or .nzb file; Patchboard sends it to the client that takes it.
 The list comes straight from the clients every few seconds while the page
-is open.
+is open. Details opens a torrent: skip a sample, put the next episode
+first, cap its speed, or move it to another qBittorrent category.
 
 ![Downloads](screenshots/downloads.webp)
 

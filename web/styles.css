@@ -14811,6 +14811,78 @@ a.lib-title:hover {
   color: var(--accent);
 }
 
+.dlp-panel {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.dlp-settings,
+.dlp-limits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 14px;
+}
+
+.dlp-setting {
+  display: grid;
+  gap: 4px;
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+.dlp-setting .field {
+  width: 9.5em;
+}
+
+.dlp-files-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 14px 0 4px;
+}
+
+.dlp-files {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dlp-files li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.dlp-files li:last-child {
+  border-bottom: 0;
+}
+
+.dlp-file {
+  display: grid;
+  min-width: 0;
+}
+
+.dlp-file-name {
+  overflow-wrap: anywhere;
+}
+
+.dlp-files li.is-skipped .dlp-file-name {
+  color: var(--ink-3);
+}
+
+.dlp-files select.field,
+.dlp-files-head select.field {
+  width: auto;
+  flex: none;
+}
+
 .lib-test {
   margin: 4px 0 0;
   font-size: 13.5px;

@@ -1167,5 +1167,22 @@
  "Turned on {name}.": "{name} activado.",
  "Usenet": "Usenet",
  "Indexers on the Library page, with how each has done, which are failing, Test and Turn off. Health errors in Needs attention, and a word on the Prowlarr tile and the Media managers widget.": "Indexadores en la página Biblioteca: cómo le va a cada uno, cuáles fallan, Probar y Desactivar. Errores de salud en Requiere atención, y un aviso en el mosaico de Prowlarr y el widget de Gestores de medios.",
- "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Subtítulos en la página Biblioteca: lo que aún no tiene subtítulos y en qué idiomas, con Buscar. Subtítulos que faltan en el mosaico de Bazarr y el widget de Gestores de medios, y sus problemas de salud en Requiere atención."
+ "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Subtítulos en la página Biblioteca: lo que aún no tiene subtítulos y en qué idiomas, con Buscar. Subtítulos que faltan en el mosaico de Bazarr y el widget de Gestores de medios, y sus problemas de salud en Requiere atención.",
+ "{n} files": "{n} archivos",
+ "{name} set to {priority}.": "{name} en {priority}.",
+ "{pct}% of {size}": "{pct}% de {size}",
+ "Category": "Categoría",
+ "Category set.": "Categoría puesta.",
+ "Download limit, MB/s": "Límite de descarga, MB/s",
+ "Every file set to {priority}.": "Todos los archivos en {priority}.",
+ "Hide details": "Ocultar detalles",
+ "High": "Alta",
+ "None": "Ninguna",
+ "Normal": "Normal",
+ "Priority of {name}": "Prioridad de {name}",
+ "Set every file to": "Poner todos los archivos en",
+ "Set every file to…": "Poner todos los archivos en…",
+ "Skip": "Omitir",
+ "Speed limits saved.": "Límites de velocidad guardados.",
+ "Upload limit, MB/s": "Límite de subida, MB/s"
 }

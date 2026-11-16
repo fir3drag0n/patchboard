@@ -1167,5 +1167,22 @@
  "Turned on {name}.": "{name} eingeschaltet.",
  "Usenet": "Usenet",
  "Indexers on the Library page, with how each has done, which are failing, Test and Turn off. Health errors in Needs attention, and a word on the Prowlarr tile and the Media managers widget.": "Indexer auf der Bibliotheksseite: wie jeder abschneidet, welche ausfallen, Testen und Ausschalten. Healthcheck-Fehler unter Handlungsbedarf sowie ein Hinweis auf der Prowlarr-Kachel und im Medienmanager-Widget.",
- "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Untertitel auf der Bibliotheksseite: was noch Untertitel braucht und in welchen Sprachen, mit Suchen. Fehlende Untertitel auf der Bazarr-Kachel und im Medienmanager-Widget, Healthcheck-Probleme unter Handlungsbedarf."
+ "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Untertitel auf der Bibliotheksseite: was noch Untertitel braucht und in welchen Sprachen, mit Suchen. Fehlende Untertitel auf der Bazarr-Kachel und im Medienmanager-Widget, Healthcheck-Probleme unter Handlungsbedarf.",
+ "{n} files": "{n} Dateien",
+ "{name} set to {priority}.": "{name} auf {priority} gesetzt.",
+ "{pct}% of {size}": "{pct}% von {size}",
+ "Category": "Kategorie",
+ "Category set.": "Kategorie gesetzt.",
+ "Download limit, MB/s": "Download-Limit, MB/s",
+ "Every file set to {priority}.": "Alle Dateien auf {priority} gesetzt.",
+ "Hide details": "Details ausblenden",
+ "High": "Hoch",
+ "None": "Keine",
+ "Normal": "Normal",
+ "Priority of {name}": "Priorität von {name}",
+ "Set every file to": "Alle Dateien setzen auf",
+ "Set every file to…": "Alle Dateien setzen auf…",
+ "Skip": "Überspringen",
+ "Speed limits saved.": "Geschwindigkeitslimits gespeichert.",
+ "Upload limit, MB/s": "Upload-Limit, MB/s"
 }

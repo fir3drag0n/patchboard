@@ -2,7 +2,7 @@
 // the board shows every download client the same way. Each one can also pause
 // and resume everything, through POST /api/downloads/:id/:action.
 
-import type { ActiveTorrent, DownloadClientId, DownloadEntry, DownloadList, DownloadState, EntryAction, QbitData } from '../../shared/types.ts';
+import type { ActiveTorrent, DownloadClientId, DownloadEntry, DownloadList, DownloadState, EntryAction, FilePriority, QbitData, TorrentChange, TorrentDetail, TorrentFile } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { HttpError, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
@@ -20,6 +20,9 @@ export interface DownloadManager {
   list(): Promise<DownloadList>;
   act(entry: DownloadEntry, action: EntryAction): Promise<void>;
   add(what: NewDownload): Promise<void>;
+  /** A torrent's files, limits and category. Torrent clients only. */
+  detail?(entry: DownloadEntry): Promise<TorrentDetail>;
+  change?(entry: DownloadEntry, change: TorrentChange, detail: TorrentDetail): Promise<void>;
 }
 
 /** A tracker announce URL's host, without the "tracker." noise. */
@@ -124,8 +127,50 @@ export function transmissionClient() {
       const added = await rpc<{ 'torrent-added'?: unknown; 'torrent-duplicate'?: unknown }>('torrent-add', 'url' in what ? { filename: what.url } : { metainfo: what.file.data.toString('base64') });
       if (!added['torrent-added'] && !added['torrent-duplicate']) throw new Error("Transmission didn't take it");
     },
+    async detail(entry) {
+      const { torrents } = await rpc<{ torrents: TrDetail[] }>('torrent-get', {
+        ids: [entry.id],
+        fields: ['files', 'fileStats', 'downloadLimit', 'downloadLimited', 'uploadLimit', 'uploadLimited'],
+      });
+      if (!torrents[0]) throw new Error('That download is gone');
+      return fromTransmissionDetail(torrents[0]);
+    },
+    async change(entry, change) {
+      const ids = [entry.id];
+      if ('files' in change) {
+        const f = change.files;
+        if (change.priority === 'skip') await rpc('torrent-set', { ids, 'files-unwanted': f });
+        else await rpc('torrent-set', { ids, 'files-wanted': f, [change.priority === 'high' ? 'priority-high' : 'priority-normal']: f });
+      } else if ('limits' in change) {
+        // Transmission counts in kB, a thousand bytes.
+        const { down, up } = change.limits;
+        await rpc('torrent-set', { ids, downloadLimited: down > 0, uploadLimited: up > 0, ...(down > 0 ? { downloadLimit: Math.max(1, Math.round(down / 1000)) } : {}), ...(up > 0 ? { uploadLimit: Math.max(1, Math.round(up / 1000)) } : {}) });
+      }
+    },
   };
   return { adapter, control, manage };
+}
+
+interface TrDetail {
+  files: { name: string; length: number; bytesCompleted: number }[];
+  fileStats: { wanted: boolean; priority: number }[];
+  downloadLimit: number;
+  downloadLimited: boolean;
+  uploadLimit: number;
+  uploadLimited: boolean;
+}
+
+/** A path inside the torrent, without the torrent's own folder in front. */
+const inside = (name: string) => name.replace(/^[^/\\]+[/\\]/, '');
+
+export function fromTransmissionDetail(t: TrDetail): TorrentDetail {
+  return {
+    files: t.files.map((f, i): TorrentFile => {
+      const st = t.fileStats[i];
+      return { index: i, name: t.files.length > 1 ? inside(f.name) : f.name, size: f.length, progress: f.length ? f.bytesCompleted / f.length : 1, priority: !st?.wanted ? 'skip' : st.priority > 0 ? 'high' : 'normal' };
+    }),
+    limits: { down: t.downloadLimited ? t.downloadLimit * 1000 : 0, up: t.uploadLimited ? t.uploadLimit * 1000 : 0 },
+  };
 }
 
 interface TrFull {
@@ -280,8 +325,46 @@ export function delugeClient() {
         else if (what.url.startsWith('magnet:')) await call('core.add_torrent_magnet', [what.url, {}]);
         else await call('core.add_torrent_url', [what.url, {}]);
       }),
+    detail: (entry) =>
+      withLogin(async () => fromDelugeDetail(await call<DeDetail>('core.get_torrent_status', [entry.id, ['files', 'file_progress', 'file_priorities', 'max_download_speed', 'max_upload_speed']]))),
+    change: (entry, change, detail) =>
+      withLogin(async () => {
+        if ('files' in change) {
+          // Deluge takes every file's priority at once.
+          const pick = new Set(change.files);
+          const to = DE_PRIORITY[change.priority];
+          const all = detail.files.map((f) => (pick.has(f.index) ? to : DE_PRIORITY[f.priority]));
+          await call('core.set_torrent_options', [[entry.id], { file_priorities: all }]);
+        } else if ('limits' in change) {
+          // Deluge counts in KiB a second, and -1 for none.
+          const kib = (b: number) => (b > 0 ? Math.max(1, Math.round(b / 1024)) : -1);
+          await call('core.set_torrent_options', [[entry.id], { max_download_speed: kib(change.limits.down), max_upload_speed: kib(change.limits.up) }]);
+        }
+      }),
   };
   return { adapter, control, manage };
+}
+
+/** Deluge 2: 0 skip, 1 low, 4 normal, 7 high. */
+const DE_PRIORITY: Record<FilePriority, number> = { skip: 0, normal: 4, high: 7 };
+
+interface DeDetail {
+  files?: { index: number; path: string; size: number }[];
+  file_progress?: number[];
+  file_priorities?: number[];
+  max_download_speed?: number;
+  max_upload_speed?: number;
+}
+
+export function fromDelugeDetail(d: DeDetail): TorrentDetail {
+  const files = d.files ?? [];
+  return {
+    files: files.map((f): TorrentFile => {
+      const p = d.file_priorities?.[f.index] ?? 4;
+      return { index: f.index, name: files.length > 1 ? inside(f.path) : f.path, size: f.size, progress: d.file_progress?.[f.index] ?? 0, priority: p === 0 ? 'skip' : p >= 6 ? 'high' : 'normal' };
+    }),
+    limits: { down: (d.max_download_speed ?? -1) > 0 ? d.max_download_speed! * 1024 : 0, up: (d.max_upload_speed ?? -1) > 0 ? d.max_upload_speed! * 1024 : 0 },
+  };
 }
 
 interface DeFull {

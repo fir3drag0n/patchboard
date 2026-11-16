@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Open a torrent on the Downloads page:** Details lists its files with
+  how far along each is, and sets each to Skip, Normal or High, or every
+  file at once. Give the torrent its own download and upload limits, and
+  in qBittorrent pick its category. Works with qBittorrent, Transmission
+  and Deluge.
 - **Subtitles and Indexers on the Library page:** with Bazarr, Subtitles
   lists each episode or film still missing subtitles and in which
   languages, with Search for one and Search for all. With Prowlarr,

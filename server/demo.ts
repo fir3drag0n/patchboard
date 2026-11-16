@@ -17,6 +17,10 @@ import type {
   FrigateData,
   DnsData,
   DnsQuery,
+  FilePriority,
+  TorrentChange,
+  TorrentDetail,
+  TorrentFile,
   SeerrData,
   SeerrRequest,
   AskItem,
@@ -929,6 +933,28 @@ const demoHeld = new Set<string>();
 const demoAdded: (DownloadEntry & { client: DownloadClientId })[] = [];
 
 /** The demo's Downloads page: the widget's live torrents and jobs, with finished and failed ones around them. */
+// A torrent opened up: a season pack has its episodes and a sample, a film
+// its video and subtitles. Priorities, limits and categories stick.
+const demoPrio = new Map<string, Map<number, FilePriority>>();
+const demoLimits = new Map<string, { down: number; up: number }>();
+const demoCategory = new Map<string, string>();
+const DEMO_CATEGORIES = ['movies', 'music', 'radarr', 'tv-sonarr'];
+
+function demoFiles(e: DownloadEntry): TorrentFile[] {
+  const base = e.name.replace(/\.(mkv|mp4)$/i, '');
+  const pack = /S\d\d(?!E)/i.test(e.name) || e.size > 20 * GB;
+  const list: [string, number][] = pack
+    ? [...Array.from({ length: 8 }, (_, i): [string, number] => [`${base}.E0${i + 1}.mkv`, e.size * 0.12]), [`${base}.sample.mkv`, e.size * 0.02], [`${base}.nfo`, 4_000]]
+    : [[`${base}.mkv`, e.size * 0.995], [`${base}.en.srt`, 90_000], [`${base}.nfo`, 3_000]];
+  const set = demoPrio.get(e.id);
+  return list.map(([name, size], index) => {
+    const priority = set?.get(index) ?? (/sample|\.nfo$/i.test(name) ? 'skip' : 'normal');
+    // Earlier files fill first, the way most clients fetch them.
+    const progress = priority === 'skip' ? 0 : Math.max(0, Math.min(1, e.progress * list.length - index * 0.6));
+    return { index, name, size: Math.round(size), progress, priority };
+  });
+}
+
 export function demoManager(id: DownloadClientId): DownloadManager | undefined {
   if (id !== 'qbit' && id !== 'sabnzbd') return undefined;
   const mine = () => demoAdded.filter((a) => a.client === id && !demoGone.has(a.id)).map(({ client: _, ...e }) => ({ ...e, state: demoHeld.has(e.id) ? ('paused' as const) : e.state }));
@@ -942,7 +968,8 @@ export function demoManager(id: DownloadClientId): DownloadManager | undefined {
           const size = i.id === 'c3d4' ? 58.3 * GB : i.id === 'a1b2' ? 2.8 * GB : 4.2 * GB;
           return { id: i.id, name: i.name, state: i.state, progress: i.progress, size, done: size * i.progress, down: i.speed, up: i.speed ? i.speed / 9 : 0, etaSec: i.etaSec, ratio: 0.02, category: i.id === 'c3d4' ? 'radarr' : 'tv-sonarr', added: Date.now() - 40 * 60_000, tracker: 'torrentleech.org' };
         });
-        return { kind: 'torrent', entries: [...live, ...mine(), ...fixed(DEMO_TORRENTS)] };
+        const entries = [...live, ...mine(), ...fixed(DEMO_TORRENTS)].map((e) => (demoCategory.has(e.id) ? { ...e, category: demoCategory.get(e.id) || undefined } : e));
+        return { kind: 'torrent', entries };
       }
       const s = demoSab();
       const queue: DownloadEntry[] = s.active.map((a, i) => {
@@ -964,6 +991,21 @@ export function demoManager(id: DownloadClientId): DownloadManager | undefined {
       const name = 'file' in what ? what.file.name.replace(/\.(torrent|nzb)$/i, '') : (/[?&]dn=([^&]+)/.exec(what.url)?.[1] ? decodeURIComponent(/[?&]dn=([^&]+)/.exec(what.url)![1].replace(/\+/g, ' ')) : what.url.split('/').pop() || 'New download');
       demoAdded.unshift({ client: id, id: `new${demoAdded.length + 1}`, name, state: 'queued', progress: 0, size: 0, done: 0, down: 0, up: 0, etaSec: -1, added: Date.now() });
     },
+    ...(id === 'qbit'
+      ? {
+          async detail(e: DownloadEntry): Promise<TorrentDetail> {
+            return { files: demoFiles(e), limits: demoLimits.get(e.id) ?? { down: 0, up: 0 }, category: e.category ?? '', categories: DEMO_CATEGORIES };
+          },
+          async change(e: DownloadEntry, change: TorrentChange) {
+            if ('files' in change) {
+              const set = demoPrio.get(e.id) ?? new Map<number, FilePriority>();
+              for (const f of change.files) set.set(f, change.priority);
+              demoPrio.set(e.id, set);
+            } else if ('category' in change) demoCategory.set(e.id, change.category);
+            else demoLimits.set(e.id, change.limits);
+          },
+        }
+      : {}),
   };
 }
 

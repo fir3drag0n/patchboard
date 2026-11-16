@@ -1167,5 +1167,22 @@
  "Turned on {name}.": "{name} attivato.",
  "Usenet": "Usenet",
  "Indexers on the Library page, with how each has done, which are failing, Test and Turn off. Health errors in Needs attention, and a word on the Prowlarr tile and the Media managers widget.": "Gli indexer nella pagina Libreria: come va ciascuno, quali danno errori, Prova e Disattiva. Problemi di funzionamento in Richiede attenzione e una segnalazione nel riquadro di Prowlarr e nel widget Gestori dei media.",
- "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Sottotitoli nella pagina Libreria: cosa ne è ancora privo e in quali lingue, con Cerca. Sottotitoli mancanti sul riquadro di Bazarr e nel widget Gestori dei media, e i suoi problemi di salute in Richiede attenzione."
+ "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Sottotitoli nella pagina Libreria: cosa ne è ancora privo e in quali lingue, con Cerca. Sottotitoli mancanti sul riquadro di Bazarr e nel widget Gestori dei media, e i suoi problemi di salute in Richiede attenzione.",
+ "{n} files": "{n} file",
+ "{name} set to {priority}.": "{name} impostato su {priority}.",
+ "{pct}% of {size}": "{pct}% di {size}",
+ "Category": "Categoria",
+ "Category set.": "Categoria impostata.",
+ "Download limit, MB/s": "Limite di download, MB/s",
+ "Every file set to {priority}.": "Tutti i file impostati su {priority}.",
+ "Hide details": "Nascondi dettagli",
+ "High": "Alta",
+ "None": "Nessuna",
+ "Normal": "Normale",
+ "Priority of {name}": "Priorità di {name}",
+ "Set every file to": "Imposta tutti i file su",
+ "Set every file to…": "Imposta tutti i file su…",
+ "Skip": "Salta",
+ "Speed limits saved.": "Limiti di velocità salvati.",
+ "Upload limit, MB/s": "Limite di upload, MB/s"
 }

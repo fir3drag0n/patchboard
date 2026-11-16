@@ -1272,6 +1272,30 @@ export interface DownloadList {
   entries: DownloadEntry[];
 }
 
+export type FilePriority = 'skip' | 'normal' | 'high';
+
+export interface TorrentFile {
+  /** The client's own number for the file. */
+  index: number;
+  name: string;
+  size: number;
+  /** 0 to 1. */
+  progress: number;
+  priority: FilePriority;
+}
+
+/** One torrent opened up: its files, its own speed limits and its category. */
+export interface TorrentDetail {
+  files: TorrentFile[];
+  /** Bytes a second; 0 means it has no limit of its own. */
+  limits: { down: number; up: number };
+  category?: string;
+  /** The client's categories, when it keeps them (qBittorrent). */
+  categories?: string[];
+}
+
+export type TorrentChange = { files: number[]; priority: FilePriority } | { category: string } | { limits: { down: number; up: number } };
+
 /** What can be done to one download: delete removes its files too. */
 export type EntryAction = 'pause' | 'resume' | 'remove' | 'delete';
 

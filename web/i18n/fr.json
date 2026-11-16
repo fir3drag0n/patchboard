@@ -1167,5 +1167,22 @@
  "Turned on {name}.": "{name} activé.",
  "Usenet": "Usenet",
  "Indexers on the Library page, with how each has done, which are failing, Test and Turn off. Health errors in Needs attention, and a word on the Prowlarr tile and the Media managers widget.": "Les indexeurs sur la page Bibliothèque : le bilan de chacun, ceux qui échouent, Tester et Désactiver. Les problèmes d'état dans À traiter, avec un indicateur sur la tuile Prowlarr et le widget Gestionnaires de médias.",
- "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Les sous-titres sur la page Bibliothèque : ce qui en manque encore et dans quelles langues, avec Rechercher. Les sous-titres manquants sur la tuile Bazarr et dans le widget Gestionnaires de médias, les problèmes d'état dans À traiter."
+ "Subtitles on the Library page: what still lacks subtitles and in which languages, with Search. Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.": "Les sous-titres sur la page Bibliothèque : ce qui en manque encore et dans quelles langues, avec Rechercher. Les sous-titres manquants sur la tuile Bazarr et dans le widget Gestionnaires de médias, les problèmes d'état dans À traiter.",
+ "{n} files": "{n} fichiers",
+ "{name} set to {priority}.": "{name} réglé sur {priority}.",
+ "{pct}% of {size}": "{pct} % de {size}",
+ "Category": "Catégorie",
+ "Category set.": "Catégorie définie.",
+ "Download limit, MB/s": "Limite de téléchargement, Mo/s",
+ "Every file set to {priority}.": "Tous les fichiers réglés sur {priority}.",
+ "Hide details": "Masquer les détails",
+ "High": "Haute",
+ "None": "Aucune",
+ "Normal": "Normale",
+ "Priority of {name}": "Priorité de {name}",
+ "Set every file to": "Régler tous les fichiers sur",
+ "Set every file to…": "Régler tous les fichiers sur…",
+ "Skip": "Ignorer",
+ "Speed limits saved.": "Limites de vitesse enregistrées.",
+ "Upload limit, MB/s": "Limite d’envoi, Mo/s"
 }

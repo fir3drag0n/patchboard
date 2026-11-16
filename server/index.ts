@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { DnsLists, DnsLog, IndexerList, MediaLibraries, SubtitleItem, SubtitleKind, SubtitleList, MediaServerId, SeerrData, Stream } from '../shared/types.ts';
+import type { DnsLists, DnsLog, DownloadEntry, FilePriority, IndexerList, TorrentChange, TorrentDetail, MediaLibraries, SubtitleItem, SubtitleKind, SubtitleList, MediaServerId, SeerrData, Stream } from '../shared/types.ts';
 import { fieldLabel } from '../shared/setup.ts';
 import { latestReleases, readFeeds } from './outside.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -811,6 +811,73 @@ app.post('/api/downloads/:id/entries/:entry/:action', async (c) => {
     return c.json({ error: (err as Error).message }, 502);
   }
   void hub.pollNow(id);
+  return c.json({ ok: true });
+});
+
+// One torrent opened up: its files with their priority, its own speed limits
+// and its category. Only a download the client listed, and only files,
+// categories and limits that are really there.
+async function listedEntry(id: DownloadClientId, m: DownloadManager, entryId: string): Promise<DownloadEntry | undefined> {
+  let seen = lastLists.get(id);
+  if (!seen || Date.now() - seen.at > 60_000) seen = { at: Date.now(), list: await m.list() };
+  return seen.list.entries.find((e) => e.id === entryId);
+}
+const PRIORITIES: FilePriority[] = ['skip', 'normal', 'high'];
+const MAX_LIMIT = 10_000_000_000;
+
+app.get('/api/downloads/:id/entries/:entry/detail', async (c) => {
+  const id = c.req.param('id') as DownloadClientId;
+  const m = managerOf(id);
+  if (!m?.detail) return c.json({ error: 'That client can’t open a download' }, 404);
+  try {
+    const entry = await listedEntry(id, m, c.req.param('entry'));
+    if (!entry) return c.json({ error: 'That download is gone' }, 404);
+    return c.json((await m.detail(entry)) satisfies TorrentDetail);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+});
+
+app.post('/api/downloads/:id/entries/:entry/set/:what', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const id = c.req.param('id') as DownloadClientId;
+  const what = c.req.param('what');
+  const m = managerOf(id);
+  if (!m?.detail || !m.change) return c.json({ error: 'That client can’t change a download' }, 404);
+  const b = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  try {
+    const entry = await listedEntry(id, m, c.req.param('entry'));
+    if (!entry) return c.json({ error: 'That download is gone' }, 404);
+    const detail = await m.detail(entry);
+    let change: TorrentChange;
+    let said: string;
+    if (what === 'files') {
+      const have = new Set(detail.files.map((f) => f.index));
+      const files = Array.isArray(b.files) ? [...new Set(b.files.map(Number))] : [];
+      const priority = b.priority as FilePriority;
+      if (!files.length || !files.every((f) => have.has(f)) || !PRIORITIES.includes(priority)) return c.json({ error: 'Pick files from this download, and Skip, Normal or High.' }, 400);
+      change = { files, priority };
+      said = `${files.length} file${files.length === 1 ? '' : 's'} to ${priority}`;
+    } else if (what === 'category') {
+      const category = typeof b.category === 'string' ? b.category : '';
+      if (!detail.categories || (category && !detail.categories.includes(category))) return c.json({ error: 'Pick one of the client’s categories.' }, 400);
+      change = { category };
+      said = category || 'no category';
+    } else if (what === 'limits') {
+      const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= MAX_LIMIT ? Math.round(v) : NaN);
+      const lim = (b.limits ?? {}) as Record<string, unknown>;
+      const down = n(lim.down);
+      const up = n(lim.up);
+      if (Number.isNaN(down) || Number.isNaN(up)) return c.json({ error: 'Limits are a speed, or none.' }, 400);
+      change = { limits: { down, up } };
+      said = `down ${down || 'none'}, up ${up || 'none'}`;
+    } else return c.json({ error: 'Unknown change' }, 400);
+    await m.change(entry, change, detail);
+    lastLists.delete(id);
+    recordAudit(who(c), `downloads.entry.${what}`, id, `${entry.name}: ${said}`);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
   return c.json({ ok: true });
 });
 

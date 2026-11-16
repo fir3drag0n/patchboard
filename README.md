@@ -143,7 +143,7 @@ boards, cameras and lights and none of the server controls.
 | **Reading** | A Miniflux reader with search, feed and time filters, and keyboard navigation. |
 | **Upcoming** | Sonarr, Radarr and Trakt in one calendar, without doubles, with posters. |
 | **Media** | Plex, Jellyfin and Emby: who's watching, stop a stream, scan a library. |
-| **Downloads** | Every torrent and NZB in every client: pause, resume, remove, add. |
+| **Downloads** | Every torrent and NZB in every client: pause, resume, remove, add. A torrent's files, priorities, speed limits and category. |
 | **Library** | Sonarr's shows and Radarr's films: monitor, search, what's missing, the queue, add new ones. Bazarr's missing subtitles and Prowlarr's indexers too. |
 | **Ad blocking** | Pi-hole or AdGuard Home: the query log, allow or block a domain, your lists, pause. |
 | **Requests** | Overseerr or Jellyseerr: approve, decline, see what's on the way, request something new. |
