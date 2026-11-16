@@ -294,5 +294,6 @@
  "Hashrate, last 24 hours": "Hashrate, dernières 24 heures",
  "UPS": "Onduleur",
  "Battery nearly empty": "Batterie presque vide",
- "Replace battery": "Remplacer la batterie"
+ "Replace battery": "Remplacer la batterie",
+ "API keys": "Clés d'API"
 }

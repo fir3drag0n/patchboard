@@ -17,6 +17,7 @@ import { HomepageImport } from '../components/HomepageImport.tsx';
 import { SignIn } from '../components/SignIn.tsx';
 import { BrandName } from '../components/BrandName.tsx';
 import { AppIconSection } from '../components/AppIcon.tsx';
+import { ApiKeys } from '../components/ApiKeys.tsx';
 import { type SetupIntegration, THRESHOLDS, type ThresholdState } from '../../shared/setup.ts';
 import {
   ACCENTS,
@@ -319,6 +320,7 @@ export function Settings() {
             <>
               <SignIn />
               <Keys />
+              <ApiKeys />
             </>
           )}
           {part === 'apps' && <CatalogCheck />}

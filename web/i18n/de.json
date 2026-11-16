@@ -294,5 +294,6 @@
  "Hashrate, last 24 hours": "Hashrate, letzte 24 Stunden",
  "UPS": "USV",
  "Battery nearly empty": "Akku fast leer",
- "Replace battery": "Akku tauschen"
+ "Replace battery": "Akku tauschen",
+ "API keys": "API-Schlüssel"
 }

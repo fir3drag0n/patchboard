@@ -6,6 +6,12 @@
   replaces the P in the tab, on the home screen and in the install, on every
   device. Patchboard draws every size and a black-and-white one for e-ink.
   Use the P brings the P back.
+- **A read-only API, with MCP:** scripts, Home Assistant and AI assistants
+  can read what needs you, the containers, the server and any widget's
+  number. Make a key per tool in Settings, Connections, Sign-in and keys;
+  it opens nothing else and changes nothing. `/api/v1/mcp` lets Claude and
+  other MCP clients ask "is Plex running?" directly. docs/API.md has the
+  endpoints and setup lines.
 
 ## 1.14.0 (2026-11-15)
 

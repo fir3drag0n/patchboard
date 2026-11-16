@@ -5655,6 +5655,30 @@ body.is-sorting * {
   grid-template-columns: minmax(0, 1fr) auto auto;
 }
 
+.api-key-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  max-width: 560px;
+}
+
+.api-key-add .crit-text {
+  grid-column: 1 / -1;
+}
+
+.api-key-made {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.api-key-made p {
+  margin: 0;
+}
+
 .key-add {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) auto;

@@ -294,5 +294,6 @@
  "Hashrate, last 24 hours": "Hashrate, afgelopen 24 uur",
  "UPS": "UPS",
  "Battery nearly empty": "Accu bijna leeg",
- "Replace battery": "Accu vervangen"
+ "Replace battery": "Accu vervangen",
+ "API keys": "API-sleutels"
 }

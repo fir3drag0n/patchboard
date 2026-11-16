@@ -14,6 +14,8 @@ import type { Adapter } from './adapters/adapter.ts';
 import type { ArrData, ContainerDetail, HaEntity, ProxmoxData, QbitData } from '../shared/types.ts';
 import { cleanBrand } from '../shared/brand.ts';
 import { appIconFor, clearAppIcon, saveAppIcon } from './appicon.ts';
+import { apiRoutes } from './api.ts';
+import { createKey, listKeys, revokeKey } from './apikeys.ts';
 import { radarrAdapter, sonarrAdapter, arrControl, type ArrControl } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
 import { fastmailAdapter } from './adapters/fastmail.ts';
@@ -278,6 +280,24 @@ app.use('/api/*', householdGuard());
 app.use('/api/*', requireAuth());
 app.use('/api/*', readOnlyGuard());
 const who = (c: Parameters<typeof currentUser>[0]) => currentUser(c) ?? '?';
+
+// The read-only API for scripts and AI tools (server/api.ts), and its keys.
+app.route('/api/v1', apiRoutes({ snapshot: () => hub.snapshot(), reading: (w, unit) => panelReading(w, unit) }));
+app.get('/api/keys', (c) => c.json({ keys: listKeys() }));
+app.post('/api/keys', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const r = createKey(((await c.req.json().catch(() => ({}))) as { name?: unknown }).name);
+  if ('error' in r) return c.json({ error: r.error }, 400);
+  recordAudit(who(c), 'api-key.add', r.info.name);
+  return c.json(r);
+});
+app.delete('/api/keys/:id', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const gone = revokeKey(c.req.param('id'));
+  if (!gone) return c.json({ error: 'No such key' }, 404);
+  recordAudit(who(c), 'api-key.revoke', gone.name);
+  return c.json({ ok: true });
+});
 
 // Who's here, how sign-in works, and whether changes are allowed.
 app.get('/api/session', (c) => c.json({ auth: config.auth.mode, user: currentUser(c), readOnly: config.readOnly, household: householdOf(c)?.name, provider: config.auth.mode === 'oidc' ? config.auth.oidc.name : undefined }));

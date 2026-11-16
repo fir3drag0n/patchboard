@@ -22,6 +22,7 @@ import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { config } from './config.ts';
 import { kvGet, kvSet, recordAudit } from './db.ts';
 import { householdOf } from './household.ts';
+import { checkKey, looksLikeKey } from './apikeys.ts';
 
 const COOKIE = 'pb_session';
 const SESSION_DAYS = 30;
@@ -251,6 +252,12 @@ const OPEN = new Set(['/api/session', '/api/login', '/api/logout', '/api/oidc/lo
 
 export function requireAuth(): MiddlewareHandler {
   return async (c, next) => {
+    // The read-only API takes a key from Settings, whatever sign-in is set to.
+    // A key opens nothing else.
+    if (/^\/api\/v1(\/|$)/.test(c.req.path)) {
+      const given = c.req.header('authorization')?.replace(/^Bearer\s+/i, '');
+      if (looksLikeKey(given)) return checkKey(given) ? next() : c.json({ error: "That API key isn't valid. Make one in Settings, Connections, API keys." }, 401);
+    }
     if (config.auth.mode === 'none' || OPEN.has(c.req.path)) return next();
     // Webhooks (Diun) can't sign in; they carry HOOK_TOKEN instead.
     if (c.req.path.startsWith('/api/hooks/')) {
@@ -264,8 +271,8 @@ export function requireAuth(): MiddlewareHandler {
   };
 }
 
-/** Changes that read-only mode still allows: marking articles read, signing in and out, inbound webhooks. */
-const READ_ONLY_ALLOWED = new Set(['/api/feeds/read', '/api/login', '/api/logout']);
+/** Changes that read-only mode still allows: marking articles read, signing in and out, inbound webhooks, MCP's read-only questions. */
+const READ_ONLY_ALLOWED = new Set(['/api/feeds/read', '/api/login', '/api/logout', '/api/v1/mcp']);
 
 export function readOnlyGuard(): MiddlewareHandler {
   return async (c, next) => {

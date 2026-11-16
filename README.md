@@ -60,6 +60,10 @@ rest lives in Settings. Prefer config as code? Environment variables and a
 `services.yaml` still work, and Settings can copy them in later.
 [docs/CONFIGURATION.md](docs/CONFIGURATION.md) has both ways.
 
+Scripts, Home Assistant and AI assistants can read it too, through a
+read-only API with its own keys and an MCP endpoint.
+[docs/API.md](docs/API.md) shows how.
+
 `latest` follows releases, which come every week or so. Pin `1` to stay on
 1.x, or a version like `1.2.0` to stay put. `edge` is the beta: every
 change, a week before it's released. `dev` is work in progress.

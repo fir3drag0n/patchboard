@@ -5,4 +5,5 @@ export const HELP = {
   tour: `${DOCS}/TOUR.md`,
   integrations: `${DOCS}/INTEGRATIONS.md`,
   configuration: `${DOCS}/CONFIGURATION.md`,
+  api: `${DOCS}/API.md`,
 };

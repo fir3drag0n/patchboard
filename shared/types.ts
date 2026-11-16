@@ -1325,6 +1325,14 @@ export interface SelfCheck {
   reason?: string;
 }
 
+/** A key for the read-only API, as Settings lists it. */
+export interface ApiKeyInfo {
+  id: string;
+  name: string;
+  created: number;
+  lastUsed?: number;
+}
+
 export interface Brand {
   /** Empty means Patchboard. */
   name?: string;
