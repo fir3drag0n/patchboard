@@ -243,10 +243,24 @@ export function Settings() {
       </Section>
 
       <Section title="Screen">
-        <label className="check">
-          <input type="checkbox" checked={a.eink} onChange={(e) => setAppearance({ eink: e.target.checked })} />
-          E-ink
-        </label>
+        <div className="seg" role="group" aria-label={tr('Screen')}>
+          {(
+            [
+              ['', msg('Standard')],
+              ['bw', msg('E-ink')],
+              ['color', msg('Color e-ink')],
+            ] as const
+          ).map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={(a.eink ? (a.einkColor ? 'color' : 'bw') : '') === v}
+              onClick={() => setAppearance({ eink: v !== '', einkColor: v === 'color' })}
+            >
+              {tr(label)}
+            </button>
+          ))}
+        </div>
         <p className="settings-note">{tr('For an e-ink reader or panel: no motion, and one redraw a minute. A wall device is set from Devices.')}</p>
       </Section>
 

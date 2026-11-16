@@ -71,6 +71,8 @@ to show where it is; it can also turn them by itself every half minute to
 ten minutes, waiting three minutes after anyone touches it. Set its Screen
 to E-ink for an e-ink reader or panel: black on white, no motion, problems
 marked by shape, and a redraw once a minute rather than with every change.
+Color e-ink, for a Kaleido or Spectra panel, keeps all of that and brings
+back status, warnings and the accent in deep inks the panel can show.
 E-ink needs a current browser, as on Boox and other Android readers; a
 Kindle e-reader's built-in browser is too old to run Patchboard.
 

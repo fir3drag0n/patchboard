@@ -175,11 +175,13 @@ step with `appearance.ts`.
 Patchboard's one status mark is a light in a patch-panel socket, the same
 socket the patch-bay launcher plugs apps into. A quiet glow means live,
 amber means stale, red means down and glows, and a dark socket means idle.
-Every board widget shows one before its name: its integration's health, or
-for a widget built from several, whether Patchboard itself is live, so a
-dropped connection turns the whole board amber at once. Right now, Changes,
-Logs, a container's state line and every alert (Needs attention, weather,
-TrueNAS) use the same light at list size, in place of a colored stripe. An
+A light shows only when it has something to say. A board widget wears one
+before its name while its integration is stale or down, or, for a widget
+built from several, while Patchboard itself has lost its connection, so a
+dropped connection marks the whole board at once. A healthy widget, a
+playing stream and an ordinary change wear none. Changes, Logs, a
+container's state line and every alert (Needs attention, weather, TrueNAS)
+use the same light at list size, in place of a colored stripe. An
 app's light follows the alerts that name it, so Home, Apps and Needs
 attention never disagree. A stop stays red only while it's unexplained: a
 container that runs again, a scheduled job, or one you stopped from

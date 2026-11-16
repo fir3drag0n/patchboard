@@ -9,16 +9,21 @@ import { useSyncExternalStore } from 'react';
 export const EINK_MS = 60_000;
 
 let on = false;
+let color = false;
 const listeners = new Set<() => void>();
 
 export function einkOn(): boolean {
   return on;
 }
 
-export function setEink(next: boolean): void {
-  if (next === on) return;
+/** A color e-ink panel: the e-ink page, with status, warnings and the accent in its few inks. */
+export function setEink(next: boolean, inColor = false): void {
+  const c = next && inColor;
+  if (next === on && c === color) return;
   on = next;
+  color = c;
   document.documentElement.toggleAttribute('data-eink', on);
+  document.documentElement.toggleAttribute('data-eink-color', color);
   for (const fn of listeners) fn();
 }
 

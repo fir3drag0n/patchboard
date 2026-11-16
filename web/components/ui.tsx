@@ -34,7 +34,8 @@ export function Section(props: {
   return (
     <section className={`section ${className ?? ''}`} id={id}>
       <header className="section-head">
-        {led && <Led state={led.state} label={led.label} />}
+        {/* A light only when it says something: a healthy widget wears none. */}
+        {led && led.state !== 'ok' && <Led state={led.state} label={led.label} />}
         <h2>{title}</h2>
         {count != null && <span className="section-count">{count}</span>}
         {source && !source.ok && source.error && (

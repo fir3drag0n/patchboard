@@ -460,7 +460,6 @@
  "Client ID": "Client-ID",
  "Clock size": "Klokgrootte",
  "Close": "Sluiten",
- "Color": "Kleur",
  "Color mode": "Kleurmodus",
  "Comfortable": "Ruim",
  "Coming from Homepage?": "Kom je van Homepage?",
@@ -925,5 +924,8 @@
  "Find your town": "Zoek je plaats",
  "Finish setup": "Instellen afronden",
  "Hide": "Verbergen",
- "Set your town": "Plaats instellen"
+ "Set your town": "Plaats instellen",
+ "Color e-ink": "Kleuren-e-ink",
+ "E-ink": "E-ink",
+ "Standard": "Standaard"
 }

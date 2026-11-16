@@ -107,7 +107,8 @@ export function SnapshotProvider({ children }: { children: ReactNode }) {
 
   // E-ink, from this device's household settings or its own Look.
   const look = useAppearance();
-  useEffect(() => setEink(snap?.household?.screen === 'eink' || look.eink), [snap?.household?.screen, look.eink]);
+  const screen = snap?.household?.screen;
+  useEffect(() => setEink(!!screen || look.eink, screen === 'eink-color' || (!screen && look.eink && look.einkColor)), [screen, look.eink, look.einkColor]);
 
   return <Ctx.Provider value={{ snap, live, failed, auth }}>{children}</Ctx.Provider>;
 }

@@ -460,7 +460,6 @@
  "Client ID": "Client-ID",
  "Clock size": "Uhrgröße",
  "Close": "Schließen",
- "Color": "Farbe",
  "Color mode": "Farbmodus",
  "Comfortable": "Großzügig",
  "Coming from Homepage?": "Kommst du von Homepage?",
@@ -925,5 +924,8 @@
  "Find your town": "Ort suchen",
  "Finish setup": "Einrichtung abschließen",
  "Hide": "Ausblenden",
- "Set your town": "Ort festlegen"
+ "Set your town": "Ort festlegen",
+ "Color e-ink": "Farb-E-Ink",
+ "E-ink": "E-Ink",
+ "Standard": "Standard"
 }

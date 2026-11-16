@@ -542,7 +542,6 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
       {idle.length > 0 && (
         <div className="now-block">
           <h3 className="now-idle">
-            <Led state="idle" />
             Nobody is watching{' '}
             {idle.map((m, i) => (
               <span key={m.id}>
@@ -557,7 +556,6 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
       {watching.map((m) => (
         <div className="now-block" key={m.id}>
           <h3>
-            <Led state="ok" />
             <AppLink container={m.container}>{`${plural(m.data.streams.length, 'stream')} on ${m.label}`}</AppLink>
           </h3>
           {/* Folded: the titles in a line, each still opening its details. */}
@@ -586,7 +584,6 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
       {listening.map((l) => (
         <div className="now-block" key={l.id}>
           <h3>
-            <Led state="ok" />
             <AppLink container={l.id}>{l.data!.streams.length === 1 ? '1 person' : `${l.data!.streams.length} people`} listening on {l.label}</AppLink>
           </h3>
           {compact && (
@@ -609,7 +606,6 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
         <div className="now-block">
           {idleClients.length > 0 && (
             <h3 className="now-idle">
-              <Led state="idle" />
               Nothing downloading in{' '}
               {idleClients.map((d, i) => (
                 <span key={d.id}>
@@ -639,7 +635,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
           {/* The heading says what's happening; its Pause sits beside it, not inside it. */}
           <div className="now-head">
             <h3>
-              <Led state={d.data.errored.length ? 'crit' : d.data.downloading && !d.data.paused ? 'ok' : 'idle'} />
+              {d.data.errored.length > 0 && <Led state="crit" />}
               <AppLink container={d.container}>
                 {d.data.paused
                   ? `${d.label} is paused`

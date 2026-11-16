@@ -120,7 +120,7 @@ export function setHouseholdView(id: string, view: { name?: string; opens?: stri
   if (view.rotate !== undefined) d.rotate = (ROTATE_SECONDS as readonly number[]).includes(view.rotate ?? 0) && view.rotate ? view.rotate : undefined;
   if (view.tint !== undefined) d.tint = view.tint === 'blue' || view.tint === 'color' ? view.tint : undefined;
   if (view.dim !== undefined) d.dim = (DIM_HOURS as readonly string[]).includes(view.dim ?? '') ? view.dim! : undefined;
-  if (view.screen !== undefined) d.screen = view.screen === 'eink' ? 'eink' : undefined;
+  if (view.screen !== undefined) d.screen = view.screen === 'eink' || view.screen === 'eink-color' ? view.screen : undefined;
   d.rev = Date.now();
   kvSet('household', all);
   return viewOf(d);

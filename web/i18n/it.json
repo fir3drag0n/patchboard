@@ -460,7 +460,6 @@
  "Client ID": "ID client",
  "Clock size": "Dimensione dell'orologio",
  "Close": "Chiudi",
- "Color": "Colore",
  "Color mode": "Modalità colore",
  "Comfortable": "Comoda",
  "Coming from Homepage?": "Arrivi da Homepage?",
@@ -925,5 +924,8 @@
  "Find your town": "Trova la tua città",
  "Finish setup": "Completa la configurazione",
  "Hide": "Nascondi",
- "Set your town": "Imposta la tua città"
+ "Set your town": "Imposta la tua città",
+ "Color e-ink": "E-ink a colori",
+ "E-ink": "E-ink",
+ "Standard": "Standard"
 }

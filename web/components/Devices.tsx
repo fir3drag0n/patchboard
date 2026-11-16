@@ -385,8 +385,9 @@ function DeviceEditor({
           <label>
             <span>{tr('Kind of screen')}</span>
             <select className="field" value={d.screen ?? ''} disabled={readOnly} onChange={(e) => onSave({ screen: e.target.value })}>
-              <option value="">{tr('Color')}</option>
-              <option value="eink">E-ink</option>
+              <option value="">{tr('Standard')}</option>
+              <option value="eink">{tr('E-ink')}</option>
+              <option value="eink-color">{tr('Color e-ink')}</option>
             </select>
           </label>
           <label>

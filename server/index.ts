@@ -484,7 +484,7 @@ app.put('/api/household/:id', async (c) => {
   }
   const rotate = body.rotate === undefined ? undefined : typeof body.rotate === 'number' ? body.rotate : null;
   const dim = body.dim === undefined ? undefined : typeof body.dim === 'string' ? body.dim : null;
-  const screen = body.screen === undefined ? undefined : body.screen === 'eink' ? 'eink' : null;
+  const screen = body.screen === undefined ? undefined : body.screen === 'eink' || body.screen === 'eink-color' ? body.screen : null;
   const look = body.look === undefined ? undefined : (cleanLook(body.look) ?? null);
   const view = setHouseholdView(c.req.param('id'), { name, opens, pages, rotate, tint, dim, screen, look });
   if (!view) return c.json({ error: 'No such device' }, 404);

@@ -1289,9 +1289,13 @@ a.jack:focus-visible {
 }
 
 .change-text::before {
-  content: '';
   margin-right: 11px;
   vertical-align: -1px;
+}
+
+/* Only a stop or a failing health check wears a light; an update reads on its own. */
+:is(.change-stopped, .change-unhealthy) .change-text::before {
+  content: '';
 }
 
 .changes time {
@@ -11303,7 +11307,7 @@ a.req-title:hover {
 /* Right now folded by Fit: under each heading, one line of what's playing. */
 .now-compact {
   margin: 2px 0 0;
-  padding-left: 22px;
+  padding-left: 0;
   color: var(--ink-2);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -14083,4 +14087,52 @@ html[data-accent='mono'] :is(.text-button, .section-action, .page a:not([class])
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
+}
+
+/* Color e-ink (a Kaleido or Spectra panel): the e-ink page, still and on
+   paper, with status, warnings and the accent back in color. These panels
+   mute every ink, so each one is deep and far from the others. */
+html[data-eink][data-eink-color] {
+  --ok: #1e6b2e !important;
+  --warn: #a34f00 !important;
+  --crit: #b3261e !important;
+  --accent: #1d4e9e !important;
+}
+
+html[data-eink][data-eink-color] .monitor.tint-eink {
+  --accent: #1d4e9e;
+  --c-cpu: #1d4e9e;
+  --c-mem: #6b3fa0;
+  --c-net: #0f6e74;
+  --warn: #a34f00;
+  --crit: #b3261e;
+}
+
+/* Playback keeps each service's own color, in its light-mode shade. */
+html[data-eink][data-eink-color] {
+  --media-plex: #986800 !important;
+  --media-jellyfin: #7940a3 !important;
+  --media-emby: #347c26 !important;
+  --media-tracearr: #246fb5 !important;
+  --media-audiobookshelf: #886615 !important;
+  --media-navidrome: #257494 !important;
+}
+
+/* Pictures and app icons keep their color, a little stronger for the panel. */
+html[data-eink][data-eink-color] img,
+html[data-eink][data-eink-color] .icon-img {
+  filter: saturate(1.35) contrast(1.05);
+}
+
+/* Lights in color, and still in their shapes: a square, a ring, a dot. */
+html[data-eink][data-eink-color] .led[data-state='crit'] {
+  background: var(--crit);
+}
+
+html[data-eink][data-eink-color] .led[data-state='warn'] {
+  box-shadow: inset 0 0 0 2px var(--warn) !important;
+}
+
+html[data-eink][data-eink-color] .led[data-state='ok'] {
+  background: var(--ok);
 }

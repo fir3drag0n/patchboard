@@ -8,9 +8,11 @@ import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 
 const dir = mkdtempSync(join(tmpdir(), 'pb-zoom-check-'));
-const base = 'http://localhost:3299';
+// CHECK_PORT moves it off a port something else already uses.
+const port = process.env.CHECK_PORT ?? '3299';
+const base = `http://localhost:${port}`;
 const server = spawn(process.execPath, ['server/index.ts'], {
-  env: { ...process.env, DEMO: '1', DATA_DIR: dir, PORT: '3299' }, stdio: 'ignore',
+  env: { ...process.env, DEMO: '1', DATA_DIR: dir, PORT: port }, stdio: 'ignore',
 });
 let context;
 try {

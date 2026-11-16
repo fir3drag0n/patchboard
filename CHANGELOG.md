@@ -33,6 +33,12 @@
   the town or a password is still to do.
 - **Connect where the app is:** a tile for Sonarr, Plex or any app with an
   integration shows Connect until you set it up, and it opens that setup.
+- **Color e-ink:** Look and Devices offer Color e-ink beside E-ink, for a
+  Kaleido or Spectra panel: the still, paper page, with status, warnings,
+  the accent and app icons in color again.
+- **Lights only when they mean something:** healthy widgets, playing
+  streams and ordinary changes no longer wear a light, so a warning or a
+  stop stands out.
 - **A color pass over every theme:**
   - **E-ink meters show their track,** so 87% no longer reads as full, and
     e-ink rows and empty posters have clean edges.

@@ -45,6 +45,8 @@ export interface Appearance {
   currency: string;
   /** An e-ink screen: black on white, no motion, redrawn once a minute. */
   eink: boolean;
+  /** With eink: a color e-ink panel, which shows a few muted inks. */
+  einkColor: boolean;
   /** The language on screen; empty follows the browser. */
   lang: string;
 }
@@ -83,6 +85,7 @@ export const DEFAULTS: Appearance = {
   locale: '',
   currency: '',
   eink: false,
+  einkColor: false,
   lang: '',
 };
 
