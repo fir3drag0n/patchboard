@@ -99,7 +99,29 @@ export interface Board {
   fit?: boolean;
   /** Made for a wall screen: one status line instead of the header, no tabs. */
   wall?: boolean;
+  /** The board's own colors, over each screen's: on every device that shows it, e-ink aside. */
+  look?: BoardLook;
   widgets: Widget[];
+}
+
+/** A board's colors. A field left out keeps the screen's own. */
+export interface BoardLook {
+  /** A built-in theme's id. */
+  theme?: string;
+  scheme?: 'dark' | 'light';
+  /** A preset accent's id, or a color as #rrggbb. */
+  accent?: string;
+}
+
+/** A board look from untrusted input, or nothing when it sets nothing. */
+export function cleanBoardLook(raw: unknown): BoardLook | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>;
+  const look: BoardLook = {};
+  if (typeof r.theme === 'string' && /^[a-z][a-z0-9-]{0,23}$/.test(r.theme)) look.theme = r.theme;
+  if (r.scheme === 'dark' || r.scheme === 'light') look.scheme = r.scheme;
+  if (typeof r.accent === 'string' && /^([a-z][a-z0-9-]{0,23}|#[0-9a-f]{6})$/i.test(r.accent)) look.accent = r.accent.toLowerCase();
+  return Object.keys(look).length ? look : undefined;
 }
 
 /** A board in the tabs: its address and its name. */
@@ -499,7 +521,8 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
   const name = cleanBoardName((raw as { name?: unknown }).name);
   const fit = (raw as { fit?: unknown }).fit === true;
   const wall = (raw as { wall?: unknown }).wall === true;
-  return { board: { version: 1, ...(name ? { name } : {}), ...(columns ? { columns } : {}), ...(fit ? { fit } : {}), ...(wall ? { wall } : {}), widgets } };
+  const look = cleanBoardLook((raw as { look?: unknown }).look);
+  return { board: { version: 1, ...(name ? { name } : {}), ...(columns ? { columns } : {}), ...(fit ? { fit } : {}), ...(wall ? { wall } : {}), ...(look ? { look } : {}), widgets } };
 }
 
 /** The shared settings, kept only when they make sense for this widget. */

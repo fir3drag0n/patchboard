@@ -232,7 +232,7 @@ zone the container runs in.
 ![Logs](screenshots/logs.webp)
 
 **Jump to:** `Ctrl K` or `/` reaches any app, page, container, article or
-message. Before you type, it lists what needs attention and what you opened
+message, and every board, wall boards too. Before you type, it lists what needs attention and what you opened
 last. Each app is one row: Enter opens it, the right arrow reaches its
 details and logs, and typing "sonarr logs" lands on the logs.
 
@@ -253,8 +253,10 @@ its neighbors; the layout updates while you drag. Hover or focus a card for
 its controls, or choose a Column in its settings. Editing keeps the full
 card preview and the same fitted counts; the arrange bar floats at the
 bottom instead of pushing the board down. Its row holds the everyday moves,
-Add widget, Cancel and Save; columns, Fit, layouts and Reset sit under
-Tools. Fit the window trims lists until the board ends at the bottom of the
+Add widget, Cancel and Save; columns, Fit, colors, layouts and Reset sit
+under Tools. Colors gives a board its own theme, mode and accent, on every
+screen that shows it, so the kitchen board can stay light while the rest
+stay dark. E-ink screens keep their ink. Fit the window trims lists until the board ends at the bottom of the
 screen. Recently added keeps every selected poster in one horizontal row,
 rather than losing titles to fit. Right now folds to one line per service
 before the other lists lose much. If lists alone can't fit the board, they
@@ -306,9 +308,11 @@ times, numbers, prices and temperatures the way your part of the world does:
 
 **Devices** lists every wall tablet, e-ink panel and family phone with a
 household link. Pick one to set the page it opens on and the pages it swipes
-through, in order, with Edit board beside each board; its screen, night
-dimming and Monitor colors; and its theme, density, units and language. A
-new link or a new panel address retires the old one.
+through, in order. Beside each board, Edit board opens it for arranging and
+Save brings you back to the device; Colors sets that board's theme, mode and
+accent. Below: its screen, night dimming and Monitor colors, and its theme,
+density, units and language. A new link or a new panel address retires the
+old one.
 
 ![Settings, Devices: a kitchen tablet's pages, screen and look](screenshots/settings-devices.webp)
 

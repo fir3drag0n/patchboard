@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { DeviceLook, DeviceView } from '../../shared/types.ts';
-import { NUMBERS, type Widget, type WidgetType, WIDGET_INFO } from '../../shared/board.ts';
+import { type BoardLook, NUMBERS, type Widget, type WidgetType, WIDGET_INFO } from '../../shared/board.ts';
 import { DIM_HOURS, dimLabel, MAX_PAGES, ROTATE_SECONDS } from '../../shared/wall.ts';
 import { THEMES } from '../lib/appearance.ts';
 import { agoLong } from '../lib/format.ts';
@@ -18,6 +18,8 @@ import { useStore } from '../lib/store.tsx';
 import { HoldButton } from './Hold.tsx';
 import { Qr } from './Qr.tsx';
 import { Section } from './ui.tsx';
+import { BoardColors, saveBoardLook } from './BoardColors.tsx';
+import { useEink } from '../lib/eink.ts';
 
 type Listed = { id: string; name: string; created: number; seen?: number } & DeviceView;
 type Patch = { name?: string; opens?: string; pages?: string[]; rotate?: number; tint?: string; dim?: string; screen?: string; look?: DeviceLook };
@@ -183,7 +185,7 @@ export function Devices() {
               {wallBoards.map((b, i) => (
                 <span key={b.id}>
                   {i > 0 && ', '}
-                  <Link to={`/b/${b.id}?arrange=1`}>{b.name}</Link>
+                  <Link to={`/b/${b.id}?arrange=1&back=${encodeURIComponent('/settings?tab=devices')}`}>{b.name}</Link>
                 </span>
               ))}
               .
@@ -218,6 +220,34 @@ export function Devices() {
         )}
       </div>
     </Section>
+  );
+}
+
+/** A board's colors, under its page in a device's list: saved as they change, for every screen that shows it. */
+function PageColors({ board, name }: { board: string; name: string }) {
+  const { snap } = useStore();
+  const [look, setLook] = useState<BoardLook | undefined>();
+  const [err, setErr] = useState('');
+  const stamp = snap?.boardSaved?.at;
+  useEffect(() => {
+    void fetch(`/api/boards/${encodeURIComponent(board)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b: { board?: { look?: BoardLook } } | null) => setLook(b?.board?.look));
+  }, [board, stamp]);
+  return (
+    <div className="device-colors">
+      <BoardColors
+        look={look}
+        label={false}
+        onChange={(next) => {
+          setLook(next);
+          setErr('');
+          void saveBoardLook(board, next).then((e) => e && setErr(e));
+        }}
+      />
+      <p className="settings-note">{tr('{board} shows these on every screen.', { board: name })}</p>
+      {err && <p className="crit-text" role="alert">{err}</p>}
+    </div>
   );
 }
 
@@ -274,6 +304,10 @@ function DeviceEditor({
     if (res.ok && body.path) onLink({ id: d.id, url: `${location.origin}${body.path}` });
   };
   const [panelShows, setPanelShows] = useState('');
+  /** The page whose board colors are open under it. */
+  const [colorsOf, setColorsOf] = useState('');
+  const eink = useEink();
+  const boardName = (b: string) => (b === '/' ? placeName('/') : placeName(b));
   const newPanel = async () => {
     const res = await fetch(`/api/household/${d.id}/panel`, { method: 'POST', headers: ACTION });
     const body = (await res.json()) as { panel?: string };
@@ -352,10 +386,18 @@ function DeviceEditor({
                 </span>
               )}
               {boardOf(p) && (
-                <Link className="text-button" to={`${boardOf(p)}?arrange=1`}>
-                  {p.startsWith('/w/') ? tr('Edit widget') : tr('Edit board')}
-                </Link>
+                <span className="device-page-links">
+                  <Link className="text-button" to={`${boardOf(p)}?arrange=1&back=${encodeURIComponent(`/settings?tab=devices&device=${d.id}`)}`}>
+                    {p.startsWith('/w/') ? tr('Edit widget') : tr('Edit board')}
+                  </Link>
+                  {!readOnly && !eink && (
+                    <button type="button" className="text-button" aria-expanded={colorsOf === p} onClick={() => setColorsOf(colorsOf === p ? '' : p)}>
+                      {tr('Colors')}
+                    </button>
+                  )}
+                </span>
               )}
+              {colorsOf === p && boardOf(p) && <PageColors board={boardOf(p) === '/' ? 'home' : boardOf(p)!.slice(3)} name={boardName(boardOf(p)!)} />}
             </li>
           ))}
         </ol>

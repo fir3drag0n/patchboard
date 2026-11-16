@@ -33,6 +33,7 @@ import { DocumentsWidget, GitWidget, ManagersWidget, MinersWidget, MonitoringWid
 import { ChoresWidget, ListWidget, PeopleWidget, RoomsWidget, ShadesWidget, ThermostatWidget } from './HaWidgets.tsx';
 import { HA_WIDGETS } from '../../shared/ha.ts';
 import { HoldButton } from '../components/Hold.tsx';
+import { BoardColors } from '../components/BoardColors.tsx';
 import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
 import { WidgetCtx } from './widget-context.ts';
 import { DownloadsWidget } from './Downloads.tsx';
@@ -52,7 +53,7 @@ import { HealthStrip } from '../components/Squares.tsx';
 import { Empty, Icon, Meter, Section } from '../components/ui.tsx';
 import { VersionLine } from '../components/WhatsNew.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
-import { useAppearance } from '../lib/appearance.ts';
+import { holdBoardLook, useAppearance } from '../lib/appearance.ts';
 import { useLanding } from '../lib/landing.ts';
 import { deg, pct, size, uptime, weatherText } from '../lib/format.ts';
 import { checkFor, containerMap, serviceFor, statusLine } from '../lib/services.ts';
@@ -360,12 +361,29 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const [draft, setDraft] = useState<BoardData | null>(null);
   // ?arrange=1, from a device's pages in Settings: open the board ready to arrange.
   const [params, setParams] = useSearchParams();
+  /** Where Save or Cancel goes after arranging that started from a device in Settings. */
+  const [backTo, setBackTo] = useState('');
+  const [leaving, setLeaving] = useState(false);
   useEffect(() => {
     if (!board || params.get('arrange') !== '1') return;
     if (!snap?.readOnly) setDraft(structuredClone(board));
+    const back = params.get('back') ?? '';
+    setBackTo(back.startsWith('/settings?') ? back : '');
     params.delete('arrange');
+    params.delete('back');
     setParams(params, { replace: true });
   }, [!!board]);
+  /** Arranging is over: back to the device it started from, or focus back where it started. */
+  const doneArranging = () => {
+    setDraft(null);
+    setNotice('');
+    if (backTo) setLeaving(true);
+    else backToArrange();
+  };
+  // Once the draft is gone, so leaving doesn't ask about unsaved changes.
+  useEffect(() => {
+    if (leaving && !draft) navigate(backTo);
+  }, [leaving, draft]);
   const [adding, setAdding] = useState(false);
   const [creating, setCreating] = useState(false);
   /** The JSON widget being edited: an existing id, or 'new' while adding one. */
@@ -394,6 +412,9 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const dirty = editing && !quick && JSON.stringify(draft) !== JSON.stringify(board);
   useLeaveGuard(dirty, 'Leave without saving your changes to this board?');
   const shown = draft ?? board;
+  // The board's colors while it's on screen, and a draft's while arranging.
+  const lookKey = JSON.stringify(shown?.look ?? null);
+  useEffect(() => holdBoardLook(shown?.look), [lookKey]);
   // Columns: the board's choice, fewer when the window can't fit them.
   const [boardEl, setBoardEl] = useState<HTMLDivElement | null>(null);
   /**
@@ -512,11 +533,11 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               Tools
             </button>
             {dirty ? (
-              <HoldButton className="text-button" danger hint="Hold to discard changes" onConfirm={() => (setDraft(null), setNotice(''), backToArrange())}>
+              <HoldButton className="text-button" danger hint="Hold to discard changes" onConfirm={doneArranging}>
                 Discard changes
               </HoldButton>
             ) : (
-              <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''), backToArrange())}>
+              <button type="button" className="text-button" onClick={doneArranging}>
                 Cancel
               </button>
             )}
@@ -526,11 +547,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               onClick={async () => {
                 const err = await save({ ...draft, widgets: pinColumns(draft.widgets), name: draft.name?.trim() || undefined });
                 if (err) setError(err);
-                else {
-                  setDraft(null);
-                  // Saved: focus goes back to where arranging started.
-                  backToArrange();
-                }
+                // Saved: back to where arranging started.
+                else doneArranging();
               }}
             >
               Save
@@ -578,6 +596,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               <input type="checkbox" checked={!!draft.wall} onChange={(e) => setDraft((d) => (d ? { ...d, wall: e.target.checked || undefined } : d))} />
               For a wall screen
             </label>
+            <BoardColors look={draft.look} onChange={(look) => setDraft((d) => (d ? { ...d, look } : d))} />
             <select
               className="field starter-pick"
               aria-label="Start over from a layout"
@@ -935,6 +954,7 @@ export function WidgetAlone({ boardId, widgetId }: { boardId: string; widgetId: 
   const { board, missing } = useBoard(boardId);
   const now = useNow(15_000);
   const w = board?.widgets.find((x) => x.id === widgetId);
+  useEffect(() => holdBoardLook(board?.look), [JSON.stringify(board?.look ?? null)]);
   if (missing || (board && !w)) return <p className="widget-alone-missing">{t("This widget isn't on its board any more. Pick another in Settings, Devices.")}</p>;
   if (!w) return null;
   return (

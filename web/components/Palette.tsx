@@ -119,7 +119,9 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       { id: 'v-logs', label: 'Logs', hint: 'View', run: go('/logs') },
       { id: 'v-apps', label: 'Apps', hint: 'View', run: go('/apps') },
       { id: 'v-settings', label: 'Settings', hint: 'Appearance', run: go('/settings') },
-      ...([['look', 'Look'], ['home', 'Home'], ['alerts', 'Alerts'], ['connections', 'Connections'], ['activity', 'Activity']] as const).map(([t, label]) => ({ id: `set-${t}`, label: `Settings: ${label}`, hint: 'Settings', run: go(`/settings?tab=${t}`) })),
+      ...([['look', 'Look'], ['home', 'Home'], ['devices', 'Devices'], ['alerts', 'Alerts'], ['connections', 'Connections'], ['activity', 'Activity']] as const).map(([t, label]) => ({ id: `set-${t}`, label: `Settings: ${label}`, hint: 'Settings', terms: t === 'devices' ? 'wall tablet e-ink panel phone kiosk' : undefined, run: go(`/settings?tab=${t}`) })),
+      // Every board, wall boards too, which stay off Home's tabs.
+      ...(snap.boards ?? []).filter((b) => b.id !== 'home').map((b) => ({ id: `brd-${b.id}`, label: b.name, hint: b.wall ? 'Wall board' : 'Board', terms: 'board dashboard page', run: go(`/b/${b.id}`), subs: snap.readOnly || snap.household ? undefined : [{ label: 'Arrange', run: go(`/b/${b.id}?arrange=1`) }] })),
       { id: 'h-tour', label: 'Help: a tour of every page', hint: 'Help', run: openUrl(HELP.tour) },
       { id: 'h-integrations', label: 'Help: setting up integrations', hint: 'Help', run: openUrl(HELP.integrations) },
       ...(onKeys ? [{ id: 'h-keys', label: 'Keyboard shortcuts', hint: 'Help', run: onKeys }] : []),

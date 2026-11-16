@@ -111,50 +111,75 @@ export function Settings() {
       <>
       <BrandName />
 
-      {!a.eink && (
-      <Section title="Theme" count={tr('{n} themes', { n: THEMES.length + 1 })} className="span-all">
-        <div className="theme-grid">
-          {THEMES.map((t) => (
-            <ThemeCard key={t.id} id={t.id} name={t.name} note={t.note} active={a.theme === t.id} />
-          ))}
-          <ThemeCard id="custom" name={tr('Custom')} note={msg('Your background, text and accent.')} active={a.theme === 'custom'} />
+      {/* The kind of screen comes first: e-ink sets aside the theme, mode and
+          accent under it, and nothing above the choice moves when it does. */}
+      <Section title="Theme" count={a.eink ? undefined : tr('{n} themes', { n: THEMES.length + 1 })} className="span-all">
+        <div className="look-screen">
+          <span id="look-screen">{tr('Screen')}</span>
+          <div className="seg" role="group" aria-labelledby="look-screen">
+            {(
+              [
+                ['', msg('Standard')],
+                ['bw', msg('E-ink')],
+                ['color', msg('Color e-ink')],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={(a.eink ? (a.einkColor ? 'color' : 'bw') : '') === v}
+                onClick={() => setAppearance({ eink: v !== '', einkColor: v === 'color' })}
+              >
+                {tr(label)}
+              </button>
+            ))}
+          </div>
         </div>
-        {a.theme === 'custom' && <CustomBuilder />}
-      </Section>
-      )}
-
-      <Section title="Mode">
-        <div className="choice-row">
-          {seg(
-            'scheme',
-            [
-              ['auto', msg('Match the system')],
-              ['dark', msg('Dark')],
-              ['light', msg('Light')],
-            ],
-            a.theme === 'custom',
-          )}
-        </div>
-        {a.theme === 'custom' && <p className="settings-note">{tr('A custom theme turns light or dark with its background color.')}</p>}
+        {a.eink ? (
+          <p className="settings-note">{tr('For an e-ink reader or panel: no motion, and one redraw a minute. A wall device is set from Devices.')}</p>
+        ) : (
+          <>
+            <div className="theme-grid">
+              {THEMES.map((t) => (
+                <ThemeCard key={t.id} id={t.id} name={t.name} note={t.note} active={a.theme === t.id} />
+              ))}
+              <ThemeCard id="custom" name={tr('Custom')} note={msg('Your background, text and accent.')} active={a.theme === 'custom'} />
+            </div>
+            {a.theme === 'custom' && <CustomBuilder />}
+            <div className="look-row">
+              <div>
+                <span>{tr('Mode')}</span>
+                {seg(
+                  'scheme',
+                  [
+                    ['auto', msg('Match the system')],
+                    ['dark', msg('Dark')],
+                    ['light', msg('Light')],
+                  ],
+                  a.theme === 'custom',
+                )}
+                {a.theme === 'custom' && <p className="settings-note">{tr('A custom theme turns light or dark with its background color.')}</p>}
+              </div>
+              <div>
+                <span>{tr('Accent')}</span>
+                <div className="swatches">
+                  <button type="button" className="swatch swatch-theme" aria-pressed={a.accent === 'default'} title={tr("The theme's own")} aria-label={tr("The theme's own accent")} onClick={() => setAppearance({ accent: 'default' })} />
+                  {ACCENTS.map((c) => (
+                    <button key={c.id} type="button" className="swatch" style={{ background: document.documentElement.dataset.scheme === 'light' ? c.light : c.dark }} aria-pressed={a.accent === c.id} aria-label={c.name} title={c.name} onClick={() => setAppearance({ accent: c.id })} />
+                  ))}
+                  <label className={`swatch swatch-pick ${a.accent === 'custom' ? 'is-on' : ''}`} title={tr('Any color')} style={a.accent === 'custom' ? { background: a.accentHex } : undefined}>
+                    <input type="color" value={a.accentHex} onChange={(e) => setAppearance({ accent: 'custom', accentHex: e.target.value })} aria-label={tr('Pick any accent color')} />
+                    <span aria-hidden>+</span>
+                  </label>
+                </div>
+                <p className="settings-note">{tr('For links, the current page, focus and charts.')}</p>
+              </div>
+            </div>
+          </>
+        )}
       </Section>
 
       <AppIconSection />
-
-      {!a.eink && (
-      <Section title="Accent">
-        <div className="choice-row swatches">
-          <button type="button" className="swatch swatch-theme" aria-pressed={a.accent === 'default'} title={tr('The theme\'s own')} aria-label={tr('The theme\'s own accent')} onClick={() => setAppearance({ accent: 'default' })} />
-          {ACCENTS.map((c) => (
-            <button key={c.id} type="button" className="swatch" style={{ background: document.documentElement.dataset.scheme === 'light' ? c.light : c.dark }} aria-pressed={a.accent === c.id} aria-label={c.name} title={c.name} onClick={() => setAppearance({ accent: c.id })} />
-          ))}
-          <label className={`swatch swatch-pick ${a.accent === 'custom' ? 'is-on' : ''}`} title={tr('Any color')} style={a.accent === 'custom' ? { background: a.accentHex } : undefined}>
-            <input type="color" value={a.accentHex} onChange={(e) => setAppearance({ accent: 'custom', accentHex: e.target.value })} aria-label={tr('Pick any accent color')} />
-            <span aria-hidden>+</span>
-          </label>
-        </div>
-        <p className="settings-note">{tr('For links, the current page, focus and charts.')}</p>
-      </Section>
-      )}
 
       <Section title="Type">
         <div className="choice-row">
@@ -240,28 +265,6 @@ export function Settings() {
             ].join(', '),
           })}
         </p>
-      </Section>
-
-      <Section title="Screen">
-        <div className="seg" role="group" aria-label={tr('Screen')}>
-          {(
-            [
-              ['', msg('Standard')],
-              ['bw', msg('E-ink')],
-              ['color', msg('Color e-ink')],
-            ] as const
-          ).map(([v, label]) => (
-            <button
-              key={v}
-              type="button"
-              aria-pressed={(a.eink ? (a.einkColor ? 'color' : 'bw') : '') === v}
-              onClick={() => setAppearance({ eink: v !== '', einkColor: v === 'color' })}
-            >
-              {tr(label)}
-            </button>
-          ))}
-        </div>
-        <p className="settings-note">{tr('For an e-ink reader or panel: no motion, and one redraw a minute. A wall device is set from Devices.')}</p>
       </Section>
 
       <Section title="Keyboard">

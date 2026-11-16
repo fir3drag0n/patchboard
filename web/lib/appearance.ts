@@ -7,6 +7,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { einkOn, onEink } from './eink.ts';
+import type { BoardLook } from '../../shared/board.ts';
 import { contrast, MEDIA_COLORS, type CustomColors, DEFAULT_CUSTOM, FONTS, type FontSet, mix, THEMES, type Tokens, tokensFrom } from './themes.ts';
 
 export type Scheme = 'auto' | 'dark' | 'light';
@@ -125,6 +126,9 @@ function read(): Appearance {
 }
 
 let current = read();
+/** The colors of the board on screen, over this browser's own. Never saved. */
+let boardLook: BoardLook | null = null;
+let boardLookOwner = 0;
 const listeners = new Set<() => void>();
 const media = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: light)') : null;
 
@@ -182,7 +186,42 @@ function resolvedScheme(a: Appearance): 'dark' | 'light' {
   return a.scheme === 'auto' ? (media?.matches ? 'light' : 'dark') : a.scheme;
 }
 
-function apply(a: Appearance): void {
+/** What the page shows: this browser's look, with the board's colors over it. */
+function shown(a: Appearance = current): Appearance {
+  const b = boardLook;
+  if (!b) return a;
+  const theme = b.theme && THEMES.some((t) => t.id === b.theme) ? b.theme : undefined;
+  const preset = b.accent && ACCENTS.some((x) => x.id === b.accent);
+  return {
+    ...a,
+    ...(theme ? { theme } : {}),
+    // A custom theme decides dark or light by its background: a board's mode needs a built-in one.
+    ...(b.scheme ? { scheme: b.scheme, ...(!theme && a.theme === 'custom' ? { theme: THEMES[0].id } : {}) } : {}),
+    ...(b.accent ? (preset ? { accent: b.accent } : { accent: 'custom', accentHex: b.accent }) : {}),
+  };
+}
+
+/**
+ * Show a board's colors until the returned function is called. The last
+ * board to ask wins, and only it can hand the colors back, so a wall device
+ * hiding one page as it shows the next never ends up on the wrong ones.
+ */
+export function holdBoardLook(look: BoardLook | null | undefined): () => void {
+  const me = ++boardLookOwner;
+  const next = look && Object.keys(look).length ? look : null;
+  if (JSON.stringify(next) !== JSON.stringify(boardLook)) {
+    boardLook = next;
+    apply(current);
+  }
+  return () => {
+    if (boardLookOwner !== me || !boardLook) return;
+    boardLook = null;
+    apply(current);
+  };
+}
+
+function apply(base: Appearance): void {
+  const a = shown(base);
   const r = document.documentElement;
   const scheme = resolvedScheme(a);
   const vars = { dark: varsFor(a, 'dark'), light: varsFor(a, 'light') };
@@ -264,7 +303,7 @@ export function setAppName(name: string): void {
 export function setStatus(level: 'critical' | 'warn' | null, count: number): void {
   if (level === status.level && count === status.count) return;
   status = { level, count };
-  applyIcon(current.appIcon, resolvedScheme(current), current.eink || einkOn());
+  applyIcon(current.appIcon, resolvedScheme(shown()), current.eink || einkOn());
   showTitle();
   // An installed app shows the count on its icon where the platform allows it.
   const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
@@ -301,7 +340,7 @@ let iconVersion = '';
 export function setIconVersion(v: string | undefined): void {
   if ((v ?? '') === iconVersion) return;
   iconVersion = v ?? '';
-  applyIcon(current.appIcon, resolvedScheme(current), current.eink || einkOn());
+  applyIcon(current.appIcon, resolvedScheme(shown()), current.eink || einkOn());
 }
 
 function applyIcon(choice: AppIcon, scheme: 'dark' | 'light', eink = false): void {
@@ -325,7 +364,7 @@ function applyIcon(choice: AppIcon, scheme: 'dark' | 'light', eink = false): voi
 }
 
 media?.addEventListener('change', () => {
-  if (current.scheme === 'auto') apply(current);
+  if (shown().scheme === 'auto') apply(current);
 });
 
 let pushTimer: ReturnType<typeof setTimeout> | undefined;

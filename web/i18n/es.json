@@ -931,5 +931,11 @@
  "Search the web": "Buscar en la web",
  "Search, or ! for shortcuts": "Busca, o ! para atajos",
  "Shortcuts": "Atajos",
- "Containers on your other machines join Stacks, alerts, history and logs, named like pihole@pi, with start, stop and restart. Updates stay on Patchboard's own host.": "Los contenedores de tus otras máquinas aparecen en Stacks, alertas, historial y registros, con nombres como pihole@pi, y se pueden iniciar, detener y reiniciar. Las actualizaciones se quedan en el host de Patchboard."
+ "Containers on your other machines join Stacks, alerts, history and logs, named like pihole@pi, with start, stop and restart. Updates stay on Patchboard's own host.": "Los contenedores de tus otras máquinas aparecen en Stacks, alertas, historial y registros, con nombres como pihole@pi, y se pueden iniciar, detener y reiniciar. Las actualizaciones se quedan en el host de Patchboard.",
+ "{board} shows these on every screen.": "{board} los muestra en todas las pantallas.",
+ "Board colors": "Colores del tablero",
+ "Colors": "Colores",
+ "Couldn't load that board.": "No se pudo cargar ese tablero.",
+ "Each screen's mode": "El modo de cada pantalla",
+ "Each screen's theme": "El tema de cada pantalla"
 }

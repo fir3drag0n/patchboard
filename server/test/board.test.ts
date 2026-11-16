@@ -48,3 +48,12 @@ test('a widget shows compact or as one number only where it can, and the number 
   assert.equal(cfg.notes, undefined, 'notes has no list to shorten');
   for (const type of Object.keys(NUMBERS)) assert.ok(viewsOf(type as never).some(([x]) => x === 'number'), type);
 });
+
+test('a board keeps its own colors, and nothing unsafe in them', () => {
+  const ok = validateBoard({ widgets: [], look: { theme: 'forest', scheme: 'light', accent: '#AABBCC' } });
+  assert.ok('board' in ok);
+  assert.deepEqual(ok.board.look, { theme: 'forest', scheme: 'light', accent: '#aabbcc' });
+  const bad = validateBoard({ widgets: [], look: { theme: 'x;}body{', scheme: 'sepia', accent: 'url(x)' } });
+  assert.ok('board' in bad);
+  assert.equal(bad.board.look, undefined);
+});

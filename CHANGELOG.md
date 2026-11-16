@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **A board's own colors:** Arrange board, Tools, Colors sets a theme, mode
+  and accent for that board, and every screen that shows it follows. A
+  device's pages in Settings, Devices have the same Colors beside each
+  board, saved as you pick.
+- **Devices to boards and back:** Edit board from a device opens the board
+  for arranging, and Save or Cancel lands you back on that device. Jump to
+  lists every board, wall boards included, and Settings: Devices.
+- **E-ink in Look stays put:** the screen choice now heads the Theme block,
+  with mode and accent under it. Picking E-ink folds that block and nothing
+  else on the page moves.
 - **Your own app icon:** upload a logo in Settings, Look, App icon, and it
   replaces the P in the tab, on the home screen and in the install, on every
   device. Patchboard draws every size and a black-and-white one for e-ink.
