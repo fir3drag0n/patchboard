@@ -12,6 +12,9 @@
   it opens nothing else and changes nothing. `/api/v1/mcp` lets Claude and
   other MCP clients ask "is Plex running?" directly. docs/API.md has the
   endpoints and setup lines.
+- **Tire warnings on your terms:** Settings, Alerts sets the pressure that
+  counts as low and how far under the others a tire may drift. 0 turns
+  either check off.
 - **Settings in your language:** Settings and the problem titles the server
   writes now come in German, Spanish, French, Italian, Dutch and Brazilian
   Portuguese too. Notifications and the API stay in English.

@@ -482,7 +482,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
 
   // Tessie: a tire going soft, named, so it's caught before the car's own warning.
   for (const car of data<CarData>(sources, 'tessie')?.cars ?? []) {
-    const soft = softTires(car.tires);
+    const soft = softTires(car.tires, { tireLowPsi: config.tireLowPsi, tireSpreadPsi: config.tireSpreadPsi });
     if (!soft.length || !car.tires) continue;
     const names: Record<string, string> = { fl: 'front left', fr: 'front right', rl: 'rear left', rr: 'rear right' };
     alerts.push({

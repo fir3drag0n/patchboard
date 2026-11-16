@@ -62,7 +62,7 @@ const TABS: [Tab, string, string][] = [
   ['look', msg('Look'), msg('This browser only. A new browser starts from the last look you saved.')],
   ['home', msg('Home'), msg("This browser only. A board's widgets are shared.")],
   ['devices', msg('Devices'), msg('Wall tablets, e-ink panels and family phones, set up from here.')],
-  ['alerts', msg('Alerts'), msg('When storage, drives and links count as trouble. Shared by every device.')],
+  ['alerts', msg('Alerts'), msg('When storage, drives, tires and links count as trouble. Shared by every device.')],
   ['connections', msg('Connections'), msg('Shared by every device.')],
   ['activity', msg('Activity'), msg('Who changed what, newest first.')],
 ];
@@ -1231,7 +1231,7 @@ function Alerts() {
                           disabled={readOnly}
                           onChange={(e) => setValues({ ...values, [t.name]: e.target.value })}
                         />
-                        {t.unit && <span className="threshold-unit">{t.unit}</span>}
+                        {t.unit && <span className="threshold-unit">{tr(t.unit)}</span>}
                         {t.unit === '°C' && unit === 'f' && <span className="threshold-unit">{asF(values[t.name] ?? '')}</span>}
                       </>
                     )}

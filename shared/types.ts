@@ -871,6 +871,10 @@ export interface Limits {
   poolCritPct: number;
   diskWarnC: number;
   diskCritC: number;
+  /** A tire under this many psi is low; 0 turns the check off. */
+  tireLowPsi?: number;
+  /** A tire this many psi under the fullest is low; 0 turns the check off. */
+  tireSpreadPsi?: number;
 }
 
 /** The sources that report a NasSystem. */

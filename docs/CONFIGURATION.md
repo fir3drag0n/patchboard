@@ -107,6 +107,8 @@ as environment variables, which win and show there as locked.
 | `POOL_CRIT_PCT` | `95` | Storage use that raises an alarm. |
 | `DISK_WARN_C` | `50` | Drive temperature, in Celsius, that raises a warning. |
 | `DISK_CRIT_C` | `58` | Drive temperature that raises an alarm. |
+| `TIRE_LOW_PSI` | `38` | A tire under this pressure warns. `0` turns it off. |
+| `TIRE_SPREAD_PSI` | `3` | A tire this far under the fullest one warns. `0` turns it off. |
 | `CHECK_DOMAINS` | empty | Your own domains, comma-separated. Patchboard checks app links on them, as well as private and Tailscale addresses. |
 | `UPCOMING_DAYS` | `14` | How far ahead the calendar looks. |
 

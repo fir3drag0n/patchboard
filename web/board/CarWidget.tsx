@@ -9,7 +9,7 @@ import { useAppearance } from '../lib/appearance.ts';
 import { useHistory } from '../lib/api.ts';
 import { agoLong, deg } from '../lib/format.ts';
 import { locale } from '../lib/region.ts';
-import { useSource } from '../lib/store.tsx';
+import { useSource, useStore } from '../lib/store.tsx';
 import { type CarData, carKey, TIRES, type TirePos } from '../../shared/types.ts';
 import { PSI, softTires } from '../../shared/car.ts';
 
@@ -30,6 +30,7 @@ const TIRE_NAMES: Record<TirePos, string> = {
 };
 export function CarWidget() {
   const { state, data } = useSource<CarData>('tessie');
+  const limits = useStore().snap?.limits;
   const { temp: unit } = useAppearance();
   const cars = data?.cars ?? [];
   // A week of charge, a day of temperatures, for every car at once.
@@ -54,7 +55,7 @@ export function CarWidget() {
         const words = CHARGE_WORDS[c.charging] ?? c.charging;
         const h = c.minutesToFull ? Math.floor(c.minutesToFull / 60) : 0;
         const m = c.minutesToFull ? c.minutesToFull % 60 : 0;
-        const soft = softTires(c.tires);
+        const soft = softTires(c.tires, limits);
         const inside = day[carKey('inside', c.vin)];
         const outside = day[carKey('outside', c.vin)];
         const temps = [...(inside ?? []), ...(outside ?? [])].map((p) => p[1]);

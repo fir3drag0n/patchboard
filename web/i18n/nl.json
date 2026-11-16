@@ -864,7 +864,7 @@
  "Webhook address": "Webhookadres",
  "What changed": "Wat er veranderde",
  "What will use it": "Wat het gaat gebruiken",
- "When storage, drives and links count as trouble. Shared by every device.": "Wanneer opslag, schijven en links als probleem tellen. Gedeeld door alle apparaten.",
+ "When storage, drives, tires and links count as trouble. Shared by every device.": "Wanneer opslag, schijven, banden en links als probleem tellen. Gedeeld door alle apparaten.",
  "White on black": "Wit op zwart",
  "Who changed what, newest first.": "Wie wat veranderde, nieuwste eerst.",
  "Who is listening and to which track, in Right now, and albums played lately in Listening. Other Subsonic-compatible servers work the same way.": "Wie luistert en naar welk nummer, in Op dit moment, en onlangs gespeelde albums in Luisteren. Andere Subsonic-compatibele servers werken net zo.",
@@ -893,5 +893,10 @@
  "Connection problem.": "Verbindingsprobleem.",
  "Everything is running.": "Alles draait.",
  "Nothing needs you.": "Niets heeft je nodig.",
- "One note below, nothing urgent.": "Eén melding hieronder, niets dringends."
+ "One note below, nothing urgent.": "Eén melding hieronder, niets dringends.",
+ "Catches a slow leak before it gets low. 0 turns this off.": "Vangt een langzaam lek op voordat de druk te laag wordt. 0 zet dit uit.",
+ "Or this far under the fullest tire": "Of zoveel onder de hardste band",
+ "psi": "psi",
+ "Tesla's own warning sits near 36. 0 turns this off.": "Tesla's eigen waarschuwing ligt rond 36. 0 zet dit uit.",
+ "Warn when a tire is under": "Waarschuwen bij bandenspanning onder"
 }

@@ -215,7 +215,7 @@ export interface Threshold {
   unit?: string;
   min?: number;
   max?: number;
-  group: 'Storage' | 'Drives' | 'Checks' | 'Calendar';
+  group: 'Storage' | 'Drives' | 'Car' | 'Checks' | 'Calendar';
 }
 
 export const THRESHOLDS: Threshold[] = [
@@ -223,6 +223,8 @@ export const THRESHOLDS: Threshold[] = [
   { name: 'POOL_CRIT_PCT', group: 'Storage', label: 'Alarm when storage is', unit: '% full', kind: 'number', default: '95', min: 50, max: 100, hint: 'Sent as an outage if you get notifications.' },
   { name: 'DISK_WARN_C', group: 'Drives', label: 'Warn when a drive reaches', unit: '°C', kind: 'number', default: '50', min: 30, max: 90, hint: 'Hard drives run cooler than SSDs; 45 to 50 suits most hard drives.' },
   { name: 'DISK_CRIT_C', group: 'Drives', label: 'Alarm when a drive reaches', unit: '°C', kind: 'number', default: '58', min: 30, max: 100, hint: 'Above this, drives wear fast. Check the airflow.' },
+  { name: 'TIRE_LOW_PSI', group: 'Car', label: 'Warn when a tire is under', unit: 'psi', kind: 'number', default: '38', min: 0, max: 80, hint: "Tesla's own warning sits near 36. 0 turns this off." },
+  { name: 'TIRE_SPREAD_PSI', group: 'Car', label: 'Or this far under the fullest tire', unit: 'psi', kind: 'number', default: '3', min: 0, max: 20, hint: 'Catches a slow leak before it gets low. 0 turns this off.' },
   { name: 'CHECK_DOMAINS', group: 'Checks', label: 'Also check links on', kind: 'list', default: '', hint: 'Your own domains, comma-separated, e.g. example.com. Links on private and Tailscale addresses are always checked.' },
   { name: 'UPCOMING_DAYS', group: 'Calendar', label: 'Look ahead', unit: 'days', kind: 'number', default: '14', min: 7, max: 60, hint: 'How far Upcoming and This week fetch releases.' },
 ];

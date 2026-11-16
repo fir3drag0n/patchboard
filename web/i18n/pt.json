@@ -864,7 +864,7 @@
  "Webhook address": "Endereço do webhook",
  "What changed": "O que mudou",
  "What will use it": "O que vai usar",
- "When storage, drives and links count as trouble. Shared by every device.": "Quando armazenamento, discos e links contam como problema. Compartilhado por todos os dispositivos.",
+ "When storage, drives, tires and links count as trouble. Shared by every device.": "Quando armazenamento, discos, pneus e links contam como problema. Compartilhado por todos os dispositivos.",
  "White on black": "Branco no preto",
  "Who changed what, newest first.": "Quem mudou o quê, mais recentes primeiro.",
  "Who is listening and to which track, in Right now, and albums played lately in Listening. Other Subsonic-compatible servers work the same way.": "Quem está ouvindo e qual faixa, em Agora mesmo, e álbuns tocados recentemente em Ouvindo. Outros servidores compatíveis com Subsonic funcionam igual.",
@@ -893,5 +893,10 @@
  "Connection problem.": "Problema de conexão.",
  "Everything is running.": "Tudo está rodando.",
  "Nothing needs you.": "Nada precisa de você.",
- "One note below, nothing urgent.": "Uma nota abaixo, nada urgente."
+ "One note below, nothing urgent.": "Uma nota abaixo, nada urgente.",
+ "Catches a slow leak before it gets low. 0 turns this off.": "Pega um vazamento lento antes que a pressão fique baixa. 0 desativa.",
+ "Or this far under the fullest tire": "Ou esta diferença abaixo do pneu mais cheio",
+ "psi": "psi",
+ "Tesla's own warning sits near 36. 0 turns this off.": "O aviso da própria Tesla fica perto de 36. 0 desativa.",
+ "Warn when a tire is under": "Avisar quando um pneu estiver abaixo de"
 }

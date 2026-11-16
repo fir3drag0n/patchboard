@@ -141,6 +141,8 @@ function build(str: Lookup) {
     poolCritPct: Number(str('POOL_CRIT_PCT') ?? 95),
     diskWarnC: Number(str('DISK_WARN_C') ?? 50),
     diskCritC: Number(str('DISK_CRIT_C') ?? 58),
+    tireLowPsi: Number(str('TIRE_LOW_PSI') ?? 38),
+    tireSpreadPsi: Number(str('TIRE_SPREAD_PSI') ?? 3),
 
     /**
      * Hostnames the API answers to besides IP addresses and localhost, e.g. the

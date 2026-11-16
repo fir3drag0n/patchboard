@@ -152,7 +152,7 @@ export function readingOf(w: Widget, ctx: ReadingContext): Reading | null | unde
         if (!car.tires) return null;
         const [pos, bar] = (Object.entries(car.tires) as [string, number][]).sort((a, b) => a[1] - b[1])[0];
         const names: Record<string, string> = { fl: f.t('Front left'), fr: f.t('Front right'), rl: f.t('Rear left'), rr: f.t('Rear right') };
-        return { value: unit === 'c' ? `${bar.toFixed(1)} bar` : `${Math.round(bar * 14.5038)} psi`, sub: names[pos], tone: softTires(car.tires).length ? 'warn' : undefined };
+        return { value: unit === 'c' ? `${bar.toFixed(1)} bar` : `${Math.round(bar * 14.5038)} psi`, sub: names[pos], tone: softTires(car.tires, ctx.limits).length ? 'warn' : undefined };
       }
       if (which === 'range') return { value: unit === 'c' ? `${Math.round(car.rangeMi * 1.609)} km` : `${car.rangeMi} mi`, sub: f.t('{name} range', { name: car.name }) };
       return { value: `${car.battery}%`, sub: car.charging === 'Charging' ? f.t('{name}, charging', { name: car.name }) : car.name, tone: car.battery <= 20 ? 'warn' : undefined };

@@ -346,7 +346,7 @@ export class Hub {
       updates: pendingUpdates(),
       readOnly: config.readOnly,
       self: { version: APP_VERSION, container: config.demo ? 'patchboard' : selfContainer, ...(config.demo ? { check: { at: Date.now(), state: 'current' as const } } : selfCheckStatus() ? { check: selfCheckStatus() } : {}) },
-      limits: { poolWarnPct: config.poolWarnPct, poolCritPct: config.poolCritPct, diskWarnC: config.diskWarnC, diskCritC: config.diskCritC },
+      limits: { poolWarnPct: config.poolWarnPct, poolCritPct: config.poolCritPct, diskWarnC: config.diskWarnC, diskCritC: config.diskCritC, tireLowPsi: config.tireLowPsi, tireSpreadPsi: config.tireSpreadPsi },
       pages: kvGet('pages') ?? {},
       brand: withIcon(kvGet('brand') ?? {}),
       boards: boardList(),
