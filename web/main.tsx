@@ -6,7 +6,6 @@ import { Root } from './components/WallDeck.tsx';
 import { SnapshotProvider } from './lib/store.tsx';
 import { Home } from './views/Home.tsx';
 import { initAppearance } from './lib/appearance.ts';
-import { initShowcase } from './lib/showcase.ts';
 import { NotFound } from './views/NotFound.tsx';
 import '@fontsource-variable/geist';
 import '@fontsource-variable/geist-mono';
@@ -57,7 +56,6 @@ const router = createBrowserRouter([
 ]);
 
 initAppearance();
-initShowcase();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

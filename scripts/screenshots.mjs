@@ -16,7 +16,7 @@ import { chromium } from 'playwright-core';
 import { STARTERS } from '../shared/board.ts';
 
 const OUT = 'docs/screenshots';
-// 1920x1080 is the showcase size; the phone is an iPhone 17 Pro.
+// 1920x1080 is the size the README shows; the phone is an iPhone 17 Pro.
 const DESKTOP = { width: 1920, height: 1080 };
 const PHONE = { width: 402, height: 874 };
 

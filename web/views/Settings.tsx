@@ -10,7 +10,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
 import { land, useLanding } from '../lib/landing.ts';
 import type { CatalogAudit, SelfCheck } from '../../shared/types.ts';
-import { setShowcase, useShowcase } from '../lib/showcase.ts';
 import { Section } from '../components/ui.tsx';
 import { IntegrationForm } from '../components/IntegrationSetup.tsx';
 import { HomepageImport } from '../components/HomepageImport.tsx';
@@ -257,8 +256,6 @@ export function Settings() {
         </label>
         <p className="settings-note">{tr('? lists them. Turn them off for speech input; Ctrl K always works.')}</p>
       </Section>
-
-      <ShowcaseSettings />
 
       </>
       )}
@@ -1261,33 +1258,5 @@ function Alerts() {
         </div>
       )}
     </>
-  );
-}
-
-/** Showcase mode: stand-ins for private details, before a screenshot is shared. */
-function ShowcaseSettings() {
-  const sc = useShowcase();
-  const [words, setWords] = useState(sc.words);
-  return (
-    <Section title="Screenshots">
-      <label className="check">
-        <input type="checkbox" checked={sc.on} onChange={(e) => setShowcase({ on: e.target.checked, words })} />
-        {tr('Showcase mode')}
-      </label>
-      <p className="settings-note">
-        {tr('On this device, addresses, email, the words below and camera pictures get stand-ins, so a screenshot is safe to post.')}
-      </p>
-      <textarea
-        className="field mono showcase-words"
-        aria-label={tr('Words to swap')}
-        rows={4}
-        spellCheck={false}
-        value={words}
-        placeholder={'tank\nNicholas = Rivera\nyour town'}
-        onChange={(e) => setWords(e.target.value)}
-        onBlur={() => words !== sc.words && setShowcase({ words })}
-      />
-      <p className="settings-note">{tr('One per line. Nicholas = Rivera picks the stand-in.')}</p>
-    </Section>
   );
 }

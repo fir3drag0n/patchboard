@@ -18,6 +18,8 @@
 - **Tire warnings on your terms:** Settings, Alerts sets the pressure that
   counts as low and how far under the others a tire may drift. 0 turns
   either check off.
+- **Showcase mode is gone:** it was for taking screenshots of this project,
+  and the demo already covers that.
 - **Settings in your language:** Settings and the problem titles the server
   writes now come in German, Spanish, French, Italian, Dutch and Brazilian
   Portuguese too. Notifications and the API stay in English.

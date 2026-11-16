@@ -12400,18 +12400,6 @@ a.jack .jack-socket {
   pointer-events: auto;
 }
 
-/* Showcase mode: camera pictures blur, so a screenshot shows the board and
-   not the driveway. */
-html.showcase img[src*="/api/img/frigate"],
-html.showcase img[src*="/api/live/"] {
-  filter: blur(14px);
-}
-
-.showcase-words {
-  width: 100%;
-  resize: vertical;
-}
-
 /* A wall device's pages: faint dots at the bottom, brighter for a moment on
    each new page. Each dot is a 28px target around a 6px mark. */
 .wall-dots {
