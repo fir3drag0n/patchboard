@@ -1699,14 +1699,16 @@ app.delete('/api/app-icon', (c) => {
 const ICON_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/gif': 'gif', 'image/x-icon': 'ico', 'image/vnd.microsoft.icon': 'ico' };
 const ICON_MIME: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp', svg: 'image/svg+xml', gif: 'image/gif', ico: 'image/x-icon' };
 const iconDir = join(config.dataDir, 'icons');
+/** Browsers shrink big photos first; this is for SVGs and animated GIFs, which they send as they are. */
+const ICON_MAX = 10 * 1024 * 1024;
 
 app.post('/api/icons', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const ext = ICON_TYPES[(c.req.header('content-type') ?? '').split(';')[0].trim().toLowerCase()];
   if (!ext) return c.json({ error: 'Use a PNG, JPEG, WebP, SVG, GIF or ICO image' }, 415);
-  if (Number(c.req.header('content-length') ?? 0) > 512 * 1024) return c.json({ error: 'Icons can be up to 512 KB' }, 413);
+  if (Number(c.req.header('content-length') ?? 0) > ICON_MAX) return c.json({ error: 'Icons can be up to 10 MB' }, 413);
   const body = Buffer.from(await c.req.arrayBuffer());
-  if (!body.length || body.length > 512 * 1024) return c.json({ error: 'Icons can be up to 512 KB' }, 413);
+  if (!body.length || body.length > ICON_MAX) return c.json({ error: 'Icons can be up to 10 MB' }, 413);
   const name = `${createHash('sha256').update(body).digest('hex').slice(0, 16)}.${ext}`;
   mkdirSync(iconDir, { recursive: true });
   writeFileSync(join(iconDir, name), body);

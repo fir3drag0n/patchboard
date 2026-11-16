@@ -197,7 +197,7 @@ export function FirstRun({ onDone }: { onDone: () => void }) {
 
           <div className="fr-row fr-ident">
             <label className={`fr-icon ${iconBusy ? 'is-busy' : ''}`} title={tr('Upload your own icon')}>
-              <img src={own ? `/icon-192.png?v=${own}` : '/icon-192.png'} alt="" width={52} height={52} />
+              <img src={own ? `/icon-192.png?v=${own}` : '/icon-192.png'} alt="" width={64} height={64} />
               <span className="sr-only">{tr('Upload your own icon')}</span>
               <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" className="sr-only" disabled={iconBusy || !!snap?.demo} onChange={(e) => void pickIcon(e.currentTarget)} />
             </label>

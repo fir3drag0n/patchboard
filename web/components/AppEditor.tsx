@@ -513,6 +513,36 @@ const slug = (name: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
+/**
+ * A photo or a big PNG, drawn again at 512 pixels at most, so a picture
+ * from a phone becomes a small icon file. SVGs and GIFs, which may be
+ * animated, go as they are.
+ */
+async function shrinkIcon(f: File): Promise<Blob> {
+  if (!/^image\/(png|jpeg|webp|x-icon|vnd\.microsoft\.icon)$/.test(f.type)) return f;
+  const url = URL.createObjectURL(f);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const scale = Math.min(1, 512 / Math.max(img.naturalWidth, img.naturalHeight));
+    if (scale === 1 && f.size <= 512 * 1024) return f;
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    const g = c.getContext('2d')!;
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(img, 0, 0, c.width, c.height);
+    // PNG keeps a logo's clear background; a photo has none to keep.
+    const type = f.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+    return await new Promise<Blob>((done) => c.toBlob((b) => done(b ?? f), type, 0.9));
+  } catch {
+    return f;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 /** Add or edit one app. Catalog apps can only change their icon here. */
 function AppForm({
   app,
@@ -545,12 +575,17 @@ function AppForm({
   const autoIcon = slug(v.name);
   const [live, setLive] = useState(() => liveDraft(app, stat));
 
-  const upload = async (f: File) => {
+  const upload = async (picked: File) => {
     setErr('');
-    if (f.size > 512 * 1024) return setErr('Icons can be up to 512 KB.');
     setBusy(true);
     try {
-      const res = await fetch('/api/icons', { method: 'POST', headers: { 'Content-Type': f.type || 'application/octet-stream', 'X-Patchboard': 'action' }, body: f });
+      // Any photo shrinks to fit; an SVG or GIF goes as it is, up to 10 MB.
+      const f = await shrinkIcon(picked);
+      if (f.size > 10 * 1024 * 1024) {
+        setBusy(false);
+        return setErr('Icons can be up to 10 MB.');
+      }
+      const res = await fetch('/api/icons', { method: 'POST', headers: { 'Content-Type': f.type || picked.type || 'application/octet-stream', 'X-Patchboard': 'action' }, body: f });
       const body = (await res.json()) as { icon?: string; error?: string };
       if (!res.ok || !body.icon) setErr(body.error ?? `Upload failed (HTTP ${res.status})`);
       else setV({ ...v, icon: body.icon });
@@ -632,7 +667,7 @@ function AppForm({
             <span>Icon</span>
             <div className="icon-pick">
               <button type="button" className="icon-preview" title="Upload your own icon" aria-label="Upload your own icon" disabled={busy} onClick={() => file.current?.click()}>
-                <Icon key={v.icon ?? autoIcon} name={v.name || '?'} icon={v.icon || (ours ? autoIcon : app.icon)} size={40} />
+                <Icon key={v.icon ?? autoIcon} name={v.name || '?'} icon={v.icon || (ours ? autoIcon : app.icon)} size={56} />
               </button>
               <input
                 className="field mono"

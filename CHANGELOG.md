@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Bigger icons, bigger files:** the app icon choices in Look are larger
+  tiles, with Upload as one of them, and Edit apps shows each app's icon
+  larger. Icons can now be any photo or image up to 10 MB; Patchboard
+  shrinks big photos to 512 pixels before saving them.
 - **A board's own colors:** Arrange board, Tools, Colors sets a theme, mode
   and accent for that board, and every screen that shows it follows. A
   device's pages in Settings, Devices have the same Colors beside each

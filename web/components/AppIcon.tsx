@@ -126,20 +126,24 @@ export function AppIconSection() {
 
   return (
     <Section title="App icon">
-      <div className="choice-row icon-choices">
+      <div className="icon-choices">
         {choices.map(([v, label, src, on]) => (
           <button key={v} type="button" className="icon-choice" aria-pressed={on} onClick={() => setAppearance({ appIcon: v })}>
-            <img src={src} alt="" width={44} height={44} />
+            <img src={src} alt="" width={64} height={64} />
             <span>{tr(label)}</span>
           </button>
         ))}
-      </div>
-      {!readOnly && (
-        <div className="app-icon-own">
-          <label className="button button-quiet" aria-disabled={busy || undefined}>
-            {busy ? tr('Uploading') : own ? tr('Upload another') : tr('Upload your own')}
+        {/* Uploading is one of the choices, the same size as the rest. */}
+        {!readOnly && (
+          <label className="icon-choice icon-upload" aria-disabled={busy || undefined}>
+            <span className="icon-upload-mark" aria-hidden>+</span>
+            <span>{busy ? tr('Uploading') : own ? tr('Upload another') : tr('Upload your own')}</span>
             <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" className="sr-only" disabled={busy} onChange={(e) => void pick(e.currentTarget)} />
           </label>
+        )}
+      </div>
+      {!readOnly && (own || err) && (
+        <div className="app-icon-own">
           {own && (
             <button type="button" className="text-button" onClick={() => void reset()}>
               {tr('Use the P')}

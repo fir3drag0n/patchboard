@@ -51,7 +51,7 @@ export function saveAppIcon(raw: unknown): { icon: string } | { error: string } 
       files.push([`${ink}-${size}.png`, b]);
     }
   }
-  if (total > 2 * 1024 * 1024) return { error: 'The icon came out over 2 MB. Try a simpler image.' };
+  if (total > 8 * 1024 * 1024) return { error: 'The icon came out over 8 MB. Try a simpler image.' };
   mkdirSync(dir(), { recursive: true });
   const hash = createHash('sha256');
   for (const [name, b] of files) {
