@@ -34,6 +34,9 @@ logged in Activity; read-only and household devices only look.
 
 ### Polish
 
+- [ ] Hover or tap a chart line to see the value at that moment and when:
+  a small tag beside the pointer, gone when you move off, on every
+  sparkline and history chart
 - [ ] A walk-through of every color choice, screen by screen: each theme in light and dark, accents, e-ink and color e-ink, so all of it looks uniform and crafted
 - [ ] Accessibility audit: keyboard paths, screen-reader labels, contrast in every theme
   - Covered: Home and editor keyboard paths, focus return, cancelled drafts, theme text contrast, accessible names, narrow reflow, forced-color graphics, actual Chromium zoom, and enlarged text.
