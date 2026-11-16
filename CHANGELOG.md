@@ -7,7 +7,8 @@
   Filter by domain or show only blocks, then Allow a blocked domain or
   Block one that got through. Your lists holds the domains you allowed or
   blocked, with Remove, and a box to add one by name. Pause sits at the
-  top, as on Home.
+  top, as on Home. On Pi-hole, changing lists with an app password needs
+  `webserver.api.app_sudo` on; the page says so if it's off.
 - **A Media page for Plex, Jellyfin and Emby:** Watching lists every
   stream with who, on what device, direct play or transcoding, and time
   left. Hold Stop to end one; the viewer sees a note that you did.

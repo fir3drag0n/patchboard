@@ -91,6 +91,8 @@ export function toPihole(sum: PiSummary, blocking: { blocking: string; timer?: n
   };
 }
 
+export const PI_SUDO = 'Pi-hole won’t let an app password change lists. In Pi-hole: Settings, All settings, Webserver and API, turn on webserver.api.app_sudo.';
+
 export function piholeClient(): DnsClient {
   const { url, password } = config.pihole!;
   // Pi-hole hands out a limited number of sessions, so keep one and only
@@ -163,24 +165,33 @@ export function piholeClient(): DnsClient {
       },
       lists,
       async put(domain, on) {
-        const now = await lists();
-        for (const type of ['allow', 'deny'] as const) {
-          const has = now[type].includes(domain);
-          if (type === on && !has) {
-            const r = await call<{ processed?: { errors?: { error?: string }[] } }>(`/api/domains/${type}/exact`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ domain, comment: 'Added from Patchboard', groups: [0], enabled: true }),
-            });
-            const failed = r?.processed?.errors?.[0];
-            if (failed) throw new Error(failed.error ?? 'Pi-hole refused that domain');
-          } else if (type !== on && has) {
-            await call(`/api/domains/${type}/exact/${encodeURIComponent(domain)}`, { method: 'DELETE' });
-          }
+        try {
+          await putPi(domain, on);
+        } catch (err) {
+          // An app password only changes lists once Pi-hole allows it to.
+          if ((err as { status?: number }).status === 403) throw new Error(PI_SUDO);
+          throw err;
         }
       },
     },
   };
+  async function putPi(domain: string, on: 'allow' | 'deny' | null) {
+    const now = await lists();
+    for (const type of ['allow', 'deny'] as const) {
+      const has = now[type].includes(domain);
+      if (type === on && !has) {
+        const r = await call<{ processed?: { errors?: { error?: string }[] } }>(`/api/domains/${type}/exact`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ domain, comment: 'Added from Patchboard', groups: [0], enabled: true }),
+        });
+        const failed = r?.processed?.errors?.[0];
+        if (failed) throw new Error(failed.error ?? 'Pi-hole refused that domain');
+      } else if (type !== on && has) {
+        await call(`/api/domains/${type}/exact/${encodeURIComponent(domain)}`, { method: 'DELETE' });
+      }
+    }
+  }
   async function lists(): Promise<DnsLists> {
     const [allow, deny] = await Promise.all(['allow', 'deny'].map((type) => call<{ domains: { domain: string }[] }>(`/api/domains/${type}/exact`)));
     return { allow: allow.domains.map((d) => d.domain).sort(), deny: deny.domains.map((d) => d.domain).sort() };

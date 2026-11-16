@@ -36,12 +36,13 @@ test('AdGuard: your lists are its exact Block and Unblock rules, and other rules
 
 test('Pi-hole: allowing a domain you blocked takes it off your block list first', async () => {
   const asked: string[] = [];
-  const lists: Record<string, string[]> = { allow: [], deny: ['ads.x.com'] };
+  const lists: Record<string, string[]> & { readOnly?: boolean } = { allow: [], deny: ['ads.x.com'] };
   const server = http.createServer((req, res) => {
     asked.push(`${req.method} ${req.url}`);
     const json = (v: unknown) => res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(v));
     const m = /^\/api\/domains\/(allow|deny)\/exact(?:\/(.+))?$/.exec(req.url ?? '');
     if (!m) return res.writeHead(404).end();
+    if (req.method !== 'GET' && lists.readOnly) return res.writeHead(403).end();
     if (req.method === 'GET') return json({ domains: lists[m[1]].map((domain) => ({ domain })) });
     if (req.method === 'DELETE') {
       lists[m[1]] = lists[m[1]].filter((d) => d !== decodeURIComponent(m[2]));
@@ -64,6 +65,8 @@ test('Pi-hole: allowing a domain you blocked takes it off your block list first'
       assert.deepEqual(await domains.lists(), { allow: ['ads.x.com'], deny: [] });
       await domains.put('ads.x.com', null);
       assert.deepEqual(await domains.lists(), { allow: [], deny: [] });
+      lists.readOnly = true;
+      await assert.rejects(domains.put('ads.x.com', 'deny'), /app_sudo/);
     });
     assert.ok(asked.includes('DELETE /api/domains/deny/exact/ads.x.com'));
     assert.ok(asked.includes('POST /api/domains/allow/exact'));
