@@ -2,6 +2,24 @@
 
 What comes next. CHANGELOG.md has what has shipped.
 
+### Run every app from Patchboard
+
+One page per app with everything it's doing, and its everyday actions, so
+you open the app itself only for its rare settings. Every action is
+logged in Activity; read-only and household devices only look.
+
+- [ ] Downloads: every torrent and NZB with progress, speed, ETA, ratio,
+  tracker and files; pause, resume, remove (with or without data),
+  priority, category, speed limits, and add by magnet, link or file
+- [ ] Sonarr and Radarr: the library with search; add a show or movie with
+  its quality and folder; monitor, search, the queue with retry and
+  blocklist, missing, history and the calendar
+- [ ] Requests (Seerr): approve, decline, and ask for something new
+- [ ] Plex and Jellyfin: who's watching, stop a stream, scan a library
+- [ ] Pi-hole and AdGuard: the query log, allow or block a domain, pause
+  blocking for a while
+- [ ] Prowlarr and Bazarr, so indexers and subtitles join the same pages
+
 ### Making it yours
 
 
