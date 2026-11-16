@@ -16,6 +16,7 @@ import type {
   FeedEntry,
   FrigateData,
   DnsData,
+  DnsQuery,
   SeerrData,
   SeerrRequest,
   AskItem,
@@ -65,6 +66,7 @@ import type { Adapter } from './adapters/adapter.ts';
 import type { DownloadManager } from './adapters/downloads.ts';
 import type { SeerrClient } from './adapters/seerr.ts';
 import type { MediaControl } from './adapters/media-control.ts';
+import type { DnsDomains } from './adapters/dns.ts';
 import { MINUTE, SECOND } from './adapters/adapter.ts';
 import { DEPENDS, demoBackups, demoChecks, demoMem, demoStats, demoTruenas, hash, IMAGES, PROJECTS } from './demo-ops.ts';
 
@@ -564,6 +566,38 @@ export function demoDnsControl(id: string): ((minutes: number | null) => Promise
   if (id !== 'pihole') return undefined;
   return async (minutes) => {
     demoDnsPausedUntil = minutes === null ? 0 : Date.now() + minutes * MINUTE;
+  };
+}
+
+// The query log: a few minutes of a household's devices, some blocked by the
+// lists, one by your own list. Allow and Block move a domain between lists.
+const DEMO_CLIENTS = ['Living room TV', 'Sam’s phone', 'Kitchen speaker', 'Office laptop', 'Doorbell', '192.168.1.48'];
+const DEMO_ASKED = ['api.github.com', 'googleads.g.doubleclick.net', 'www.netflix.com', 'time.apple.com', 'scribe.logs.roku.com', 'connectivitycheck.gstatic.com', 'app-measurement.com', 'plex.direct', 'click.mailchimp.com', 'registry-1.docker.io', 'device-metrics-us.amazon.com', 'i.ytimg.com', 'metrics.icloud.com', 'api.weather.gov', 'graph.facebook.com', 'cdn.jsdelivr.net'];
+const DEMO_ON_LISTS = new Set(['googleads.g.doubleclick.net', 'scribe.logs.roku.com', 'app-measurement.com', 'click.mailchimp.com', 'metrics.icloud.com', 'graph.facebook.com']);
+const demoAllow = new Set(['click.mailchimp.com']);
+const demoDeny = new Set(['device-metrics-us.amazon.com']);
+
+export function demoDnsDomains(id: string): DnsDomains | undefined {
+  if (id !== 'pihole') return undefined;
+  return {
+    async log({ search, blocked }) {
+      const now = Date.now();
+      const all: DnsQuery[] = Array.from({ length: 90 }, (_, i) => {
+        const domain = DEMO_ASKED[(i * 7) % DEMO_ASKED.length];
+        const by = demoDeny.has(domain) ? 'yours' : DEMO_ON_LISTS.has(domain) && !demoAllow.has(domain) ? 'list' : undefined;
+        return { id: String(i), at: now - i * 6_500 - ((i * 37) % 5) * 1000, domain, client: DEMO_CLIENTS[(i * 5) % DEMO_CLIENTS.length], blocked: !!by, by };
+      });
+      return all.filter((q) => (!search || q.domain.includes(search)) && (!blocked || q.blocked));
+    },
+    async lists() {
+      return { allow: [...demoAllow].sort(), deny: [...demoDeny].sort() };
+    },
+    async put(domain, on) {
+      demoAllow.delete(domain);
+      demoDeny.delete(domain);
+      if (on === 'allow') demoAllow.add(domain);
+      if (on === 'deny') demoDeny.add(domain);
+    },
   };
 }
 

@@ -318,6 +318,8 @@ try {
   await shoot(page, 'library');
   await go('/media', 2500);
   await shoot(page, 'media');
+  await go('/blocking', 2500);
+  await shoot(page, 'blocking');
   await go('/requests', 2500);
   await shoot(page, 'requests');
   await go('/');

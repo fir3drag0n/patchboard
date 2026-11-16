@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **An Ad blocking page for Pi-hole and AdGuard Home:** Queries is the
+  live query log: which device asked for what, when, and what blocked it.
+  Filter by domain or show only blocks, then Allow a blocked domain or
+  Block one that got through. Your lists holds the domains you allowed or
+  blocked, with Remove, and a box to add one by name. Pause sits at the
+  top, as on Home.
 - **A Media page for Plex, Jellyfin and Emby:** Watching lists every
   stream with who, on what device, direct play or transcoding, and time
   left. Hold Stop to end one; the viewer sees a note that you did.

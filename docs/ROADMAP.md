@@ -14,8 +14,6 @@ logged in Activity; read-only and household devices only look.
   history, and the calendar with search
 - [ ] Media, next: Plex without Tautulli (Right now and Recently added from
   Plex itself), and Play, which opens a title in the app that plays it
-- [ ] Pi-hole and AdGuard: the query log, allow or block a domain, pause
-  blocking for a while
 - [ ] Prowlarr and Bazarr, so indexers and subtitles join the same pages
 
 ### Making it yours

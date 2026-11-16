@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { MediaLibraries, MediaServerId, SeerrData, Stream } from '../shared/types.ts';
+import type { DnsLists, DnsLog, MediaLibraries, MediaServerId, SeerrData, Stream } from '../shared/types.ts';
 import { fieldLabel } from '../shared/setup.ts';
 import { latestReleases, readFeeds } from './outside.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -53,7 +53,7 @@ import { booksAdapter } from './adapters/books.ts';
 import { send } from './notify.ts';
 import { pendingIds, type SeerrClient, seerrClient } from './adapters/seerr.ts';
 import { mediaControl, plexSections } from './adapters/media-control.ts';
-import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
+import { adguardClient, cleanDomain, type DnsControl, type DnsDomains, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
 import { adoptEnvironment, candidate, checkThresholds, describeThresholds, saveThresholds, savedThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { authLocked, authProblem, envHas, withConfig } from './config.ts';
@@ -74,7 +74,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
@@ -123,6 +123,7 @@ type Made = {
   manage?: DownloadManager;
   arr?: ArrControl;
   dns?: DnsControl;
+  domains?: DnsDomains;
   seerr?: Omit<SeerrClient, 'adapter'>;
 };
 const itemControls = new Map<DownloadClientId, (id: string, action: ItemAction) => Promise<void>>();
@@ -130,6 +131,7 @@ const altSpeedControls = new Map<DownloadClientId, () => Promise<void>>();
 const downloadManagers = new Map<DownloadClientId, DownloadManager>();
 const arrControls = new Map<'sonarr' | 'radarr', ArrControl>();
 const dnsControls = new Map<'pihole' | 'adguard', DnsControl>();
+const dnsDomains = new Map<'pihole' | 'adguard', DnsDomains>();
 let seerrApi: Omit<SeerrClient, 'adapter'> | null = null;
 
 /**
@@ -206,6 +208,7 @@ function realAdapters(): Adapter[] {
   downloadManagers.clear();
   arrControls.clear();
   dnsControls.clear();
+  dnsDomains.clear();
   seerrApi = null;
   for (const [id, make] of Object.entries(FACTORIES)) {
     const m = make();
@@ -217,6 +220,7 @@ function realAdapters(): Adapter[] {
     if (m.manage) downloadManagers.set(id as DownloadClientId, m.manage);
     if (m.arr) arrControls.set(id as 'sonarr' | 'radarr', m.arr);
     if (m.dns) dnsControls.set(id as 'pihole' | 'adguard', m.dns);
+    if (m.domains) dnsDomains.set(id as 'pihole' | 'adguard', m.domains);
     if (m.seerr) seerrApi = m.seerr;
   }
   return list;
@@ -1053,6 +1057,51 @@ app.post('/api/dns/:id/:action', async (c) => {
   recordAudit(who(c), minutes === null ? 'dns.resume' : `dns.pause.${minutes}m`, id);
   void hub.pollNow(id);
   return c.json({ ok: true });
+});
+
+// The Ad blocking page: the query log, read live while the page is open, and
+// your own allow and block lists, exact domains only.
+const domainsOf = (id: string) => (id !== 'pihole' && id !== 'adguard' ? undefined : config.demo ? demoDnsDomains(id) : dnsDomains.get(id));
+
+app.get('/api/dns/:id/log', async (c) => {
+  const dom = domainsOf(c.req.param('id'));
+  if (!dom) return c.json({ error: 'That blocker is not set up' }, 404);
+  const search = (c.req.query('q') ?? '').toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 100);
+  try {
+    return c.json({ queries: await dom.log({ search: search || undefined, blocked: c.req.query('blocked') === '1' }) } satisfies DnsLog);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+});
+
+app.get('/api/dns/:id/domains', async (c) => {
+  const dom = domainsOf(c.req.param('id'));
+  if (!dom) return c.json({ error: 'That blocker is not set up' }, 404);
+  try {
+    return c.json((await dom.lists()) satisfies DnsLists);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+});
+
+const DOMAIN_ACTION = { allow: 'allow', block: 'deny', forget: null } as const;
+app.post('/api/dns/:id/domains/:action', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const id = c.req.param('id');
+  const dom = domainsOf(id);
+  if (!dom) return c.json({ error: 'That blocker is not set up' }, 404);
+  const action = c.req.param('action');
+  if (!(action in DOMAIN_ACTION)) return c.json({ error: 'Unknown action' }, 400);
+  const body = (await c.req.json().catch(() => ({}))) as { domain?: unknown };
+  const domain = typeof body.domain === 'string' ? cleanDomain(body.domain) : null;
+  if (!domain) return c.json({ error: 'That isn’t a domain name. Try one like ads.example.com.' }, 400);
+  try {
+    await dom.put(domain, DOMAIN_ACTION[action as keyof typeof DOMAIN_ACTION]);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), `dns.${action}`, id, domain);
+  return c.json({ ok: true, domain });
 });
 
 // Overseerr or Jellyseerr. The Requests page reads its lists straight from

@@ -784,6 +784,30 @@ export interface DnsData {
   listSize?: number;
 }
 
+/** What blocked a query: a blocklist, your own list, a rule, the upstream server, a blocked service, or safe browsing. */
+export type DnsBlockedBy = 'list' | 'yours' | 'rule' | 'upstream' | 'service' | 'safety';
+
+export interface DnsQuery {
+  id: string;
+  at: number;
+  domain: string;
+  /** The device's name when the blocker knows it, else its address. */
+  client: string;
+  blocked: boolean;
+  by?: DnsBlockedBy;
+}
+
+export interface DnsLog {
+  queries: DnsQuery[];
+}
+
+/** Your own exact-domain lists. `other` counts AdGuard rules the page leaves alone. */
+export interface DnsLists {
+  allow: string[];
+  deny: string[];
+  other?: number;
+}
+
 export type KumaState = 'up' | 'down' | 'pending' | 'maintenance' | 'unknown';
 
 export interface KumaMonitor {

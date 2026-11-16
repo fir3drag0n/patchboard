@@ -511,7 +511,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'pihole',
     name: 'Pi-hole',
-    adds: 'An Ad blocking widget: queries and blocks today, and Pause for 5, 30 or 60 minutes. Blocking left off with no timer shows in Needs attention.',
+    adds: 'An Ad blocking widget and page: queries and blocks today, Pause for 5, 30 or 60 minutes, the query log, and Allow or Block on any domain. Blocking left off with no timer shows in Needs attention.',
     env: ['PIHOLE_URL'],
     optional: ['PIHOLE_PASSWORD'],
     where: 'Pi-hole 6 or newer: Settings, Web interface / API, Configure app password. Leave the password blank if the web interface has none.',
@@ -520,7 +520,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'adguard',
     name: 'AdGuard Home',
-    adds: 'The Ad blocking widget for AdGuard Home: queries and blocks, and Pause for 5, 30 or 60 minutes.',
+    adds: 'The Ad blocking widget and page for AdGuard Home: queries and blocks, Pause for 5, 30 or 60 minutes, the query log, and Allow or Block on any domain.',
     env: ['ADGUARD_URL'],
     optional: ['ADGUARD_USERNAME', 'ADGUARD_PASSWORD'],
     where: 'The username and password you sign in to AdGuard Home with.',

@@ -46,6 +46,7 @@ const router = createBrowserRouter([
           { path: '/downloads', lazy: page(() => import('./views/Downloads.tsx'), 'Downloads') },
           { path: '/library', lazy: page(() => import('./views/Library.tsx'), 'Library') },
           { path: '/media', lazy: page(() => import('./views/Media.tsx'), 'Media') },
+          { path: '/blocking', lazy: page(() => import('./views/Blocking.tsx'), 'Blocking') },
           { path: '/requests', lazy: page(() => import('./views/Requests.tsx'), 'Requests') },
           { path: '/settings', lazy: page(() => import('./views/Settings.tsx'), 'Settings') },
           { path: '*', element: <NotFound /> },

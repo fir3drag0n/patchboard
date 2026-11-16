@@ -266,6 +266,14 @@ Scan beside it.
 
 ![Media](screenshots/media.webp)
 
+**Ad blocking:** Pi-hole or AdGuard Home. Queries shows each device's
+lookups as they happen and what blocked them. Filter by domain or show
+only blocks, then Allow a domain a list caught by mistake, or Block one
+that slipped through. Your lists keeps the domains you allowed and
+blocked, and takes a new one by name.
+
+![Ad blocking](screenshots/blocking.webp)
+
 **Logs:** live from Docker, each line stamped in your own time, whatever
 zone the container runs in.
 

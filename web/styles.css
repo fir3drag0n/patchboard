@@ -14811,6 +14811,32 @@ a.lib-title:hover {
   color: var(--accent);
 }
 
+.blk-domain {
+  overflow-wrap: anywhere;
+}
+
+.blk-why {
+  color: var(--warn);
+}
+
+.blk-add {
+  max-width: 640px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 4px;
+}
+
+.blk-add .field {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+/* The view switch stays left; only the domain filter sits at the far end. */
+.page-toolbar.blk-toolbar > .seg {
+  margin-left: 0;
+}
+
 @media (max-width: 760px) {
   .lib-row.no-art {
     grid-template-columns: minmax(0, 1fr) auto;

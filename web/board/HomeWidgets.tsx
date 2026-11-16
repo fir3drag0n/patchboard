@@ -415,10 +415,11 @@ function Blocker({ id, label, showName, now }: { id: 'pihole' | 'adguard'; label
 
 export function DnsWidget({ now }: { now: number }) {
   const states = { pihole: useSource<DnsData>('pihole').state, adguard: useSource<DnsData>('adguard').state };
+  const { snap } = useStore();
   const on = BLOCKERS.filter((b) => states[b.id]);
   if (!on.length) return null;
   return (
-    <Section title="Ad blocking" source={on.length === 1 ? states[on[0].id] : undefined} className="dns">
+    <Section title="Ad blocking" source={on.length === 1 ? states[on[0].id] : undefined} className="dns" action={snap?.household ? undefined : { label: 'Query log', to: '/blocking' }}>
       {on.map((b) => (
         <Blocker key={b.id} id={b.id} label={b.label} showName={on.length > 1} now={now} />
       ))}

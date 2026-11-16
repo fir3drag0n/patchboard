@@ -145,6 +145,7 @@ boards, cameras and lights and none of the server controls.
 | **Media** | Plex, Jellyfin and Emby: who's watching, stop a stream, scan a library. |
 | **Downloads** | Every torrent and NZB in every client: pause, resume, remove, add. |
 | **Library** | Sonarr's shows and Radarr's films: monitor, search, what's missing, the queue, add new ones. |
+| **Ad blocking** | Pi-hole or AdGuard Home: the query log, allow or block a domain, your lists, pause. |
 | **Requests** | Overseerr or Jellyseerr: approve, decline, see what's on the way, request something new. |
 | **Weather** | The next 24 hours, the week, sunrise and sunset, US weather alerts. |
 | **Logs** | Live container logs, with a hand-off to Dozzle. |

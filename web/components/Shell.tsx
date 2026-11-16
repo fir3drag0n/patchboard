@@ -40,6 +40,7 @@ const NAV = [
   { to: '/downloads', label: 'Downloads', desktop: true },
   { to: '/library', label: 'Library', desktop: true },
   { to: '/requests', label: 'Requests', desktop: true },
+  { to: '/blocking', label: 'Ad blocking', desktop: true },
 ];
 
 // "g" then a letter, as in Gmail and GitHub.
@@ -56,7 +57,7 @@ const GO: Record<string, [string, string]> = {
 
 // Pages for whoever runs the server. A household device doesn't see them;
 // it does see Server, which only shows how things stand.
-const ADMIN = ['/stacks', '/logs', '/apps', '/settings', '/c', '/downloads', '/library', '/requests', '/media'];
+const ADMIN = ['/stacks', '/logs', '/apps', '/settings', '/c', '/downloads', '/library', '/requests', '/media', '/blocking'];
 export const adminPage = (path: string) => ADMIN.some((a) => path === a || path.startsWith(`${a}/`));
 
 const isTyping = (el: EventTarget | null) =>
@@ -252,7 +253,9 @@ export function Shell() {
   const hasRequests = !!snap?.sources.overseerr;
   // Media once Plex (through Tautulli), Jellyfin or Emby is.
   const hasMedia = !!(snap?.sources.tautulli || snap?.sources.jellyfin || snap?.sources.emby);
-  const nav = NAV.filter((n) => !(household && adminPage(n.to)) && (n.to !== '/media' || hasMedia) && (n.to !== '/downloads' || hasDownloads) && (n.to !== '/library' || hasLibrary) && (n.to !== '/requests' || hasRequests));
+  // Ad blocking once Pi-hole or AdGuard Home is.
+  const hasBlocking = !!(snap?.sources.pihole || snap?.sources.adguard);
+  const nav = NAV.filter((n) => !(household && adminPage(n.to)) && (n.to !== '/blocking' || hasBlocking) && (n.to !== '/media' || hasMedia) && (n.to !== '/downloads' || hasDownloads) && (n.to !== '/library' || hasLibrary) && (n.to !== '/requests' || hasRequests));
   const more: { to: string; label: string }[] = [...nav.filter((n) => !phoneTabs.includes(n.to)), { to: '/weather', label: 'Weather' }, { to: '/settings', label: 'Settings' }].filter(
     (m) => !phoneTabs.includes(m.to) && !(household && adminPage(m.to)),
   );
