@@ -1054,6 +1054,47 @@ export interface QueueItem {
   state: 'downloading' | 'stalled' | 'queued' | 'paused' | 'errored';
 }
 
+/** What one download is doing, as the Downloads page shows it. */
+export type DownloadState = 'downloading' | 'stalled' | 'queued' | 'checking' | 'paused' | 'seeding' | 'done' | 'errored';
+
+/** One download, finished or not, from any client. */
+export interface DownloadEntry {
+  /** The client's own id: a torrent's hash, an NZB's id. */
+  id: string;
+  name: string;
+  state: DownloadState;
+  /** 0 to 1. */
+  progress: number;
+  /** Bytes in all, and bytes downloaded. */
+  size: number;
+  done: number;
+  /** Bytes a second. */
+  down: number;
+  up: number;
+  /** Seconds left, or -1 when unknown. */
+  etaSec: number;
+  /** Uploaded over downloaded, for a torrent. */
+  ratio?: number;
+  category?: string;
+  /** When it was added, in ms. */
+  added?: number;
+  /** The tracker's host, for a torrent. */
+  tracker?: string;
+  /** What the client says went wrong. */
+  error?: string;
+  /** Usenet: the job sits in the client's history rather than its queue. */
+  history?: boolean;
+}
+
+/** Everything in one client, for the Downloads page. */
+export interface DownloadList {
+  kind: 'torrent' | 'usenet';
+  entries: DownloadEntry[];
+}
+
+/** What can be done to one download: delete removes its files too. */
+export type EntryAction = 'pause' | 'resume' | 'remove' | 'delete';
+
 export interface QbitData {
   kind?: 'torrent' | 'usenet';
   /** Unfinished downloads with their ids, errored first, up to 20. Clients that can act on one item report these. */

@@ -14285,3 +14285,170 @@ html[data-eink][data-eink-color] .led[data-state='warn'] {
 html[data-eink][data-eink-color] .led[data-state='ok'] {
   background: var(--ok);
 }
+
+/* ---------- Downloads page ---------- */
+
+.dlp-total {
+  display: flex;
+  gap: 16px;
+  margin: 0 0 0 auto;
+  font: 500 15px/1 var(--f-mono);
+  color: var(--ink-2);
+}
+
+.dlp-clients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dlp-clients li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.dlp-clients strong {
+  color: var(--head);
+  font-weight: 600;
+}
+
+.dlp-client-state {
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+.dlp-client-actions {
+  display: inline-flex;
+  gap: 12px;
+}
+
+.dlp-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.dlp-add > .field:first-child {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.dlp-add select.field {
+  width: auto;
+}
+
+.dlp-add > .crit-text {
+  flex-basis: 100%;
+}
+
+.dlp-toolbar .field {
+  width: min(300px, 100%);
+}
+
+.dlp-count {
+  color: var(--ink-3);
+  font: 500 12px/1 var(--f-mono);
+  margin-left: 4px;
+}
+
+.dlp-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dlp-row {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.dlp-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.dlp-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--head);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.dlp-how {
+  flex: none;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dlp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  color: var(--ink-3);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dlp-tag {
+  color: var(--ink-2);
+}
+
+/* Details on the left, what you can do on the right: one line on a wide screen. */
+.dlp-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+}
+
+.dlp-info {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dlp-error {
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.dlp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+}
+
+.dlp-actions .button {
+  min-height: var(--ctl-sm-h);
+}
+
+/* Finished and seeding rows step back; what's running or failing reads first. */
+.dlp-row:is(.is-done, .is-seeding) .dlp-name {
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.dlp-loading {
+  min-height: 40vh;
+}
+
+@media (max-width: 760px) {
+  .dlp-head {
+    flex-direction: column;
+    gap: 2px;
+  }
+}

@@ -43,6 +43,7 @@ const router = createBrowserRouter([
           { path: '/logs', lazy: page(() => import('./views/Logs.tsx'), 'Logs') },
           { path: '/logs/:name', lazy: page(() => import('./views/Logs.tsx'), 'Logs') },
           { path: '/apps', lazy: page(() => import('./views/Apps.tsx'), 'Apps') },
+          { path: '/downloads', lazy: page(() => import('./views/Downloads.tsx'), 'Downloads') },
           { path: '/settings', lazy: page(() => import('./views/Settings.tsx'), 'Settings') },
           { path: '*', element: <NotFound /> },
         ],

@@ -118,6 +118,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       { id: 'v-monitor', label: 'Monitor', hint: 'View, full screen', terms: 'wall tablet terminal kiosk', run: go('/monitor') },
       { id: 'v-logs', label: 'Logs', hint: 'View', run: go('/logs') },
       { id: 'v-apps', label: 'Apps', hint: 'View', run: go('/apps') },
+      ...(['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget'].some((id) => snap.sources[id as 'qbit']) ? [{ id: 'v-downloads', label: 'Downloads', hint: 'View', terms: 'torrents qbittorrent sabnzbd transmission deluge nzbget magnet', run: go('/downloads') }] : []),
       { id: 'v-settings', label: 'Settings', hint: 'Appearance', run: go('/settings') },
       ...([['look', 'Look'], ['home', 'Home'], ['devices', 'Devices'], ['alerts', 'Alerts'], ['connections', 'Connections'], ['activity', 'Activity']] as const).map(([t, label]) => ({ id: `set-${t}`, label: `Settings: ${label}`, hint: 'Settings', terms: t === 'devices' ? 'wall tablet e-ink panel phone kiosk' : undefined, run: go(`/settings?tab=${t}`) })),
       // Every board, wall boards too, which stay off Home's tabs.
@@ -132,7 +133,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
     // A household device sees no admin pages, container pages or logs.
     const household = !!snap.household;
     if (household) {
-      const adminViews = new Set(['v-stacks', 'v-logs', 'v-apps', 'v-settings']);
+      const adminViews = new Set(['v-stacks', 'v-logs', 'v-apps', 'v-settings', 'v-downloads']);
       out.splice(0, out.length, ...out.filter((it) => !adminViews.has(it.id) && !it.id.startsWith('set-')));
     }
     const ctrs = containerMap(snap);

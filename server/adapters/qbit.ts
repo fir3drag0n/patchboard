@@ -1,10 +1,10 @@
 // qBittorrent Web API v2. Login gives a SID cookie; on 403 we log in again.
 
-import type { QbitData, QueueItem } from '../../shared/types.ts';
+import type { DownloadEntry, DownloadState, QbitData, QueueItem } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { HttpError, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
-import type { DownloadControl, ItemAction } from './downloads.ts';
+import { type DownloadControl, type DownloadManager, type ItemAction, trackerHost } from './downloads.ts';
 
 interface Torrent {
   hash: string;
@@ -40,11 +40,56 @@ export function unfinished(torrents: Torrent[]): QueueItem[] {
     .slice(0, 20);
 }
 
+interface QbitFull extends Torrent {
+  size: number;
+  completed: number;
+  upspeed: number;
+  ratio: number;
+  category: string;
+  added_on: number;
+  tracker: string;
+}
+
+const CHECKING = new Set(['checkingDL', 'checkingUP', 'checkingResumeData', 'moving', 'allocating']);
+
+/** One torrent as the Downloads page shows it. */
+export function fromQbit(t: QbitFull): DownloadEntry {
+  const finished = t.progress >= 1;
+  const state: DownloadState = ERRORED.has(t.state)
+    ? 'errored'
+    : PAUSED.has(t.state)
+      ? finished ? 'done' : 'paused'
+      : CHECKING.has(t.state)
+        ? 'checking'
+        : SEEDING.has(t.state)
+          ? 'seeding'
+          : t.state === 'stalledDL'
+            ? 'stalled'
+            : t.state === 'queuedDL'
+              ? 'queued'
+              : 'downloading';
+  return {
+    id: t.hash,
+    name: t.name,
+    state,
+    progress: t.progress,
+    size: t.size,
+    done: t.completed,
+    down: t.dlspeed,
+    up: t.upspeed,
+    etaSec: finished || t.eta >= 8_640_000 ? -1 : t.eta,
+    ratio: t.ratio >= 0 ? t.ratio : undefined,
+    category: t.category || undefined,
+    added: t.added_on ? t.added_on * 1000 : undefined,
+    tracker: trackerHost(t.tracker),
+  };
+}
+
 export function qbitAdapter(): Adapter<QbitData> {
   return qbitClient().adapter;
 }
 
-export function qbitClient(): { adapter: Adapter<QbitData>; control: DownloadControl; item: (hash: string, action: ItemAction) => Promise<void>; altSpeed: () => Promise<void> } {
+export function qbitClient(): { adapter: Adapter<QbitData>; control: DownloadControl; item: (hash: string, action: ItemAction) => Promise<void>; altSpeed: () => Promise<void>; manage: DownloadManager } {
   const { url, username, password } = config.qbit!;
   let cookie = '';
   // qBittorrent bans an IP after a few failed logins, and the ban hits every
@@ -129,6 +174,23 @@ export function qbitClient(): { adapter: Adapter<QbitData>; control: DownloadCon
   /** The alternative speed limits, on or off. */
   const altSpeed = async (): Promise<void> => void (await form('/api/v2/transfer/toggleSpeedLimitsMode', ''));
 
+  const manage: DownloadManager = {
+    async list() {
+      return { kind: 'torrent', entries: (await get<QbitFull[]>('/api/v2/torrents/info')).map(fromQbit) };
+    },
+    async act(entry, action) {
+      if (action === 'pause' || action === 'resume') return item(entry.id, action);
+      await form('/api/v2/torrents/delete', `hashes=${encodeURIComponent(entry.id)}&deleteFiles=${action === 'delete'}`);
+    },
+    async add(what) {
+      const body = new FormData();
+      if ('url' in what) body.append('urls', what.url);
+      else body.append('torrents', new Blob([new Uint8Array(what.file.data)], { type: 'application/x-bittorrent' }), what.file.name);
+      const text = (await (await send('/api/v2/torrents/add', { method: 'POST', body })).text()).trim();
+      if (text === 'Fails.') throw new Error("qBittorrent didn't take it: not a torrent, or already there");
+    },
+  };
+
   const adapter: Adapter<QbitData> = {
     id: 'qbit',
     label: 'qBittorrent',
@@ -159,5 +221,5 @@ export function qbitClient(): { adapter: Adapter<QbitData>; control: DownloadCon
       };
     },
   };
-  return { adapter, control, item, altSpeed };
+  return { adapter, control, item, altSpeed, manage };
 }

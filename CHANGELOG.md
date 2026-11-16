@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **A Downloads page:** every torrent and NZB in qBittorrent, Transmission,
+  Deluge, SABnzbd and NZBGet on one list, finished and failed ones too,
+  with progress, speed, time left, size, ratio, category and tracker.
+  Pause, resume, remove, or remove with the files. Add a magnet link, a web
+  address, or a .torrent or .nzb file. It sits in the nav once a download
+  client is set up, and the Home widget links to it.
+- **Hide all and Show all on Stacks:** one tap folds or opens every stack.
 - **Reading's count follows Miniflux:** articles you read in Miniflux or
   another reader leave the badge within a minute, opening Reading brings it
   up to date at once, and while Miniflux can't be reached the badge hides

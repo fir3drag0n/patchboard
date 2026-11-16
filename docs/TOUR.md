@@ -118,8 +118,8 @@ logs beside them, and buttons to start, restart, update or roll back.
 ![A container page](screenshots/container.webp)
 
 **Stacks:** every container by compose project. Sort by problems, CPU or
-memory. Each stack folds to its header with Hide; on a phone the healthy
-ones start folded. Containers on your other machines, added under Other
+memory. Each stack folds to its header with Hide, and Hide all or Show all
+folds or opens every one; on a phone the healthy ones start folded. Containers on your other machines, added under Other
 Docker hosts in Settings, show as their own stacks ("dns on pi") and are
 named like pihole@pi, with logs, history, start, stop and restart.
 
@@ -225,6 +225,17 @@ Sun and moon shows sunrise, sunset, the day getting longer or shorter, and
 tonight's moon. Countdown counts the days to the dates you name.
 
 ![Bookmarks, Search, Clocks, Feeds and Releases on the board](screenshots/everyday.webp)
+
+**Downloads:** everything in qBittorrent, Transmission, Deluge, SABnzbd and
+NZBGet on one list, running or failed first: progress, speed, time left,
+size, ratio, category and tracker. Filter by what it's doing or by name.
+Pause and resume are a tap; remove is a hold, and a torrent can go with
+its files or without them. Paste a magnet link or a web address, or add a
+.torrent or .nzb file; Patchboard sends it to the client that takes it.
+The list comes straight from the clients every few seconds while the page
+is open.
+
+![Downloads](screenshots/downloads.webp)
 
 **Logs:** live from Docker, each line stamped in your own time, whatever
 zone the container runs in.

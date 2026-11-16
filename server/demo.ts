@@ -6,6 +6,8 @@ import { pinnedAnywhere } from './adapters/homeassistant.ts';
 import { poster } from './demo-media.ts';
 import { episodeKey } from './adapters/arr.ts';
 import type {
+  DownloadEntry,
+  DownloadState,
   ArrData,
   Catalog,
   Container,
@@ -58,6 +60,7 @@ import type {
   QueueItem,
 } from '../shared/types.ts';
 import type { Adapter } from './adapters/adapter.ts';
+import type { DownloadManager } from './adapters/downloads.ts';
 import { MINUTE, SECOND } from './adapters/adapter.ts';
 import { DEPENDS, demoBackups, demoChecks, demoMem, demoStats, demoTruenas, hash, IMAGES, PROJECTS } from './demo-ops.ts';
 
@@ -714,6 +717,63 @@ function demoQbit(): QbitData {
     stalled: 1,
     errored: [],
     active: items.filter((i) => i.state === 'downloading').map(({ name, progress, speed, etaSec }) => ({ name, progress, speed, etaSec })),
+  };
+}
+
+const GB = 1024 ** 3;
+const DAY = 86_400_000;
+/** Torrents that sit still in the demo: seeding, finished, failing. */
+const DEMO_TORRENTS: DownloadEntry[] = [
+  { id: 'f101', name: 'Severance.S02.1080p.ATVP.WEB-DL', state: 'seeding', progress: 1, size: 38.2 * GB, done: 38.2 * GB, down: 0, up: 1.1e6, etaSec: -1, ratio: 1.84, category: 'tv-sonarr', added: Date.now() - 12 * DAY, tracker: 'torrentleech.org' },
+  { id: 'f102', name: 'Dune.Part.Two.2024.2160p.UHD.BluRay.REMUX', state: 'seeding', progress: 1, size: 71.4 * GB, done: 71.4 * GB, down: 0, up: 0.6e6, etaSec: -1, ratio: 0.93, category: 'radarr', added: Date.now() - 5 * DAY, tracker: 'passthepopcorn.me' },
+  { id: 'f103', name: 'Andor.S02E07.1080p.DSNP.WEB-DL', state: 'done', progress: 1, size: 3.1 * GB, done: 3.1 * GB, down: 0, up: 0, etaSec: -1, ratio: 2.4, category: 'tv-sonarr', added: Date.now() - 2 * DAY, tracker: 'torrentleech.org' },
+  { id: 'f104', name: 'ubuntu-24.04.2-desktop-amd64.iso', state: 'seeding', progress: 1, size: 5.9 * GB, done: 5.9 * GB, down: 0, up: 0.2e6, etaSec: -1, ratio: 6.1, added: Date.now() - 40 * DAY, tracker: 'ubuntu.com' },
+  { id: 'f105', name: 'Shogun.S01E05.2160p.HULU.WEB-DL', state: 'errored', progress: 0.81, size: 9.6 * GB, done: 7.8 * GB, down: 0, up: 0, etaSec: -1, ratio: 0.1, category: 'tv-sonarr', added: Date.now() - 1 * DAY, tracker: 'torrentleech.org', error: 'Files missing from /downloads/tv' },
+];
+const DEMO_SAB_DONE: DownloadEntry[] = [
+  { id: 'SABnzbd_nzo_h1', name: 'The.Last.of.Us.S02E07.2160p.MAX.WEB-DL', state: 'done', progress: 1, size: 8.4 * GB, done: 8.4 * GB, down: 0, up: 0, etaSec: -1, category: 'tv', added: Date.now() - 3 * 3600_000, history: true },
+  { id: 'SABnzbd_nzo_h2', name: 'Paddington.in.Peru.2024.1080p.BluRay', state: 'errored', progress: 1, size: 12.1 * GB, done: 12.1 * GB, down: 0, up: 0, etaSec: -1, category: 'movies', added: Date.now() - 9 * 3600_000, error: 'Repair failed, not enough repair blocks', history: true },
+];
+const demoGone = new Set<string>();
+const demoHeld = new Set<string>();
+const demoAdded: (DownloadEntry & { client: DownloadClientId })[] = [];
+
+/** The demo's Downloads page: the widget's live torrents and jobs, with finished and failed ones around them. */
+export function demoManager(id: DownloadClientId): DownloadManager | undefined {
+  if (id !== 'qbit' && id !== 'sabnzbd') return undefined;
+  const mine = () => demoAdded.filter((a) => a.client === id && !demoGone.has(a.id)).map(({ client: _, ...e }) => ({ ...e, state: demoHeld.has(e.id) ? ('paused' as const) : e.state }));
+  const fixed = (list: DownloadEntry[]) =>
+    list.filter((e) => !demoGone.has(e.id)).map((e) => (demoHeld.has(e.id) ? { ...e, state: (e.progress >= 1 ? 'done' : 'paused') as DownloadState, up: 0 } : e));
+  return {
+    async list() {
+      if (id === 'qbit') {
+        const q = demoQbit();
+        const live: DownloadEntry[] = (q.items ?? []).map((i) => {
+          const size = i.id === 'c3d4' ? 58.3 * GB : i.id === 'a1b2' ? 2.8 * GB : 4.2 * GB;
+          return { id: i.id, name: i.name, state: i.state, progress: i.progress, size, done: size * i.progress, down: i.speed, up: i.speed ? i.speed / 9 : 0, etaSec: i.etaSec, ratio: 0.02, category: i.id === 'c3d4' ? 'radarr' : 'tv-sonarr', added: Date.now() - 40 * 60_000, tracker: 'torrentleech.org' };
+        });
+        return { kind: 'torrent', entries: [...live, ...mine(), ...fixed(DEMO_TORRENTS)] };
+      }
+      const s = demoSab();
+      const queue: DownloadEntry[] = s.active.map((a, i) => {
+        const nid = `SABnzbd_nzo_q${i}`;
+        const size = (i ? 2.9 : 9.8) * GB;
+        const held = s.paused || demoHeld.has(nid);
+        return { id: nid, name: a.name, state: held ? 'paused' : a.speed ? 'downloading' : 'queued', progress: a.progress, size, done: size * a.progress, down: held ? 0 : a.speed, up: 0, etaSec: held ? -1 : a.etaSec, category: 'tv' };
+      });
+      return { kind: 'usenet', entries: [...queue.filter((e) => !demoGone.has(e.id)), ...mine(), ...fixed(DEMO_SAB_DONE)] };
+    },
+    async act(entry, action) {
+      // qBittorrent's live three go through the widget's controls, so both show the same thing.
+      if (id === 'qbit' && ['a1b2', 'c3d4', 'e5f6'].includes(entry.id)) return demoItemControl('qbit')!(entry.id, action === 'delete' ? 'remove' : action);
+      if (action === 'pause') demoHeld.add(entry.id);
+      else if (action === 'resume') demoHeld.delete(entry.id);
+      else demoGone.add(entry.id);
+    },
+    async add(what) {
+      const name = 'file' in what ? what.file.name.replace(/\.(torrent|nzb)$/i, '') : (/[?&]dn=([^&]+)/.exec(what.url)?.[1] ? decodeURIComponent(/[?&]dn=([^&]+)/.exec(what.url)![1].replace(/\+/g, ' ')) : what.url.split('/').pop() || 'New download');
+      demoAdded.unshift({ client: id, id: `new${demoAdded.length + 1}`, name, state: 'queued', progress: 0, size: 0, done: 0, down: 0, up: 0, etaSec: -1, added: Date.now() });
+    },
   };
 }
 

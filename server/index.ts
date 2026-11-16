@@ -61,8 +61,8 @@ import { parseChores } from '../shared/fields.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
 import { mediaImage, mediaServerAdapter } from './adapters/mediaserver.ts';
-import { delugeClient, DOWNLOAD_CLIENTS, type DownloadControl, type ItemAction, nzbgetClient, sabnzbdClient, transmissionClient } from './adapters/downloads.ts';
-import type { DownloadClientId } from '../shared/types.ts';
+import { delugeClient, DOWNLOAD_CLIENTS, type DownloadControl, type DownloadManager, type ItemAction, type NewDownload, nzbgetClient, sabnzbdClient, transmissionClient } from './adapters/downloads.ts';
+import type { DownloadClientId, DownloadList, EntryAction } from '../shared/types.ts';
 import { traktAdapter } from './adapters/trakt.ts';
 import { truenasAdapter } from './adapters/truenas.ts';
 import { backupsAdapter } from './adapters/backups.ts';
@@ -71,7 +71,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
@@ -117,12 +117,14 @@ type Made = {
   control?: DownloadControl;
   item?: (id: string, action: ItemAction) => Promise<void>;
   altSpeed?: () => Promise<void>;
+  manage?: DownloadManager;
   arr?: ArrControl;
   dns?: DnsControl;
   seerr?: (id: number, action: 'approve' | 'decline') => Promise<void>;
 };
 const itemControls = new Map<DownloadClientId, (id: string, action: ItemAction) => Promise<void>>();
 const altSpeedControls = new Map<DownloadClientId, () => Promise<void>>();
+const downloadManagers = new Map<DownloadClientId, DownloadManager>();
 const arrControls = new Map<'sonarr' | 'radarr', ArrControl>();
 const dnsControls = new Map<'pihole' | 'adguard', DnsControl>();
 let seerrAct: ((id: number, action: 'approve' | 'decline') => Promise<void>) | null = null;
@@ -198,6 +200,7 @@ function realAdapters(): Adapter[] {
   downloadControls.clear();
   itemControls.clear();
   altSpeedControls.clear();
+  downloadManagers.clear();
   arrControls.clear();
   dnsControls.clear();
   seerrAct = null;
@@ -208,6 +211,7 @@ function realAdapters(): Adapter[] {
     if (m.control) downloadControls.set(id as DownloadClientId, m.control);
     if (m.item) itemControls.set(id as DownloadClientId, m.item);
     if (m.altSpeed) altSpeedControls.set(id as DownloadClientId, m.altSpeed);
+    if (m.manage) downloadManagers.set(id as DownloadClientId, m.manage);
     if (m.arr) arrControls.set(id as 'sonarr' | 'radarr', m.arr);
     if (m.dns) dnsControls.set(id as 'pihole' | 'adguard', m.dns);
     if (m.seerr) seerrAct = m.seerr;
@@ -755,6 +759,79 @@ app.post('/api/downloads/:id/altspeed', async (c) => {
     return c.json({ error: (err as Error).message }, 502);
   }
   recordAudit(who(c), 'downloads.altspeed', id);
+  void hub.pollNow(id);
+  return c.json({ ok: true });
+});
+
+// The Downloads page: everything in one client, fetched only while the page
+// is open. The snapshot keeps its short summary.
+const lastLists = new Map<DownloadClientId, { at: number; list: DownloadList }>();
+const managerOf = (id: string): DownloadManager | undefined => (config.demo ? demoManager(id as DownloadClientId) : downloadManagers.get(id as DownloadClientId));
+
+app.get('/api/downloads/:id/list', async (c) => {
+  const id = c.req.param('id') as DownloadClientId;
+  const m = managerOf(id);
+  if (!m) return c.json({ error: 'That client is not set up' }, 404);
+  try {
+    const list = await m.list();
+    lastLists.set(id, { at: Date.now(), list });
+    return c.json(list);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+});
+
+// One download: pause, resume, remove, or remove with its files. Only one
+// the client listed, so a request can't name anything else.
+app.post('/api/downloads/:id/entries/:entry/:action', async (c) => {
+  const id = c.req.param('id') as DownloadClientId;
+  const action = c.req.param('action') as EntryAction;
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (!['pause', 'resume', 'remove', 'delete'].includes(action)) return c.json({ error: 'Unknown action' }, 400);
+  const m = managerOf(id);
+  if (!m) return c.json({ error: 'That client is not set up' }, 404);
+  try {
+    let seen = lastLists.get(id);
+    if (!seen || Date.now() - seen.at > 60_000) seen = { at: Date.now(), list: await m.list() };
+    const entry = seen.list.entries.find((e) => e.id === c.req.param('entry'));
+    if (!entry) return c.json({ error: 'That download is gone' }, 404);
+    await m.act(entry, action);
+    lastLists.delete(id);
+    recordAudit(who(c), `downloads.entry.${action}`, id, entry.name);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  void hub.pollNow(id);
+  return c.json({ ok: true });
+});
+
+// Add a download: a magnet or web link, or a .torrent or .nzb file as base64.
+const DOWNLOAD_FILE_MAX = 10 * 1024 * 1024;
+app.post('/api/downloads/:id/add', async (c) => {
+  const id = c.req.param('id') as DownloadClientId;
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const m = managerOf(id);
+  if (!m) return c.json({ error: 'That client is not set up' }, 404);
+  const body = (await c.req.json().catch(() => ({}))) as { url?: unknown; name?: unknown; data?: unknown };
+  let what: NewDownload;
+  if (typeof body.url === 'string') {
+    const url = body.url.trim();
+    if (url.length > 8000 || !/^(magnet:\?|https?:\/\/)/i.test(url)) return c.json({ error: 'Paste a magnet link or a web address' }, 400);
+    what = { url };
+  } else if (typeof body.name === 'string' && typeof body.data === 'string') {
+    const name = body.name.replace(/[^\w .()[\]-]/g, '_').slice(0, 200);
+    if (!/\.(torrent|nzb)$/i.test(name)) return c.json({ error: 'Pick a .torrent or .nzb file' }, 400);
+    const data = Buffer.from(body.data, 'base64');
+    if (!data.length || data.length > DOWNLOAD_FILE_MAX) return c.json({ error: 'Files can be up to 10 MB' }, 413);
+    what = { file: { name, data } };
+  } else return c.json({ error: 'Send a link or a file' }, 400);
+  try {
+    await m.add(what);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), 'downloads.add', id, 'url' in what ? what.url.slice(0, 120) : what.file.name);
+  lastLists.delete(id);
   void hub.pollNow(id);
   return c.json({ ok: true });
 });

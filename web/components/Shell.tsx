@@ -36,6 +36,7 @@ const NAV = [
   { to: '/upcoming', label: 'Upcoming' },
   { to: '/logs', label: 'Logs', desktop: true },
   { to: '/apps', label: 'Apps', desktop: true },
+  { to: '/downloads', label: 'Downloads', desktop: true },
 ];
 
 // "g" then a letter, as in Gmail and GitHub.
@@ -52,7 +53,7 @@ const GO: Record<string, [string, string]> = {
 
 // Pages for whoever runs the server. A household device doesn't see them;
 // it does see Server, which only shows how things stand.
-const ADMIN = ['/stacks', '/logs', '/apps', '/settings', '/c'];
+const ADMIN = ['/stacks', '/logs', '/apps', '/settings', '/c', '/downloads'];
 export const adminPage = (path: string) => ADMIN.some((a) => path === a || path.startsWith(`${a}/`));
 
 const isTyping = (el: EventTarget | null) =>
@@ -236,7 +237,9 @@ export function Shell() {
   const unreadFeeds = feeds?.ok ? ((feeds.data as { unread: number } | null)?.unread ?? 0) : 0;
   const reading = !!snap?.sources.miniflux || !!snap?.demo;
   const phoneTabs = household ? ['/', '/upcoming', reading ? '/reading' : '/weather'] : ['/', '/server', '/stacks', reading ? '/reading' : '/upcoming'];
-  const nav = household ? NAV.filter((n) => !adminPage(n.to)) : NAV;
+  // Downloads only once a download client is set up.
+  const hasDownloads = ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget'].some((id) => snap?.sources[id as 'qbit']);
+  const nav = NAV.filter((n) => !(household && adminPage(n.to)) && (n.to !== '/downloads' || hasDownloads));
   const more: { to: string; label: string }[] = [...nav.filter((n) => !phoneTabs.includes(n.to)), { to: '/weather', label: 'Weather' }, { to: '/settings', label: 'Settings' }].filter(
     (m) => !phoneTabs.includes(m.to) && !(household && adminPage(m.to)),
   );

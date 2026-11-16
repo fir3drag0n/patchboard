@@ -94,6 +94,11 @@ export function Stacks() {
   const totalMem = shownCtrs.reduce((n, c) => n + (s[c.name]?.memBytes ?? 0), 0);
   const running = shownCtrs.filter((c) => c.state === 'running').length;
   const updateCount = shownCtrs.filter(hasUpdate).length;
+  const quietOf = (list: Container[]) => list.every((c) => ['up', 'idle', 'none'].includes(ctrState(c, serviceFor(snap, c.name)))) && !list.some(hasUpdate);
+  const openOf = (project: string, list: Container[]) => flipped.get(project) ?? !(phone && quietOf(list));
+  // One tap folds every stack, or opens every one once all are folded.
+  const anyOpen = ordered.some(([p, l]) => openOf(p, l));
+  const setAll = (open: boolean) => setFlipped(new Map(ordered.map(([p]) => [p, open])));
   // The chip keeps the sort; only the filter changes.
   const toggleUpdates = () => {
     const next = new URLSearchParams(params);
@@ -134,6 +139,11 @@ export function Stacks() {
             {onlyUpdates ? (updateCount ? `Showing ${plural(updateCount, 'image update')}` : 'Show every container') : `Show ${plural(updateCount, 'image update')}`}
           </button>
         )}
+        {ordered.length > 1 && (
+          <button type="button" className="text-button stacks-fold" onClick={() => setAll(!anyOpen)}>
+            {anyOpen ? 'Hide all' : 'Show all'}
+          </button>
+        )}
       </div>
       {/* A breadcrumb to a stack you've hidden says so, instead of landing nowhere. */}
       {hash && hiddenStacks.has(decodeURIComponent(hash.slice(1))) && (
@@ -156,8 +166,8 @@ export function Stacks() {
       {ordered.map(([project, list]) => {
         const cpu = list.reduce((n, c) => n + (s[c.name]?.cpu ?? 0), 0);
         const mem = list.reduce((n, c) => n + (s[c.name]?.memBytes ?? 0), 0);
-        const quiet = list.every((c) => ['up', 'idle', 'none'].includes(ctrState(c, serviceFor(snap, c.name)))) && !list.some(hasUpdate);
-        const isOpen = flipped.get(project) ?? !(phone && quiet);
+        const quiet = quietOf(list);
+        const isOpen = openOf(project, list);
         // Says what runs: a stopped or finished container isn't counted as running.
         const running = list.filter((c) => c.state === 'running').length;
         return (

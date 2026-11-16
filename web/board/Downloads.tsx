@@ -64,7 +64,7 @@ export function DownloadsWidget() {
   const down = clients.reduce((n, c) => n + c.data.down, 0);
 
   return (
-    <Section title="Downloads" count={down ? speed(down) : undefined} className="downloads">
+    <Section title="Downloads" count={down ? speed(down) : undefined} className="downloads" action={configured ? { label: 'All downloads', to: '/downloads' } : undefined}>
       {clients.map((c) => (
         <div className="dl-group" key={c.id}>
         <p className="dl-client">

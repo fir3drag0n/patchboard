@@ -2,7 +2,7 @@
 // the board shows every download client the same way. Each one can also pause
 // and resume everything, through POST /api/downloads/:id/:action.
 
-import type { ActiveTorrent, DownloadClientId, QbitData } from '../../shared/types.ts';
+import type { ActiveTorrent, DownloadClientId, DownloadEntry, DownloadList, DownloadState, EntryAction, QbitData } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { HttpError, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
@@ -11,6 +11,30 @@ export type DownloadAction = 'pause' | 'resume';
 export type DownloadControl = (action: DownloadAction) => Promise<void>;
 /** What can be done to one download. */
 export type ItemAction = 'pause' | 'resume' | 'remove';
+
+/** Something to download: a magnet or web link, or a .torrent or .nzb file. */
+export type NewDownload = { url: string } | { file: { name: string; data: Buffer } };
+
+/** The Downloads page's view of one client: everything in it, and what can be done. */
+export interface DownloadManager {
+  list(): Promise<DownloadList>;
+  act(entry: DownloadEntry, action: EntryAction): Promise<void>;
+  add(what: NewDownload): Promise<void>;
+}
+
+/** A tracker announce URL's host, without the "tracker." noise. */
+export function trackerHost(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    return new URL(url).hostname.replace(/^(tracker|announce|t)\./, '') || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Seconds since 1970 as ms, or nothing for 0 and missing. */
+const ms = (s: number | undefined) => (s && s > 0 ? s * 1000 : undefined);
+const eta = (s: number | undefined) => (s != null && s >= 0 && s < 8_640_000 ? Math.round(s) : -1);
 
 const basic = (user?: string, pass?: string): Record<string, string> =>
   user || pass ? { Authorization: `Basic ${Buffer.from(`${user ?? ''}:${pass ?? ''}`).toString('base64')}` } : {};
@@ -82,7 +106,67 @@ export function transmissionClient() {
   const control: DownloadControl = async (action) => {
     await rpc(action === 'pause' ? 'torrent-stop' : 'torrent-start');
   };
-  return { adapter, control };
+
+  const manage: DownloadManager = {
+    async list() {
+      const { torrents } = await rpc<{ torrents: TrFull[] }>('torrent-get', {
+        fields: ['hashString', 'name', 'status', 'percentDone', 'sizeWhenDone', 'haveValid', 'rateDownload', 'rateUpload', 'eta', 'uploadRatio', 'labels', 'addedDate', 'trackers', 'error', 'errorString'],
+      });
+      return { kind: 'torrent', entries: torrents.map(fromTransmission) };
+    },
+    async act(entry, action) {
+      const ids = [entry.id];
+      if (action === 'pause') await rpc('torrent-stop', { ids });
+      else if (action === 'resume') await rpc('torrent-start', { ids });
+      else await rpc('torrent-remove', { ids, 'delete-local-data': action === 'delete' });
+    },
+    async add(what) {
+      const added = await rpc<{ 'torrent-added'?: unknown; 'torrent-duplicate'?: unknown }>('torrent-add', 'url' in what ? { filename: what.url } : { metainfo: what.file.data.toString('base64') });
+      if (!added['torrent-added'] && !added['torrent-duplicate']) throw new Error("Transmission didn't take it");
+    },
+  };
+  return { adapter, control, manage };
+}
+
+interface TrFull {
+  hashString: string;
+  name: string;
+  status: number;
+  percentDone: number;
+  sizeWhenDone: number;
+  haveValid: number;
+  rateDownload: number;
+  rateUpload: number;
+  eta: number;
+  uploadRatio: number;
+  labels?: string[];
+  addedDate: number;
+  trackers?: { announce: string }[];
+  error: number;
+  errorString: string;
+}
+
+export function fromTransmission(t: TrFull): DownloadEntry {
+  const finished = t.percentDone >= 1;
+  // 0 stopped, 1-2 checking, 3 queued, 4 downloading, 5 queued to seed, 6 seeding.
+  const state: DownloadState =
+    t.error > 0 ? 'errored' : t.status === 0 ? (finished ? 'done' : 'paused') : t.status <= 2 ? 'checking' : t.status === 3 ? 'queued' : t.status === 4 ? (t.rateDownload ? 'downloading' : 'stalled') : 'seeding';
+  return {
+    id: t.hashString,
+    name: t.name,
+    state,
+    progress: t.percentDone,
+    size: t.sizeWhenDone,
+    done: t.haveValid,
+    down: t.rateDownload,
+    up: t.rateUpload,
+    etaSec: eta(t.eta),
+    ratio: t.uploadRatio >= 0 ? t.uploadRatio : undefined,
+    category: t.labels?.[0],
+    added: ms(t.addedDate),
+    tracker: trackerHost(t.trackers?.[0]?.announce),
+    error: t.error > 0 ? t.errorString : undefined,
+  };
 }
 
 // ---------- Deluge: the Web UI's JSON RPC, signed in with its password ----------
@@ -167,7 +251,76 @@ export function delugeClient() {
     withLogin(async () => {
       await call(action === 'pause' ? 'core.pause_session' : 'core.resume_session');
     });
-  return { adapter, control };
+
+  /** Deluge 2 takes a list in pause_torrents; 1.3 took it in pause_torrent. */
+  const each = async (verb: 'pause' | 'resume', id: string) => {
+    try {
+      await call(`core.${verb}_torrents`, [[id]]);
+    } catch {
+      await call(`core.${verb}_torrent`, [[id]]);
+    }
+  };
+  const manage: DownloadManager = {
+    list: () =>
+      withLogin(async () => {
+        const ui = await call<{ torrents: Record<string, DeFull> }>('web.update_ui', [
+          ['name', 'state', 'progress', 'total_wanted', 'total_done', 'download_payload_rate', 'upload_payload_rate', 'eta', 'ratio', 'label', 'time_added', 'tracker_host', 'message'],
+          {},
+        ]);
+        return { kind: 'torrent', entries: Object.entries(ui.torrents ?? {}).map(([id, t]) => fromDeluge(id, t)) };
+      }),
+    act: (entry, action) =>
+      withLogin(async () => {
+        if (action === 'pause' || action === 'resume') await each(action, entry.id);
+        else await call('core.remove_torrent', [entry.id, action === 'delete']);
+      }),
+    add: (what) =>
+      withLogin(async () => {
+        if ('file' in what) await call('core.add_torrent_file', [what.file.name, what.file.data.toString('base64'), {}]);
+        else if (what.url.startsWith('magnet:')) await call('core.add_torrent_magnet', [what.url, {}]);
+        else await call('core.add_torrent_url', [what.url, {}]);
+      }),
+  };
+  return { adapter, control, manage };
+}
+
+interface DeFull {
+  name: string;
+  state: string;
+  progress: number;
+  total_wanted: number;
+  total_done: number;
+  download_payload_rate: number;
+  upload_payload_rate: number;
+  eta: number;
+  ratio: number;
+  label?: string;
+  time_added: number;
+  tracker_host?: string;
+  message?: string;
+}
+
+export function fromDeluge(id: string, t: DeFull): DownloadEntry {
+  const finished = t.progress >= 100;
+  const s = t.state;
+  const state: DownloadState =
+    s === 'Error' ? 'errored' : s === 'Paused' ? (finished ? 'done' : 'paused') : s === 'Seeding' ? 'seeding' : s === 'Queued' ? (finished ? 'done' : 'queued') : s === 'Checking' || s === 'Allocating' || s === 'Moving' ? 'checking' : t.download_payload_rate ? 'downloading' : 'stalled';
+  return {
+    id,
+    name: t.name,
+    state,
+    progress: t.progress / 100,
+    size: t.total_wanted,
+    done: t.total_done,
+    down: t.download_payload_rate,
+    up: t.upload_payload_rate,
+    etaSec: finished ? -1 : eta(t.eta || -1),
+    ratio: t.ratio >= 0 ? t.ratio : undefined,
+    category: t.label || undefined,
+    added: ms(t.time_added),
+    tracker: t.tracker_host || undefined,
+    error: s === 'Error' ? t.message : undefined,
+  };
 }
 
 // ---------- SABnzbd: one API key in the query string ----------
@@ -220,7 +373,101 @@ export function sabnzbdClient() {
   const control: DownloadControl = async (action) => {
     await api(action);
   };
-  return { adapter, control };
+
+  const ok = (r: { status?: boolean; error?: string }) => {
+    if (r.status === false) throw new Error(`SABnzbd: ${r.error ?? 'refused'}`);
+  };
+  const manage: DownloadManager = {
+    async list() {
+      const [{ queue }, { history }] = await Promise.all([
+        api<{ queue: { paused: boolean; kbpersec: string; slots: SabFull[] } }>('queue'),
+        api<{ history: { slots: SabDone[] } }>('history', '&limit=60'),
+      ]);
+      const rate = Number(queue.kbpersec) * 1024 || 0;
+      return { kind: 'usenet', entries: [...(queue.slots ?? []).map((s, i) => fromSabQueue(s, i === 0 && !queue.paused ? rate : 0, queue.paused)), ...(history.slots ?? []).map(fromSabHistory)] };
+    },
+    async act(entry, action) {
+      const id = encodeURIComponent(entry.id);
+      if (entry.history) {
+        if (action === 'remove' || action === 'delete') ok(await api('history', `&name=delete&value=${id}${action === 'delete' ? '&del_files=1' : ''}`));
+        return;
+      }
+      // A half-downloaded job's files are no use to anyone: removing it from the queue clears them.
+      if (action === 'pause' || action === 'resume') ok(await api('queue', `&name=${action}&value=${id}`));
+      else ok(await api('queue', `&name=delete&value=${id}&del_files=1`));
+    },
+    async add(what) {
+      if ('url' in what) return ok(await api('addurl', `&name=${encodeURIComponent(what.url)}`));
+      const form = new FormData();
+      form.append('name', new Blob([new Uint8Array(what.file.data)], { type: 'application/x-nzb' }), what.file.name);
+      const res = await request(`${url}/api?mode=addfile&output=json&apikey=${encodeURIComponent(key)}`, { method: 'POST', body: form });
+      ok((await res.json()) as { status?: boolean; error?: string });
+    },
+  };
+  return { adapter, control, manage };
+}
+
+interface SabFull {
+  nzo_id: string;
+  filename: string;
+  percentage: string;
+  mb: string;
+  mbleft: string;
+  timeleft: string;
+  status: string;
+  cat?: string;
+}
+
+interface SabDone {
+  nzo_id: string;
+  name: string;
+  status: string;
+  bytes: number;
+  completed: number;
+  category?: string;
+  fail_message?: string;
+}
+
+const MB = 1_048_576;
+
+export function fromSabQueue(s: SabFull, rate: number, allPaused: boolean): DownloadEntry {
+  const size = (Number(s.mb) || 0) * MB;
+  const left = (Number(s.mbleft) || 0) * MB;
+  const st = s.status.toLowerCase();
+  const state: DownloadState = allPaused || st === 'paused' ? 'paused' : st === 'downloading' ? (rate ? 'downloading' : 'stalled') : st === 'checking' || st === 'fetching' || st === 'grabbing' ? 'checking' : 'queued';
+  return {
+    id: s.nzo_id,
+    name: s.filename,
+    state,
+    progress: (Number(s.percentage) || 0) / 100,
+    size,
+    done: Math.max(0, size - left),
+    down: state === 'downloading' ? rate : 0,
+    up: 0,
+    etaSec: state === 'downloading' ? hms(s.timeleft) : -1,
+    category: s.cat && s.cat !== '*' ? s.cat : undefined,
+  };
+}
+
+export function fromSabHistory(h: SabDone): DownloadEntry {
+  const failed = h.status === 'Failed';
+  const finished = h.status === 'Completed';
+  return {
+    id: h.nzo_id,
+    name: h.name,
+    // Still unpacking or moving: the work after the download.
+    state: failed ? 'errored' : finished ? 'done' : 'checking',
+    progress: 1,
+    size: h.bytes,
+    done: h.bytes,
+    down: 0,
+    up: 0,
+    etaSec: -1,
+    category: h.category && h.category !== '*' ? h.category : undefined,
+    added: ms(h.completed),
+    error: failed ? h.fail_message || undefined : undefined,
+    history: true,
+  };
 }
 
 // ---------- NZBGet: JSON RPC behind basic auth ----------
@@ -282,7 +529,102 @@ export function nzbgetClient() {
   const control: DownloadControl = async (action) => {
     await rpc(action === 'pause' ? 'pausedownload' : 'resumedownload');
   };
-  return { adapter, control };
+
+  /** NZBGet 18 and later take (command, param, ids); older ones put an offset first. */
+  const edit = async (command: string, id: number) => {
+    let done: boolean;
+    try {
+      done = await rpc<boolean>('editqueue', [command, '', [id]]);
+    } catch {
+      done = await rpc<boolean>('editqueue', [command, 0, '', [id]]);
+    }
+    if (!done) throw new Error(`NZBGet refused ${command}`);
+  };
+  const manage: DownloadManager = {
+    async list() {
+      const [status, groups, history] = await Promise.all([
+        rpc<{ DownloadRate: number; DownloadPaused: boolean }>('status'),
+        rpc<NzbFull[]>('listgroups', [0]),
+        rpc<NzbDone[]>('history', [false]).catch(() => [] as NzbDone[]),
+      ]);
+      return {
+        kind: 'usenet',
+        entries: [...groups.map((g, i) => fromNzbget(g, i === 0 && g.Status === 'DOWNLOADING' && !status.DownloadPaused ? status.DownloadRate : 0, status.DownloadPaused)), ...history.slice(0, 60).map(fromNzbgetHistory)],
+      };
+    },
+    async act(entry, action) {
+      const id = Number(entry.id);
+      if (entry.history) {
+        if (action === 'remove' || action === 'delete') await edit('HistoryDelete', id);
+        return;
+      }
+      await edit(action === 'pause' ? 'GroupPause' : action === 'resume' ? 'GroupResume' : 'GroupFinalDelete', id);
+    },
+    async add(what) {
+      // A link goes as the content; NZBGet fetches it. A file goes as base64.
+      const name = 'url' in what ? '' : what.file.name;
+      const content = 'url' in what ? what.url : what.file.data.toString('base64');
+      const id = await rpc<number>('append', [name, content, '', 0, false, false, '', 0, 'SCORE', []]);
+      if (!(id > 0)) throw new Error("NZBGet didn't take it");
+    },
+  };
+  return { adapter, control, manage };
+}
+
+interface NzbFull {
+  NZBID: number;
+  NZBName: string;
+  FileSizeMB: number;
+  RemainingSizeMB: number;
+  Status: string;
+  Category?: string;
+}
+
+interface NzbDone {
+  NZBID: number;
+  Name: string;
+  Status: string;
+  FileSizeMB: number;
+  Category?: string;
+  HistoryTime: number;
+}
+
+export function fromNzbget(g: NzbFull, rate: number, allPaused: boolean): DownloadEntry {
+  const size = g.FileSizeMB * MB;
+  const left = g.RemainingSizeMB * MB;
+  const st = g.Status;
+  const state: DownloadState = allPaused || st === 'PAUSED' ? 'paused' : st === 'DOWNLOADING' ? (rate ? 'downloading' : 'stalled') : st === 'QUEUED' ? 'queued' : 'checking';
+  return {
+    id: String(g.NZBID),
+    name: g.NZBName,
+    state,
+    progress: size ? 1 - left / size : 0,
+    size,
+    done: Math.max(0, size - left),
+    down: state === 'downloading' ? rate : 0,
+    up: 0,
+    etaSec: state === 'downloading' && rate ? Math.round(left / rate) : -1,
+    category: g.Category || undefined,
+  };
+}
+
+export function fromNzbgetHistory(h: NzbDone): DownloadEntry {
+  const failed = h.Status.startsWith('FAILURE');
+  return {
+    id: String(h.NZBID),
+    name: h.Name,
+    state: failed ? 'errored' : 'done',
+    progress: 1,
+    size: h.FileSizeMB * MB,
+    done: h.FileSizeMB * MB,
+    down: 0,
+    up: 0,
+    etaSec: -1,
+    category: h.Category || undefined,
+    added: ms(h.HistoryTime),
+    error: failed ? h.Status.split('/')[1]?.toLowerCase() : undefined,
+    history: true,
+  };
 }
 
 export const DOWNLOAD_CLIENTS: DownloadClientId[] = ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget'];
