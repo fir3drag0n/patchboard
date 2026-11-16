@@ -3497,8 +3497,9 @@ a.vitals {
 }
 
 .tag-update {
-  color: var(--warn);
-  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+  /* An update waiting isn't trouble: the accent, as the ↑ on app tiles has it. */
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   margin-left: 2px;
 }
 
@@ -11734,8 +11735,9 @@ a.jack .jack-socket {
   --c-net: #4fd2e8;
   --c-pool: #c9d3f5;
   --c-disk: #c9d3f5;
-  --warn: #f5a524;
-  --crit: #ff6b6b;
+  /* Trouble in the same amber and red as everywhere else. */
+  --warn: #e3a253;
+  --crit: #ef6b5e;
   --mon-up: #2f3b58;
   --mon-off: #161b28;
 }
@@ -12831,6 +12833,20 @@ html[data-eink] :is(.cell:not([data-type='apps']):not([data-type='json']) .cell-
 html[data-eink] .poster-type {
   background: #e8e8e8 !important;
   color: #000;
+  outline: 1px solid #000;
+  outline-offset: -1px;
+}
+
+/* A meter's track on white paper: an outline, so 87% never reads as full. */
+html[data-eink] .meter {
+  background: #fff;
+  outline: 1px solid #000;
+  outline-offset: -1px;
+}
+
+/* Rows end square: a rounded corner bends the rule under each one. */
+html[data-eink] .srow {
+  border-radius: 0;
 }
 
 html[data-eink] :is(.seg button[aria-pressed='true'], .seg button[aria-selected='true'], .chip[aria-pressed='true'], .chip[aria-selected='true']) {
@@ -14059,4 +14075,12 @@ html[data-eink] .fr-sheet {
 
 .finish-setup .text-button {
   margin-left: auto;
+}
+
+/* Accent "None (white)": links are the same white as headings, so they keep
+   an underline to read as links. */
+html[data-accent='mono'] :is(.text-button, .section-action, .page a:not([class]), .status-line[href]) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }

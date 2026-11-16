@@ -189,6 +189,9 @@ function apply(a: Appearance): void {
   r.dataset.scheme = scheme;
   r.dataset.icons = a.icons;
   r.dataset.density = a.density;
+  // "None (white)" takes the color off links, so they keep an underline instead.
+  if (a.accent === 'mono') r.dataset.accent = 'mono';
+  else delete r.dataset.accent;
   try {
     // eink: so the first paint, before the bundle, picks the black-and-white icon and a white status bar.
     localStorage.setItem(VARS_KEY, JSON.stringify({ ...vars, scheme: a.theme === 'custom' ? scheme : a.scheme, appIcon: a.appIcon, eink: a.eink || einkOn(), attrs: { theme: r.dataset.theme, icons: a.icons, density: a.density } }));

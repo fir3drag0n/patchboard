@@ -33,6 +33,15 @@
   the town or a password is still to do.
 - **Connect where the app is:** a tile for Sonarr, Plex or any app with an
   integration shows Connect until you set it up, and it opens that setup.
+- **A color pass over every theme:**
+  - **E-ink meters show their track,** so 87% no longer reads as full, and
+    e-ink rows and empty posters have clean edges.
+  - **Forest's accent is teal,** where its green links read as healthy.
+  - **Paper's warning in light mode is brighter,** apart from body text.
+  - **An image update is the accent everywhere,** not a warning.
+  - **The Monitor's trouble colors match the rest of Patchboard.**
+  - **Accent swatches follow light and dark,** and with the white accent,
+    links keep an underline.
 - **Plainer words:** a pass over the README, the docs and the app's own text
   trimmed filler and repeats.
 - **Showcase mode is gone:** it was for taking screenshots of this project,

@@ -145,7 +145,7 @@ export function Settings() {
         <div className="choice-row swatches">
           <button type="button" className="swatch swatch-theme" aria-pressed={a.accent === 'default'} title={tr('The theme\'s own')} aria-label={tr('The theme\'s own accent')} onClick={() => setAppearance({ accent: 'default' })} />
           {ACCENTS.map((c) => (
-            <button key={c.id} type="button" className="swatch" style={{ background: c.dark }} aria-pressed={a.accent === c.id} aria-label={c.name} title={c.name} onClick={() => setAppearance({ accent: c.id })} />
+            <button key={c.id} type="button" className="swatch" style={{ background: document.documentElement.dataset.scheme === 'light' ? c.light : c.dark }} aria-pressed={a.accent === c.id} aria-label={c.name} title={c.name} onClick={() => setAppearance({ accent: c.id })} />
           ))}
           <label className={`swatch swatch-pick ${a.accent === 'custom' ? 'is-on' : ''}`} title={tr('Any color')} style={a.accent === 'custom' ? { background: a.accentHex } : undefined}>
             <input type="color" value={a.accentHex} onChange={(e) => setAppearance({ accent: 'custom', accentHex: e.target.value })} aria-label={tr('Pick any accent color')} />

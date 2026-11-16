@@ -85,17 +85,17 @@ export const THEMES: ThemeDef[] = [
   {
     id: 'forest',
     name: 'Forest',
-    note: msg('Green-black, moss accent.'),
+    note: msg('Green-black, teal accent.'),
     fonts: 'geist',
     dark: {
       bg: '#0a0f0c', raised: '#111813', surface: '#18211b', line: '#29362d', lineSoft: '#1c271f',
       ink: '#e4ebe5', ink2: '#aebbb0', ink3: '#87978c', head: '#f3f8f4',
-      accent: '#86c7a0', ok: '#b6d97a', warn: '#e6b45c', crit: '#ee7b67', termBg: '#070b08',
+      accent: '#86bfb8', ok: '#b6d97a', warn: '#e6b45c', crit: '#ee7b67', termBg: '#070b08',
     },
     light: {
       bg: '#f4f7f3', raised: '#ecf1eb', surface: '#e1e9e0', line: '#cdd9cc', lineSoft: '#e0e8df',
       ink: '#1b241d', ink2: '#3f4c42', ink3: '#5a6a5e', head: '#0d140f',
-      accent: '#2f7a50', ok: '#4f7a12', warn: '#93600c', crit: '#b23a2a', termBg: '#fafcf9',
+      accent: '#2a6b66', ok: '#4f7a12', warn: '#93600c', crit: '#b23a2a', termBg: '#fafcf9',
     },
   },
   {
@@ -127,7 +127,7 @@ export const THEMES: ThemeDef[] = [
     light: {
       bg: '#fbf9f4', raised: '#f4f1ea', surface: '#ebe7dd', line: '#dad3c5', lineSoft: '#ebe6dc',
       ink: '#22201c', ink2: '#4c4840', ink3: '#69645a', head: '#12110e',
-      accent: '#2f5f7a', ok: '#3d7a55', warn: '#94580f', crit: '#b0402f', termBg: '#fdfcf9',
+      accent: '#2f5f7a', ok: '#3d7a55', warn: '#a35c00', crit: '#b0402f', termBg: '#fdfcf9',
     },
   },
 ];
