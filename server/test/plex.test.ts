@@ -47,6 +47,7 @@ test('Plex: the token goes in a header, and posters only come from the library',
       assert.deepEqual([data.streams, data.recent[0].title, data.itemPath?.includes('m1')], [[], 'Dune', true]);
       assert.equal(await (await plexImage('/library/metadata/3/thumb/9')).text(), 'jpg');
       await assert.rejects(plexImage('/:/prefs'), /Bad image path/);
+      await assert.rejects(plexImage('/library/../accounts'), /Bad image path/);
     });
     assert.ok(asked.every((a) => a.endsWith(' tok') && !a.includes('X-Plex-Token=')), 'the token never rides in the address');
   } finally {

@@ -19,4 +19,18 @@ export interface Adapter<T = unknown> {
 }
 
 export const SECOND = 1000;
+
+/**
+ * Runs what it's given one at a time, in order. For changes that read a
+ * list, edit it and write it back: two at once would each read the old list,
+ * and the second would undo the first.
+ */
+export function oneAtATime(): <T>(fn: () => Promise<T>) => Promise<T> {
+  let last: Promise<unknown> = Promise.resolve();
+  return <T>(fn: () => Promise<T>) => {
+    const run = last.then(fn, fn);
+    last = run.catch(() => {});
+    return run;
+  };
+}
 export const MINUTE = 60 * SECOND;

@@ -160,7 +160,7 @@ export function seerrClient(): SeerrClient {
       },
     },
     async act(id, action) {
-      await getJson(`${url}/api/v1/request/${id}/${action}`, { method: 'POST', headers });
+      await send(`/request/${id}/${action}`, {});
     },
     async list(which) {
       const filter = which === 'waiting' ? 'pending' : 'processing';

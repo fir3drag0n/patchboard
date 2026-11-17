@@ -9,7 +9,7 @@ import { domainToASCII } from 'node:url';
 import type { DnsBlockedBy, DnsData, DnsLists, DnsQuery } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { getJson, request } from '../http.ts';
-import { type Adapter, SECOND } from './adapter.ts';
+import { type Adapter, oneAtATime, SECOND } from './adapter.ts';
 
 /** null resumes; a number pauses for that many minutes. */
 export type DnsControl = (minutes: number | null) => Promise<void>;
@@ -94,6 +94,7 @@ export function toPihole(sum: PiSummary, blocking: { blocking: string; timer?: n
 export const PI_SUDO = 'Pi-hole won’t let an app password change lists. In Pi-hole: Settings, All settings, Webserver and API, turn on webserver.api.app_sudo.';
 
 export function piholeClient(): DnsClient {
+  const queue = oneAtATime();
   const { url, password } = config.pihole!;
   // Pi-hole hands out a limited number of sessions, so keep one and only
   // sign in again when it expires.
@@ -125,7 +126,12 @@ export function piholeClient(): DnsClient {
     const go = async () => {
       const res = await request(`${url}${path}`, { ...init, headers: { ...(init.headers as Record<string, string>), ...(sid ? { 'X-FTL-SID': sid } : {}) } });
       const text = await res.text();
-      return (text ? JSON.parse(text) : undefined) as T;
+      try {
+        return (text ? JSON.parse(text) : undefined) as T;
+      } catch {
+        // A proxy's sign-in page, say: not Pi-hole's API.
+        throw new Error('That address answered, but not as Pi-hole’s API. Check PIHOLE_URL.');
+      }
     };
     try {
       return await go();
@@ -166,7 +172,7 @@ export function piholeClient(): DnsClient {
       lists,
       async put(domain, on) {
         try {
-          await putPi(domain, on);
+          await queue(() => putPi(domain, on));
         } catch (err) {
           // An app password only changes lists once Pi-hole allows it to.
           if ((err as { status?: number }).status === 403) throw new Error(PI_SUDO);
@@ -274,6 +280,7 @@ export function putRule(rules: string[], domain: string, on: 'allow' | 'deny' | 
 }
 
 export function adguardClient(): DnsClient {
+  const queue = oneAtATime();
   const { url, username, password } = config.adguard!;
   const auth: Record<string, string> = username ? { Authorization: `Basic ${Buffer.from(`${username}:${password ?? ''}`).toString('base64')}` } : {};
   return {
@@ -304,11 +311,13 @@ export function adguardClient(): DnsClient {
         return readRules(await userRules());
       },
       async put(domain, on) {
-        const rules = putRule(await userRules(), domain, on);
-        await request(`${url}/control/filtering/set_rules`, {
-          method: 'POST',
-          headers: { ...auth, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rules }),
+        await queue(async () => {
+          const rules = putRule(await userRules(), domain, on);
+          await request(`${url}/control/filtering/set_rules`, {
+            method: 'POST',
+            headers: { ...auth, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rules }),
+          });
         });
       },
     },

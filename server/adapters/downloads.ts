@@ -330,10 +330,11 @@ export function delugeClient() {
     change: (entry, change, detail) =>
       withLogin(async () => {
         if ('files' in change) {
-          // Deluge takes every file's priority at once.
-          const pick = new Set(change.files);
-          const to = DE_PRIORITY[change.priority];
-          const all = detail.files.map((f) => (pick.has(f.index) ? to : DE_PRIORITY[f.priority]));
+          // Deluge takes every file's priority at once. Start from its own
+          // numbers, so a file set low there stays low.
+          const raw = (await call<DeDetail>('core.get_torrent_status', [entry.id, ['file_priorities']])).file_priorities ?? detail.files.map((f) => DE_PRIORITY[f.priority]);
+          const all = [...raw];
+          for (const i of change.files) all[i] = DE_PRIORITY[change.priority];
           await call('core.set_torrent_options', [[entry.id], { file_priorities: all }]);
         } else if ('limits' in change) {
           // Deluge counts in KiB a second, and -1 for none.

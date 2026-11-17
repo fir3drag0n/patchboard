@@ -192,6 +192,6 @@ export function tautulliAdapter(): Adapter<TautulliData> {
 
 /** Proxy a Plex image through Tautulli. Only library paths are allowed. */
 export async function tautulliImage(path: string): Promise<Response> {
-  if (!/^\/library\/[\w/.-]+$/.test(path)) throw new Error('Bad image path');
+  if (!/^\/library\/[\w/.-]+$/.test(path) || path.split('/').includes('..')) throw new Error('Bad image path');
   return request(api('pms_image_proxy', `&img=${encodeURIComponent(path)}&width=300&height=450&fallback=poster`));
 }

@@ -825,7 +825,8 @@ async function listedEntry(id: DownloadClientId, m: DownloadManager, entryId: st
   return seen.list.entries.find((e) => e.id === entryId);
 }
 const PRIORITIES: FilePriority[] = ['skip', 'normal', 'high'];
-const MAX_LIMIT = 10_000_000_000;
+// qBittorrent keeps a torrent's limit in 32 bits: past this it wraps around.
+const MAX_LIMIT = 2_147_483_647;
 
 app.get('/api/downloads/:id/entries/:entry/detail', async (c) => {
   const id = c.req.param('id') as DownloadClientId;
@@ -1153,6 +1154,8 @@ const indexersOf = () => (config.demo ? demoIndexers : prowlarrControl());
 const subtitlesOf = () => (config.demo ? demoSubtitles : bazarrControl());
 const indexerSeen = { at: 0, names: new Map<number, string>() };
 const subtitleSeen = new Map<string, { at: number; item: SubtitleItem }>();
+/** Searches Bazarr is still running, so a second press doesn't start another. */
+const subtitleSearching = new Set<string>();
 const fresh = (at: number) => Date.now() - at < 600_000;
 
 app.get('/api/indexers', async (c) => {
@@ -1242,13 +1245,19 @@ app.post('/api/subtitles/:kind/:id/search', async (c) => {
   const seen = subtitleSeen.get(`${kind}:${c.req.param('id')}`);
   if (!seen || !fresh(seen.at)) return c.json({ error: 'That is no longer on the list. Reload and try again.' }, 404);
   const { item } = seen;
+  const key = `${kind}:${item.id}`;
+  if (subtitleSearching.has(key)) return c.json({ ok: true, waiting: true });
   recordAudit(who(c), 'subtitles.search', 'bazarr', [item.title, item.subtitle].filter(Boolean).join(' '));
   // Bazarr answers once every provider has been asked, which can take a
   // minute. Past a few seconds, the page hears that it's still looking.
-  const search = ctl.search(kind, item).then(
-    () => 'done' as const,
-    (err: Error) => err,
-  );
+  subtitleSearching.add(key);
+  const search = ctl
+    .search(kind, item)
+    .then(
+      () => 'done' as const,
+      (err: Error) => err,
+    )
+    .finally(() => subtitleSearching.delete(key));
   const got = await Promise.race([search, new Promise<'waiting'>((r) => setTimeout(() => r('waiting'), 8000))]);
   if (got instanceof Error) return libFail(c, got);
   return c.json({ ok: true, waiting: got === 'waiting' });
@@ -2456,7 +2465,7 @@ app.get('/api/img/:kind{jellyfin|emby}', async (c) => {
     return new Response(res.body, {
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
-        'Cache-Control': 'public, max-age=86400',
+        'Cache-Control': 'private, max-age=86400',
       },
     });
   } catch {
@@ -2508,7 +2517,7 @@ app.get('/api/img/tautulli', async (c) => {
     return new Response(res.body, {
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
-        'Cache-Control': 'public, max-age=86400',
+        'Cache-Control': 'private, max-age=86400',
       },
     });
   } catch {
@@ -2523,7 +2532,7 @@ app.get('/api/img/plex', async (c) => {
     return new Response(res.body, {
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
-        'Cache-Control': 'public, max-age=86400',
+        'Cache-Control': 'private, max-age=86400',
       },
     });
   } catch {

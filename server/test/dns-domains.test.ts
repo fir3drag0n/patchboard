@@ -74,3 +74,31 @@ test('Pi-hole: allowing a domain you blocked takes it off your block list first'
     server.close();
   }
 });
+
+test('AdGuard: two changes at once both stick, because they take turns', async () => {
+  let rules: string[] = ['||old.com^'];
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      // Answer slowly, so two changes would overlap if nothing kept them apart.
+      setTimeout(() => {
+        if (req.url === '/control/filtering/status') return res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ user_rules: rules }));
+        if (req.url === '/control/filtering/set_rules') rules = JSON.parse(body).rules;
+        res.writeHead(200).end('OK');
+      }, 30);
+    });
+  });
+  await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+  const { withConfig } = await import('../config.ts');
+  const { adguardClient } = await import('../adapters/dns.ts');
+  try {
+    await withConfig({ ADGUARD_URL: `http://127.0.0.1:${(server.address() as AddressInfo).port}` }, async () => {
+      const { domains } = adguardClient();
+      await Promise.all([domains.put('a.com', 'deny'), domains.put('b.com', 'allow')]);
+    });
+    assert.deepEqual(rules, ['||old.com^', '||a.com^', '@@||b.com^']);
+  } finally {
+    server.close();
+  }
+});

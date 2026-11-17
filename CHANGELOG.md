@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Quick clicks don't undo each other:** allowing or blocking two domains
+  in a row, or switching two seasons' monitoring, now both stick in
+  AdGuard, Pi-hole and Sonarr. A Deluge file you set low stays low when
+  you change another. A second Search for the same subtitles waits for the
+  first. Overseerr's own reason shows when it refuses an approval, and a
+  speed limit above 2 GB/s no longer wraps around in qBittorrent.
 - **Every app leads to its page:** Right now links to Media, Requests to
   all requests, and on the Media managers widget Prowlarr and Bazarr open
   Indexers and Subtitles. An app's own page links to its Patchboard page:

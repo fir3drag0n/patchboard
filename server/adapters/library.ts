@@ -7,6 +7,7 @@ import type { ArrApp, ArrOptions, ArrQueueItem, EpisodeInfo, FoundItem, HistoryE
 import { config } from '../config.ts';
 import { getJson, HttpError } from '../http.ts';
 import { toQueue } from './arr.ts';
+import { oneAtATime } from './adapter.ts';
 
 export interface AddRequest {
   key: number;
@@ -233,6 +234,7 @@ export function arrLibrary(app: ArrApp): ArrLibrary {
     return res;
   };
   const command = (body: Record<string, unknown>) => send('POST', '/command', body).then(() => {});
+  const seasons = oneAtATime();
   const sonarr = app === 'sonarr';
 
   return {
@@ -291,11 +293,13 @@ export function arrLibrary(app: ArrApp): ArrLibrary {
             const [series, episodes] = await Promise.all([get<{ seasons: ShowSeason[] }>(`/series/${id}`), get<ShowEpisode[]>(`/episode?seriesId=${id}`)]);
             return fromShow(series.seasons ?? [], episodes);
           },
-          async monitorSeason(id: number, season: number, on: boolean) {
-            const series = await get<{ seasons: ShowSeason[] } & Record<string, unknown>>(`/series/${id}`);
-            if (!series.seasons.some((s) => s.seasonNumber === season)) throw new Error('Sonarr has no such season');
-            await send('PUT', `/series/${id}`, { ...series, seasons: series.seasons.map((s) => (s.seasonNumber === season ? { ...s, monitored: on } : s)) });
-          },
+          // Sonarr takes the whole show back, so toggles run one at a time.
+          monitorSeason: (id: number, season: number, on: boolean) =>
+            seasons(async () => {
+              const series = await get<{ seasons: ShowSeason[] } & Record<string, unknown>>(`/series/${id}`);
+              if (!series.seasons.some((s) => s.seasonNumber === season)) throw new Error('Sonarr has no such season');
+              await send('PUT', `/series/${id}`, { ...series, seasons: series.seasons.map((s) => (s.seasonNumber === season ? { ...s, monitored: on } : s)) });
+            }),
           searchSeason: (id: number, season: number) => command({ name: 'SeasonSearch', seriesId: id, seasonNumber: season }),
         }
       : {}),

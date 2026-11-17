@@ -127,7 +127,7 @@ export function plexAdapter(): Adapter<TautulliData> {
 
 /** A Plex poster, sized down by Plex itself. Only library paths. */
 export async function plexImage(path: string): Promise<Response> {
-  if (!/^\/library\/[\w/.-]+$/.test(path)) throw new Error('Bad image path');
+  if (!/^\/library\/[\w/.-]+$/.test(path) || path.split('/').includes('..')) throw new Error('Bad image path');
   const { url, key } = config.plex!;
   return request(`${url}/photo/:/transcode?width=300&height=450&minSize=1&upscale=1&url=${encodeURIComponent(path)}`, { headers: { 'X-Plex-Token': key } });
 }
