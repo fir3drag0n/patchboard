@@ -20,6 +20,8 @@
     answers 404 for those, the app reloads onto the new build by itself,
     and any other failure shows its own page with Reload.
   - **Plex reads On** in Connections once it's saved.
+  - **A wall page's clock is right the moment you swipe to it:** it showed
+    the time it was hidden until the next tick, up to a minute behind.
   - **Updates restart faster:** Patchboard now stops when Docker asks,
     closing its live lines to Jellyfin and the rest, instead of waiting out
     Docker's 10 seconds to be killed.

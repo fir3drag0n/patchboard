@@ -138,6 +138,9 @@ export function useNow(intervalMs = 30_000): number {
   // An e-ink screen ticks once a minute at most.
   const every = useEink() ? Math.max(intervalMs, EINK_MS) : intervalMs;
   useEffect(() => {
+    // A wall page swiped back into view (React's Activity pauses hidden pages)
+    // starts from the time now, not the time it was hidden.
+    setNow(Date.now());
     const t = setInterval(() => setNow(Date.now()), every);
     return () => clearInterval(t);
   }, [every]);
