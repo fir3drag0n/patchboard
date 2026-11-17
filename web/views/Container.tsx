@@ -28,6 +28,7 @@ import type {
   UptimeData,
 } from '../../shared/types.ts';
 import { HealthStrip } from '../components/Squares.tsx';
+import { copyText } from '../lib/copy.ts';
 import { type Action, ContainerActions, VERB } from '../components/Actions.tsx';
 import { UpdateButton, UpdateNotice, UpdatePanel, UpdateUndo, useUpdateJob } from '../components/Updater.tsx';
 import { Spark } from '../components/Spark.tsx';
@@ -466,12 +467,7 @@ function RunbookBlock({ section, open }: { section: RunbookSection; open: boolea
       btn.textContent = 'Copy';
       btn.addEventListener('click', async () => {
         const code = pre.querySelector('code')?.textContent ?? pre.textContent ?? '';
-        try {
-          await navigator.clipboard.writeText(code.replace(/\n$/, ''));
-          btn.textContent = 'Copied';
-        } catch {
-          btn.textContent = 'Select and copy';
-        }
+        btn.textContent = (await copyText(code.replace(/\n$/, ''))) ? 'Copied' : 'Select and copy';
         setTimeout(() => (btn.textContent = 'Copy'), 1600);
       });
       pre.appendChild(btn);

@@ -1216,5 +1216,6 @@
  "No episodes yet": "Ancora nessun episodio",
  "Diun's webhook, with its token. Put it in Diun's DIUN_NOTIF_WEBHOOK_ENDPOINT:": "Il webhook di Diun, con il suo token. Mettilo in DIUN_NOTIF_WEBHOOK_ENDPOINT di Diun:",
  "Diun's webhook, with its token": "Il webhook di Diun, con il suo token",
- "Selected: copy it": "Selezionato: copialo"
+ "Selected: copy it": "Selezionato: copialo",
+ "This browser didn’t copy. Try again from another browser.": "Questo browser non ha copiato. Riprova da un altro browser."
 }

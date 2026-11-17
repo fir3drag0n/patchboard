@@ -35,6 +35,7 @@ import { agoLong } from '../lib/format.ts';
 import { SelfUpdate } from '../components/Updater.tsx';
 import { CURRENCIES, currency, locale, money, num, REGIONS } from '../lib/region.ts';
 import { LANGUAGES, msg, t as tr, tn, tx } from '../lib/i18n.ts';
+import { copyText } from '../lib/copy.ts';
 import { Devices } from '../components/Devices.tsx';
 
 type Tab = 'look' | 'home' | 'devices' | 'alerts' | 'connections' | 'activity';
@@ -529,8 +530,7 @@ function Portability() {
           type="button"
           className="button button-quiet"
           onClick={async () => {
-            await navigator.clipboard.writeText(exportAppearance());
-            setMsg(tr('Copied. Paste it into Settings on the other device.'));
+            setMsg((await copyText(exportAppearance())) ? tr('Copied. Paste it into Settings on the other device.') : tr('This browser didn’t copy. Try again from another browser.'));
           }}
         >
           {tr('Copy settings')}
@@ -760,7 +760,7 @@ function CatalogCheck() {
                 type="button"
                 className="copy"
                 onClick={async () => {
-                  await navigator.clipboard.writeText(audit.yaml ?? '');
+                  if (!(await copyText(audit.yaml ?? ''))) return;
                   setCopied(true);
                   setTimeout(() => setCopied(false), 1600);
                 }}

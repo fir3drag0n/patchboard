@@ -20,8 +20,9 @@
     answers 404 for those, the app reloads onto the new build by itself,
     and any other failure shows its own page with Reload.
   - **Plex reads On** in Connections once it's saved.
-  - **Copy works at a plain http address:** Diun's webhook, API keys and a
-    device's link copied only over https. They copy at
+  - **Copy works at a plain http address:** every Copy (Diun's webhook, API
+    keys, a device's link, runbook code, carried settings, the catalog's
+    YAML) copied only over https. They copy at
     http://your-server:3200 too, and Diun's address now sits in a field
     that selects itself if a browser still refuses.
   - **Touch targets on a wall tablet:** the busiest containers on Server
