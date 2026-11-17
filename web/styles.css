@@ -14728,6 +14728,11 @@ a.lib-title:hover {
   margin-top: 16px;
 }
 
+/* Find a title by name: a box sized for a name, with its button beside it. */
+.dlp-add.lib-find {
+  max-width: 640px;
+}
+
 .lib-add {
   display: flex;
   flex-wrap: wrap;

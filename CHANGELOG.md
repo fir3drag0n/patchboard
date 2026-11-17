@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Same words, same size:** the Media page says "22 min left" as Home
+  does, and Find a title by name keeps its box a name's width on a wide
+  screen, with Find beside it.
 - **Quick clicks don't undo each other:** allowing or blocking two domains
   in a row, or switching two seasons' monitoring, now both stick in
   AdGuard, Pi-hole and Sonarr. A Deluge file you set low stays low when

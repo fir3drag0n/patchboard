@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import type { MediaLibraries, MediaLibrary, Stream } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { Empty, Meter, PosterRow as Row } from '../components/ui.tsx';
-import { agoLong, duration } from '../lib/format.ts';
+import { agoLong, eta } from '../lib/format.ts';
 import { msg, t as tr } from '../lib/i18n.ts';
 import { ACTION, call, useList } from '../lib/live-list.ts';
 import { type MediaServer, streamProps, useMediaServers } from '../lib/media.ts';
@@ -129,7 +129,7 @@ function Watching({ streams, many, ro, onSaid, onErr }: { streams: { s: Stream; 
           {s.progress >= 0 && (
             <div className="media-progress playback" data-service={streamProps(server, s).service}>
               <Meter value={s.progress} level="ok" label={tr('{title}, {pct}% played', { title: s.title, pct: Math.round(s.progress) })} />
-              {s.durationSec != null && s.positionSec != null && <span className="lib-total">{tr('{left} left', { left: duration((s.durationSec - s.positionSec) * 1000) })}</span>}
+              {s.durationSec != null && s.positionSec != null && <span className="lib-total">{eta(s.durationSec - s.positionSec)}</span>}
             </div>
           )}
         </Row>
