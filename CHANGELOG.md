@@ -20,6 +20,11 @@
     answers 404 for those, the app reloads onto the new build by itself,
     and any other failure shows its own page with Reload.
   - **Plex reads On** in Connections once it's saved.
+  - **Updates restart faster:** Patchboard now stops when Docker asks,
+    closing its live lines to Jellyfin and the rest, instead of waiting out
+    Docker's 10 seconds to be killed.
+  - **Monitor trusts an app's own level:** Jellyfin's "[WRN] … error
+    receiving data" shows as a warning, not an error.
   - **Copy works at a plain http address:** every Copy (Diun's webhook, API
     keys, a device's link, runbook code, carried settings, the catalog's
     YAML) copied only over https. They copy at

@@ -26,8 +26,24 @@ const FINE = /\b(?:no|0|zero) (?:errors?|warnings?|failures?|failed)\b|\b(?:erro
 // ("ValueError: ...") is the one that counts.
 const FRAME = /^\s*(?:File "[^"]+", line \d+|Traceback \(most recent call last\)|\^+\s*$|at [\w$.<>]+ \()/;
 
+// The level an app states for its own line, near the start: [WRN], level=warn,
+// "level":"warn". It wins over words in the message, so Jellyfin's
+// "[WRN] … error receiving data" is a warning, as Jellyfin says.
+const TAG = /\[(inf|info|dbg|debug|trc|trace|wrn|warn|warning|err|error|ftl|fatal|crit)\]|level=(info|debug|trace|warn|warning|error|fatal|crit)|"level":\s*"(info|debug|trace|warn|warning|error|fatal|crit)"/i;
+
+function stated(text: string): ProblemLine['level'] | null | undefined {
+  const m = TAG.exec(text.slice(0, 120));
+  if (!m) return undefined;
+  const tag = (m[1] ?? m[2] ?? m[3]).toLowerCase();
+  if (/^(?:wrn|warn|warning)$/.test(tag)) return 'warn';
+  if (/^(?:err|error|ftl|fatal|crit)$/.test(tag)) return 'error';
+  return null;
+}
+
 export function classify(text: string): ProblemLine['level'] | null {
   if (FRAME.test(text.replace(/^\s*\[?\d{4}[-/]\d\d[-/]\d\d[ T][\d:.,]+\]?\s*/, ''))) return null;
+  const own = stated(text);
+  if (own !== undefined) return own;
   if (FINE.test(text) && !/\b(?:fatal|panic|exception)\b/i.test(text)) return null;
   // Python and Java name the error itself: ConnectionError, IOException. Case-sensitive, so "terror" isn't one.
   if (ERROR.test(text) || /\b\w+(?:Error|Exception)\b/.test(text)) return 'error';

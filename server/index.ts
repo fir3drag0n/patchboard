@@ -2694,6 +2694,19 @@ if (config.auth.mode === 'oidc' && !config.auth.oidc.allowed.length && !config.a
   console.warn('OIDC_ALLOWED is empty: anyone your provider signs in gets in. List who may, or set OIDC_ALLOW_ANYONE=1 if the provider already decides.');
 }
 
-serve({ fetch: app.fetch, port: config.port, ...(config.listenHost ? { hostname: config.listenHost } : {}) }, (info) => {
+const httpServer = serve({ fetch: app.fetch, port: config.port, ...(config.listenHost ? { hostname: config.listenHost } : {}) }, (info) => {
   console.log(`patchboard: listening on :${info.port}`);
 });
+
+// Docker stops a container with SIGTERM. Node running as the container's
+// first process ignores it unless told otherwise, so every update used to
+// wait out Docker's 10 seconds and end in a kill. Close the push lines and
+// the port, give the goodbyes half a second to go out, then leave.
+for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+  process.once(signal, () => {
+    console.log(`patchboard: ${signal}, stopping`);
+    hub.closeLines();
+    httpServer.close();
+    setTimeout(() => process.exit(0), 500).unref();
+  });
+}

@@ -97,6 +97,12 @@ export class Hub {
   /** Open push lines, by source. */
   private lines = new Map<SourceId, () => void>();
 
+  /** Shutting down: close every push line properly, so Jellyfin and the rest see a goodbye, not a dropped line. */
+  closeLines(): void {
+    for (const stop of this.lines.values()) stop();
+    this.lines.clear();
+  }
+
   /** Open (or reopen) an adapter's push line, if it has one. */
   private startLive(a: Adapter): void {
     this.lines.get(a.id)?.();

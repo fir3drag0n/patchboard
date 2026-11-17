@@ -4,6 +4,10 @@ import { classify, ProblemFeed, type ProblemLine } from '../problems.ts';
 
 test('only lines that say something went wrong count, and "no errors" is not one', () => {
   assert.equal(classify('[ERR] Jellyfin.Api: Token is required'), 'error');
+  // The app's own level wins over words in its message.
+  assert.equal(classify('[10:10:52] [WRN] [10] Emby.Server.Implementations.HttpServer.WebSocketConnection: WS 172.16.4.2 error receiving data'), 'warn');
+  assert.equal(classify('{"level":"warn","error":"context deadline exceeded","message":"failed to inspect container"}'), 'warn');
+  assert.equal(classify('[12:00:00] [INF] [4] Scan finished: 0 errors'), null);
   assert.equal(classify('level=error msg="dial tcp: connection refused"'), 'error');
   assert.equal(classify('FATAL open /downloads/complete: permission denied'), 'error');
   assert.equal(classify('Request failed with status 502'), 'error');
