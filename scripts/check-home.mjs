@@ -273,8 +273,8 @@ try {
     assert(await overlay.evaluate((el) => el.contains(document.activeElement)), `${name} receives focus`);
     assert(await page.locator('html').evaluate((el) => el.classList.contains('is-locked')), `${name} locks background scrolling`);
     const first = overlay.getByRole('button', { name: name === 'Help' ? 'Close' : 'Cancel', exact: true });
-    // Help ends on its last guide link; every other editor on a button.
-    const last = name === 'Help' ? overlay.getByRole('link', { name: 'Configuration', exact: true }) : overlay.getByRole('button', { name: lastName, exact: true });
+    // Help ends on its last link, Report a problem; every other editor on a button.
+    const last = name === 'Help' ? overlay.getByRole('link', { name: 'Report a problem', exact: true }) : overlay.getByRole('button', { name: lastName, exact: true });
     await first.focus();
     await page.keyboard.press('Shift+Tab');
     assert(await last.evaluate((el) => el === document.activeElement), `${name} wraps backwards`);

@@ -11,7 +11,8 @@
   lists with Details alone, and its controls open with it.
 - **Suggest an idea or report a problem from Patchboard:** Help (the `?`)
   and a phone's More open the matching GitHub form with the version, browser
-  or page filled in, and nothing private.
+  or page filled in, and nothing private. Tab and Shift-Tab still wrap
+  inside Help.
 - **A turned-away webhook raises a warning:** when Diun posts without the
   token sign-in needs, Home says so and points to the address to copy.
 - **Save says whether it connects:** saving an app in Settings,
