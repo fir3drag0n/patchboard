@@ -127,7 +127,7 @@ function Watching({ streams, many, ro, onSaid, onErr }: { streams: { s: Stream; 
             {s.state !== 'playing' && <span>{s.state === 'paused' ? tr('Paused') : tr('Buffering')}</span>}
           </div>
           {s.progress >= 0 && (
-            <div className="media-progress">
+            <div className="media-progress playback" data-service={streamProps(server, s).service}>
               <Meter value={s.progress} level="ok" label={tr('{title}, {pct}% played', { title: s.title, pct: Math.round(s.progress) })} />
               {s.durationSec != null && s.positionSec != null && <span className="lib-total">{tr('{left} left', { left: duration((s.durationSec - s.positionSec) * 1000) })}</span>}
             </div>

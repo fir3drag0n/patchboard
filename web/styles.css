@@ -9875,6 +9875,10 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
 @media (max-width: 760px) {
   .playback-trigger { min-height: 44px; align-content: center; }
   .playback-trigger .stream-user { max-width: 40%; overflow-wrap: anywhere; flex-shrink: 1; }
+  /* A title in a line of text keeps the line's height; its tap area reaches
+     past it instead, as a link in a sentence does. */
+  .stream.is-compact .playback-trigger { min-height: 0; position: relative; }
+  .stream.is-compact .playback-trigger::after { content: ''; position: absolute; inset: -12px -4px; }
 }
 
 /* A keyboard user can reach the page without traversing every view. */

@@ -600,7 +600,7 @@ function AppPanel({ name }: { name: string }) {
   if (arr) {
     const next = arr.upcoming.find((u) => Date.parse(u.when) > Date.now() && !u.hasFile);
     return (
-      <Section title={name === 'sonarr' ? 'In Sonarr' : 'In Radarr'}>
+      <Section title={name === 'sonarr' ? 'In Sonarr' : 'In Radarr'} action={{ label: 'Library', to: `/library?app=${name}` }}>
         <dl className="ledger">
           <Row k="Queue">{plural(arr.queueTotal, 'item')}</Row>
           <Row k="Import problems">{arr.problems.length || 'None'}</Row>
@@ -620,7 +620,7 @@ function AppPanel({ name }: { name: string }) {
     const d = media.data;
     const next = 'nextUp' in d ? d.nextUp : [];
     return (
-      <Section title={`In ${media.label}`}>
+      <Section title={`In ${media.label}`} action={{ label: 'Media', to: '/media' }}>
         <dl className="ledger">
           <Row k="Streams">
             {d.streams.length
@@ -655,7 +655,7 @@ function AppPanel({ name }: { name: string }) {
   if (dl) {
     const q = dl.data;
     return (
-      <Section title={`In ${dl.label}`}>
+      <Section title={`In ${dl.label}`} action={{ label: 'Downloads', to: '/downloads' }}>
         <dl className="ledger">
           <Row k="State">
             {q.paused ? 'Paused' : q.downloading ? 'Downloading' : 'Idle'} <PauseButton client={dl} />
@@ -721,7 +721,7 @@ function AppPanel({ name }: { name: string }) {
   const other = name === 'bazarr' ? bazarr : name === 'prowlarr' ? prowlarr : null;
   if (other) {
     return (
-      <Section title={name === 'bazarr' ? 'In Bazarr' : 'In Prowlarr'}>
+      <Section title={name === 'bazarr' ? 'In Bazarr' : 'In Prowlarr'} action={{ label: name === 'bazarr' ? 'Subtitles' : 'Indexers', to: `/library?view=${name === 'bazarr' ? 'subtitles' : 'indexers'}` }}>
         <dl className="ledger">
           {name === 'bazarr' && <Row k="Missing subtitles">{other.queueTotal ? other.queueTotal.toLocaleString(locale()) : 'None'}</Row>}
           <Row k="Health">{other.health.length ? other.health.map((h) => h.message).join(' ') : 'No warnings'}</Row>
@@ -750,7 +750,7 @@ function AppPanel({ name }: { name: string }) {
   }
   if (['overseerr', 'jellyseerr', 'seerr'].includes(name) && seerr) {
     return (
-      <Section title="Requests">
+      <Section title="Requests" action={{ label: 'All requests', to: '/requests' }}>
         <dl className="ledger">
           <Row k="Waiting">{seerr.pending ? seerr.requests.slice(0, 5).map((r) => r.title).join(', ') : 'Nothing'}</Row>
           <Row k="On the way">{seerr.processing || 'None'}</Row>

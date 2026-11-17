@@ -1185,7 +1185,7 @@ export function RequestsWidget({ now }: { now: number }) {
   }
   const shown = data.requests.slice(0, limit);
   return (
-    <Section title="Requests" count={data.pending ? `${data.pending} waiting` : undefined} source={state} className="requests">
+    <Section title="Requests" count={data.pending ? `${data.pending} waiting` : undefined} source={state} className="requests" action={snap?.household ? undefined : { label: 'All requests', to: '/requests' }}>
       {shown.length === 0 && coming.length === 0 ? (
         <Empty>Nothing waiting for approval.</Empty>
       ) : shown.length === 0 ? null : (

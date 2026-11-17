@@ -1198,5 +1198,6 @@
  "Open in the {app} app": "Openen in de {app}-app",
  "something new inside": "er staat iets nieuws in",
  "That did not work.": "Dat lukte niet.",
- "The server did not answer.": "De server gaf geen antwoord."
+ "The server did not answer.": "De server gaf geen antwoord.",
+ "All requests": "Alle verzoeken"
 }

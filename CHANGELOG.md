@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Every app leads to its page:** Right now links to Media, Requests to
+  all requests, and on the Media managers widget Prowlarr and Bazarr open
+  Indexers and Subtitles. An app's own page links to its Patchboard page:
+  Sonarr and Radarr to Library, a media server to Media, a download client
+  to Downloads, Overseerr to Requests. A stream's bar on the Media page
+  wears its server's color, as on Home.
 - **A stream's details wherever it plays:** the card that opens from a
   stream on Home now opens from the Media page and from Plex's, Jellyfin's,
   Emby's, Navidrome's and Audiobookshelf's own pages too. It has Stop, for

@@ -12,13 +12,17 @@ import { useHistory } from '../lib/api.ts';
 import { Empty, Section } from '../components/ui.tsx';
 import { agoLong, deg, size, uptime } from '../lib/format.ts';
 import { locale } from '../lib/region.ts';
-import { useSource } from '../lib/store.tsx';
+import { useSource, useStore } from '../lib/store.tsx';
+import { Link } from 'react-router-dom';
 import { useWidget } from './widget-context.ts';
 
 const n = (v: number) => v.toLocaleString(locale());
 
+const PAGE: Record<string, string> = { prowlarr: '/library?view=indexers', bazarr: '/library?view=subtitles' };
+
 /** Lidarr, Readarr, Prowlarr and Bazarr, one line each: what's wrong first, then what's queued. */
 export function ManagersWidget() {
+  const { snap } = useStore();
   const apps = [
     { id: 'lidarr', name: 'Lidarr', what: 'in the queue', s: useSource<ArrData>('lidarr') },
     { id: 'readarr', name: 'Readarr', what: 'in the queue', s: useSource<ArrData>('readarr') },
@@ -26,6 +30,7 @@ export function ManagersWidget() {
     { id: 'bazarr', name: 'Bazarr', what: 'missing subtitles', s: useSource<ArrData>('bazarr') },
   ].filter((a) => a.s.state);
   if (!apps.length) return null;
+  const household = !!snap?.household;
   const trouble = apps.filter((a) => !a.s.state?.ok || (a.s.data?.health.length ?? 0) > 0 || (a.s.data?.problems.length ?? 0) > 0).length;
   return (
     <Section title="Media managers" className="managers" count={trouble ? `${trouble} ${trouble === 1 ? 'needs' : 'need'} you` : 'all well'}>
@@ -37,7 +42,14 @@ export function ManagersWidget() {
           const stuck = d?.problems.length ?? 0;
           return (
             <li key={id} className={down || warn || stuck ? 'is-trouble' : undefined}>
-              <span className="app-row-name">{name}</span>
+              {/* Prowlarr and Bazarr have their own view on the Library page. */}
+              {PAGE[id] && !household ? (
+                <Link className="app-row-name" to={PAGE[id]}>
+                  {name}
+                </Link>
+              ) : (
+                <span className="app-row-name">{name}</span>
+              )}
               <span className={`app-row-state ${down ? 'crit-text' : warn || stuck ? 'warn-text' : ''}`} title={warn?.message}>
                 {down ? "Can't reach it" : warn ? warn.message : stuck ? `${stuck} stuck` : 'Healthy'}
               </span>

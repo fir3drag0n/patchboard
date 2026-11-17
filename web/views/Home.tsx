@@ -548,7 +548,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
   const busyClients = clients.filter((d) => !isQuiet(d));
 
   return (
-    <Section title="Right now" className="now">
+    <Section title="Right now" className="now" action={configured && !nowSnap?.household ? { label: 'Media', to: '/media' } : undefined}>
       <div className="now-grid">
       {idle.length > 0 && (
         <div className="now-block">

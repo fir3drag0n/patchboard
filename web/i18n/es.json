@@ -1198,5 +1198,6 @@
  "Open in the {app} app": "Abrir en la app de {app}",
  "something new inside": "hay algo nuevo dentro",
  "That did not work.": "No funcionó.",
- "The server did not answer.": "El servidor no respondió."
+ "The server did not answer.": "El servidor no respondió.",
+ "All requests": "Todas las solicitudes"
 }
