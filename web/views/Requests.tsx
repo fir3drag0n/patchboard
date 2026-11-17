@@ -259,7 +259,7 @@ function Ask({ onSaid }: { onSaid: (s: string) => void }) {
   return (
     <>
       <form className="dlp-add lib-find" onSubmit={(e) => void find(e)}>
-        <input className="field" type="search" value={term} onChange={(e) => setTerm(e.target.value)} placeholder={tr('Find a film or show by name')} aria-label={tr('Film or show name')} autoComplete="off" />
+        <input className="field" type="search" value={term} onChange={(e) => setTerm(e.target.value)} placeholder={tr('Film or show name')} aria-label={tr('Film or show name')} autoComplete="off" />
         <button type="submit" className="button" disabled={busy === 'find' || !term.trim()}>
           {busy === 'find' ? tr('Finding') : tr('Find')}
         </button>

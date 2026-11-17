@@ -653,7 +653,6 @@
  "Paste {file} from Homepage's config folder, or choose the files. Apps, groups, icons, descriptions and links come over. Widget blocks stay behind with their keys.": "Collez {file} depuis le dossier de configuration de Homepage, ou choisissez les fichiers. Les applis, groupes, icônes, descriptions et liens sont repris. Les blocs de widgets restent en place avec leurs clés.",
  "Paste it here": "Collez-le ici",
  "Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you have.": "Collez ses services.yaml et bookmarks.yaml, et les applis, groupes, icônes et liens s'ajoutent à ce que vous avez déjà.",
- "Paste settings from another device": "Coller les réglages d'un autre appareil",
  "Paste the key": "Collez la clé",
  "Patchboard": "Patchboard",
  "Patchboard address": "Adresse de Patchboard",
@@ -949,7 +948,6 @@
  "Downloading": "En téléchargement",
  "Failed": "Échoués",
  "Files can be up to 10 MB": "Les fichiers peuvent faire jusqu'à 10 Mo",
- "Filter by name, category or tracker": "Filtrer par nom, catégorie ou tracker",
  "Filter downloads": "Filtrer les téléchargements",
  "Finished": "Terminés",
  "finished {when}": "terminé {when}",
@@ -966,7 +964,6 @@
  "Nothing here right now.": "Rien ici pour l'instant.",
  "Nothing in any client.": "Rien dans aucun client.",
  "Nothing matches.": "Aucun résultat.",
- "Paste a magnet link or a web address": "Collez un lien magnet ou une adresse web",
  "Pause": "Mettre en pause",
  "Paused": "En pause",
  "Queued": "En file",
@@ -1061,7 +1058,6 @@
  "Film": "Film",
  "TV show": "Série",
  "Film or show name": "Nom du film ou de la série",
- "Find a film or show by name": "Chercher un film ou une série par nom",
  "Hold to decline": "Maintenir pour refuser",
  "New request": "Nouvelle demande",
  "Nothing on the way.": "Rien en route.",
@@ -1197,5 +1193,6 @@
  "Renamed": "Renommé",
  "Seasons and episodes": "Saisons et épisodes",
  "Specials": "Épisodes spéciaux",
- "Untitled": "Sans titre"
+ "Untitled": "Sans titre",
+ "Paste settings here": "Collez les réglages ici"
 }

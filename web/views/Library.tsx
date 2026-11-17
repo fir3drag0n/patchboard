@@ -177,6 +177,7 @@ function Items({ app, shows, ro, act }: { app: ArrApp; shows: boolean; ro: boole
                   key={i.id}
                   art={i.art}
                   title={i.title}
+                  below={shows && opened === i.id && <ShowPanel app={app} id={i.id} title={i.title} ro={ro} act={act} />}
                   actions={
                     !ro && (
                       <>
@@ -205,7 +206,6 @@ function Items({ app, shows, ro, act }: { app: ArrApp; shows: boolean; ro: boole
                       {opened === i.id ? tr('Hide seasons') : tr('Seasons and episodes')}
                     </button>
                   )}
-                  {shows && opened === i.id && <ShowPanel app={app} id={i.id} title={i.title} ro={ro} act={act} />}
                 </Row>
               );
             })}

@@ -95,9 +95,49 @@ try {
     await page.keyboard.press('Escape');
     await page.setViewportSize({ width: 1920, height: 1080 });
   }
+  // A touch phone, the width of the smaller iPhones: a tap on the middle of a
+  // control lands on it, not on a neighbour's enlarged tap area, and every
+  // placeholder fits its field. Touch makes field text 16px, so this runs
+  // with touch on, not just a narrow window.
+  const phone = await browser.newPage({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+  phone.on('pageerror', (error) => errors.push(error.message));
+  for (const path of paths) {
+    await phone.goto(base + path);
+    await phone.locator('main').waitFor();
+    await phone.waitForTimeout(600);
+    const found = await phone.evaluate(async () => {
+      const bad = new Set();
+      const label = (el) => (el.getAttribute('aria-label') || el.textContent || el.getAttribute('placeholder') || el.tagName).trim().replace(/\s+/g, ' ').slice(0, 40);
+      const shown = (el) => el.offsetParent && el.checkVisibility({ contentVisibilityAuto: true, visibilityProperty: true });
+      const ctx = document.createElement('canvas').getContext('2d');
+      for (const el of document.querySelectorAll('main input[placeholder], main textarea[placeholder]')) {
+        if (!shown(el)) continue;
+        const cs = getComputedStyle(el);
+        ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        const room = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - (el.type === 'search' ? 18 : 0);
+        if (ctx.measureText(el.placeholder).width > room) bad.add(`placeholder "${el.placeholder}" is cut off`);
+      }
+      const controls = [...document.querySelectorAll('main button, main a[href], main input, main select')].filter(shown);
+      for (let y = 0; y < document.documentElement.scrollHeight; y += innerHeight / 2) {
+        scrollTo(0, y);
+        await new Promise((r) => requestAnimationFrame(() => r()));
+        for (const el of controls) {
+          const r = el.getBoundingClientRect();
+          const cy = r.top + r.height / 2;
+          if (cy < 80 || cy > innerHeight - 100) continue;
+          const hit = document.elementFromPoint(r.left + Math.min(r.width / 2, 20), cy);
+          const other = hit && !el.contains(hit) && !hit.contains(el) ? hit.closest('button, a[href], input, select, textarea, label') : null;
+          if (other && !other.contains(el)) bad.add(`a tap on "${label(el)}" lands on "${label(other)}"`);
+        }
+      }
+      return [...bad];
+    });
+    assert.deepEqual(found, [], `${path} on a touch phone`);
+  }
+  await phone.close();
   assert.deepEqual(await setup(), before, 'accessibility checks preserve saved setup');
   assert.deepEqual(errors, [], 'no browser errors');
-  console.log('Accessible names, meter values, landmarks, 320/960px reflow, high-contrast graphics and narrow help passed.');
+  console.log('Accessible names, meter values, landmarks, 320/960px reflow, high-contrast graphics, narrow help, and phone tap targets and placeholders passed.');
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.exitCode !== null ? resolve() : (server.once('exit', resolve), server.kill()));

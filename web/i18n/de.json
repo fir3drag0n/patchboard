@@ -653,7 +653,6 @@
  "Paste {file} from Homepage's config folder, or choose the files. Apps, groups, icons, descriptions and links come over. Widget blocks stay behind with their keys.": "Füge {file} aus dem Konfigurationsordner von Homepage ein oder wähle die Dateien aus. Apps, Gruppen, Symbole, Beschreibungen und Links werden übernommen. Widget-Blöcke und ihre Schlüssel bleiben zurück.",
  "Paste it here": "Hier einfügen",
  "Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you have.": "Füge services.yaml und bookmarks.yaml aus Homepage ein. Apps, Gruppen, Symbole und Links werden zusätzlich zu den vorhandenen Einträgen übernommen.",
- "Paste settings from another device": "Einstellungen von einem anderen Gerät einfügen",
  "Paste the key": "Schlüssel einfügen",
  "Patchboard": "Patchboard",
  "Patchboard address": "Patchboard-Adresse",
@@ -949,7 +948,6 @@
  "Downloading": "Lädt",
  "Failed": "Fehlgeschlagen",
  "Files can be up to 10 MB": "Dateien dürfen bis zu 10 MB groß sein",
- "Filter by name, category or tracker": "Nach Name, Kategorie oder Tracker filtern",
  "Filter downloads": "Downloads filtern",
  "Finished": "Fertig",
  "finished {when}": "fertig {when}",
@@ -966,7 +964,6 @@
  "Nothing here right now.": "Gerade nichts hier.",
  "Nothing in any client.": "In keinem Client ist etwas.",
  "Nothing matches.": "Nichts passt.",
- "Paste a magnet link or a web address": "Magnet-Link oder Webadresse einfügen",
  "Pause": "Pausieren",
  "Paused": "Pausiert",
  "Queued": "In der Warteschlange",
@@ -1061,7 +1058,6 @@
  "Film": "Film",
  "TV show": "Serie",
  "Film or show name": "Name des Films oder der Serie",
- "Find a film or show by name": "Film oder Serie nach Namen suchen",
  "Hold to decline": "Halten zum Ablehnen",
  "New request": "Neue Anfrage",
  "Nothing on the way.": "Nichts unterwegs.",
@@ -1197,5 +1193,6 @@
  "Renamed": "Umbenannt",
  "Seasons and episodes": "Staffeln und Folgen",
  "Specials": "Specials",
- "Untitled": "Ohne Titel"
+ "Untitled": "Ohne Titel",
+ "Paste settings here": "Einstellungen hier einfügen"
 }

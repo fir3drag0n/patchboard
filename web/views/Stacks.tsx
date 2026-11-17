@@ -111,7 +111,7 @@ export function Stacks() {
     <div className="page stacks">
       <div className="page-head">
         <h1 className="page-title">Stacks</h1>
-        <input className="field" type="search" placeholder="Filter by name, stack or image" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="field" type="search" placeholder="Filter containers" aria-label="Filter containers by name, stack or image" value={q} onChange={(e) => setQ(e.target.value)} />
         <CustomizePage
           page="stacks"
           title="Stacks"

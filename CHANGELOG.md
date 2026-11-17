@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **Phones use the whole width:** a poster row's buttons, and anything
+  opened from it, such as a show's seasons, run under the poster instead
+  of leaving an empty strip beside them. Filter and link boxes take a line
+  of their own, placeholders are shorter, and text too long for a box ends
+  in an ellipsis.
+- **Every tap lands where you aim:** on a touch screen, a row of buttons
+  that wraps no longer lets one button's tap area cover the line above, so
+  Details on a download can't reach Remove and delete files. The
+  accessibility check now taps through every page on a phone to keep it so.
 - **A show's seasons and episodes, and History, on the Library page:**
   Seasons and episodes opens a show: each season with how many episodes
   are on disk, Monitor and Search, and each episode with when it aired or

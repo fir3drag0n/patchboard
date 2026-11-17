@@ -653,7 +653,6 @@
  "Paste {file} from Homepage's config folder, or choose the files. Apps, groups, icons, descriptions and links come over. Widget blocks stay behind with their keys.": "Plak {file} uit de configmap van Homepage, of kies de bestanden. Apps, groepen, pictogrammen, beschrijvingen en links komen mee. Widgetblokken blijven met hun sleutels achter.",
  "Paste it here": "Plak het hier",
  "Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you have.": "Plak de services.yaml en bookmarks.yaml, en de apps, groepen, pictogrammen en links komen naast wat je al hebt.",
- "Paste settings from another device": "Instellingen van een ander apparaat plakken",
  "Paste the key": "Plak de sleutel",
  "Patchboard": "Patchboard",
  "Patchboard address": "Patchboard-adres",
@@ -949,7 +948,6 @@
  "Downloading": "Downloaden",
  "Failed": "Mislukt",
  "Files can be up to 10 MB": "Bestanden mogen tot 10 MB zijn",
- "Filter by name, category or tracker": "Filter op naam, categorie of tracker",
  "Filter downloads": "Downloads filteren",
  "Finished": "Klaar",
  "finished {when}": "klaar {when}",
@@ -966,7 +964,6 @@
  "Nothing here right now.": "Nu niets hier.",
  "Nothing in any client.": "Niets in welke client dan ook.",
  "Nothing matches.": "Niets gevonden.",
- "Paste a magnet link or a web address": "Plak een magnetlink of webadres",
  "Pause": "Pauzeren",
  "Paused": "Gepauzeerd",
  "Queued": "In de wachtrij",
@@ -1061,7 +1058,6 @@
  "Film": "Film",
  "TV show": "Serie",
  "Film or show name": "Naam van de film of serie",
- "Find a film or show by name": "Zoek een film of serie op naam",
  "Hold to decline": "Ingedrukt houden om te weigeren",
  "New request": "Nieuw verzoek",
  "Nothing on the way.": "Niets onderweg.",
@@ -1197,5 +1193,6 @@
  "Renamed": "Hernoemd",
  "Seasons and episodes": "Seizoenen en afleveringen",
  "Specials": "Specials",
- "Untitled": "Zonder titel"
+ "Untitled": "Zonder titel",
+ "Paste settings here": "Plak hier de instellingen"
 }

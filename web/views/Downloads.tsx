@@ -183,7 +183,7 @@ export function Downloads() {
             ) : null,
           )}
         </div>
-        <input className="field" type="search" placeholder={tr('Filter by name, category or tracker')} aria-label={tr('Filter downloads')} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="field" type="search" placeholder={tr('Filter downloads')} aria-label={tr('Filter downloads')} value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
       {said && (
@@ -494,7 +494,7 @@ function AddDownload({ clients, onAdded }: { clients: DownloadClient[]; onAdded:
         if (u) void send(target(u), { url: u }, linkName(u));
       }}
     >
-      <input className="field" value={link} onChange={(e) => setLink(e.target.value)} placeholder={tr('Paste a magnet link or a web address')} aria-label={tr('Magnet link or web address')} autoComplete="off" spellCheck={false} />
+      <input className="field" value={link} onChange={(e) => setLink(e.target.value)} placeholder={tr('Magnet link or web address')} aria-label={tr('Magnet link or web address')} autoComplete="off" spellCheck={false} />
       {options.length > 1 && (
         <select className="field" aria-label={tr('Send to')} value={target(link.trim())?.id ?? ''} onChange={(e) => setTo(e.target.value as DownloadClientId)}>
           {options.map((c) => (

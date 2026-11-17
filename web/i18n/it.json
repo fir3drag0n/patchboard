@@ -653,7 +653,6 @@
  "Paste {file} from Homepage's config folder, or choose the files. Apps, groups, icons, descriptions and links come over. Widget blocks stay behind with their keys.": "Incolla {file} dalla cartella di configurazione di Homepage, o scegli i file. App, gruppi, icone, descrizioni e link vengono importati. I blocchi dei widget restano fuori con le loro chiavi.",
  "Paste it here": "Incollalo qui",
  "Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you have.": "Incolla il suo services.yaml e bookmarks.yaml, e app, gruppi, icone e link arrivano accanto a quello che hai già.",
- "Paste settings from another device": "Incolla le impostazioni da un altro dispositivo",
  "Paste the key": "Incolla la chiave",
  "Patchboard": "Patchboard",
  "Patchboard address": "Indirizzo di Patchboard",
@@ -949,7 +948,6 @@
  "Downloading": "In download",
  "Failed": "Non riusciti",
  "Files can be up to 10 MB": "I file possono arrivare a 10 MB",
- "Filter by name, category or tracker": "Filtra per nome, categoria o tracker",
  "Filter downloads": "Filtra i download",
  "Finished": "Completati",
  "finished {when}": "completato {when}",
@@ -966,7 +964,6 @@
  "Nothing here right now.": "Niente qui per ora.",
  "Nothing in any client.": "Niente in nessun client.",
  "Nothing matches.": "Nessun risultato.",
- "Paste a magnet link or a web address": "Incolla un link magnet o un indirizzo web",
  "Pause": "Pausa",
  "Paused": "In pausa",
  "Queued": "In coda",
@@ -1061,7 +1058,6 @@
  "Film": "Film",
  "TV show": "Serie",
  "Film or show name": "Nome del film o della serie",
- "Find a film or show by name": "Cerca un film o una serie per nome",
  "Hold to decline": "Tieni premuto per rifiutare",
  "New request": "Nuova richiesta",
  "Nothing on the way.": "Niente in arrivo.",
@@ -1197,5 +1193,6 @@
  "Renamed": "Rinominato",
  "Seasons and episodes": "Stagioni ed episodi",
  "Specials": "Speciali",
- "Untitled": "Senza titolo"
+ "Untitled": "Senza titolo",
+ "Paste settings here": "Incolla qui le impostazioni"
 }

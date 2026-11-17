@@ -1542,6 +1542,12 @@ a.jack:focus-visible {
   color: var(--ink-3);
 }
 
+/* Text too long for its field ends in an ellipsis, never a hard cut. */
+.field,
+.field::placeholder {
+  text-overflow: ellipsis;
+}
+
 .field:focus {
   outline: none;
   border-color: var(--accent);
@@ -8829,6 +8835,23 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
     inset: -14px -11px;
   }
 
+  /* In a row of buttons that can wrap, a text button is really 44px tall
+     instead of reaching past its line, so a wrapped second line never
+     covers the first. */
+  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions, .dlp-files-head, .media-actions) .text-button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions, .dlp-files-head, .media-actions) .text-button::after {
+    inset: 0 -6px;
+  }
+
+  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions) {
+    column-gap: 14px;
+  }
+
   /* Stacked alert links share the gap between them instead of overlapping. */
   .head-alert a::after {
     inset: -5px -8px;
@@ -10862,6 +10885,11 @@ a.req-come:hover .req-title {
      top of the backups line's tap area instead of under it. */
   .head-alert-more .text-button {
     z-index: 1;
+  }
+
+  /* Its tap area stops short of the backups line, so each keeps its own. */
+  .head-alert-more .text-button::after {
+    inset: -14px -11px -5px;
   }
 
   a.overnight::after {
@@ -14436,6 +14464,17 @@ html[data-eink][data-eink-color] .led[data-state='ok'] {
   width: min(300px, 100%);
 }
 
+/* On a phone, a filter or a link box gets the whole width to itself. */
+@media (max-width: 760px) {
+  .page-toolbar > input.field,
+  .dlp-toolbar .field,
+  .dlp-add > .field:first-child {
+    flex: 1 1 100%;
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
 .dlp-count {
   color: var(--ink-3);
   font: 500 12px/1 var(--f-mono);
@@ -14584,6 +14623,13 @@ html[data-eink][data-eink-color] .led[data-state='ok'] {
   margin: 0;
 }
 
+/* Something opened from a row sits under it, lined up with the title and
+   as wide as the row from there. */
+.lib-below {
+  grid-column: 2 / -1;
+  min-width: 0;
+}
+
 .lib-row > .poster-type {
   padding: 6px;
   justify-content: center;
@@ -14693,18 +14739,21 @@ a.lib-title:hover {
 }
 
 @media (max-width: 760px) {
-  /* The buttons drop under the title, lined up with it. */
+  /* The buttons drop under the poster and title and take the whole width,
+     so nothing leaves an empty strip under the poster. */
   .lib-row {
     grid-template-columns: 48px minmax(0, 1fr);
     align-items: start;
-  }
-
-  .lib-row > .poster {
-    grid-row: span 2;
+    column-gap: 12px;
   }
 
   .lib-actions {
+    grid-column: 1 / -1;
     justify-content: flex-start;
+  }
+
+  .lib-below {
+    grid-column: 1 / -1;
   }
 }
 
@@ -14889,7 +14938,7 @@ a.lib-title:hover {
 }
 
 .lib-panel {
-  margin-top: 10px;
+  margin-top: 6px;
 }
 
 .lib-seasons,
@@ -15008,6 +15057,12 @@ a.lib-title:hover {
   min-width: 0;
 }
 
+@media (max-width: 760px) {
+  .blk-add .field {
+    flex-basis: 100%;
+  }
+}
+
 /* The view switch stays left; only the domain filter sits at the far end. */
 .page-toolbar.blk-toolbar > .seg {
   margin-left: 0;
@@ -15017,4 +15072,13 @@ a.lib-title:hover {
   .lib-row.no-art {
     grid-template-columns: minmax(0, 1fr) auto;
   }
+
+  /* Without a poster, the buttons stay beside the text. */
+  .lib-row.no-art > .lib-actions {
+    grid-column: auto;
+  }
+}
+
+.lib-row.no-art > .lib-below {
+  grid-column: 1 / -1;
 }

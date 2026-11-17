@@ -653,7 +653,6 @@
  "Paste {file} from Homepage's config folder, or choose the files. Apps, groups, icons, descriptions and links come over. Widget blocks stay behind with their keys.": "Cole {file} da pasta de configuração do Homepage ou escolha os arquivos. Apps, grupos, ícones, descrições e links são importados. Os blocos de widgets e suas chaves ficam de fora.",
  "Paste it here": "Cole aqui",
  "Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you have.": "Cole o services.yaml e o bookmarks.yaml, e os apps, grupos, ícones e links vêm para junto do que você já tem.",
- "Paste settings from another device": "Colar ajustes de outro dispositivo",
  "Paste the key": "Cole a chave",
  "Patchboard": "Patchboard",
  "Patchboard address": "Endereço do Patchboard",
@@ -949,7 +948,6 @@
  "Downloading": "Baixando",
  "Failed": "Com falha",
  "Files can be up to 10 MB": "Os arquivos podem ter até 10 MB",
- "Filter by name, category or tracker": "Filtrar por nome, categoria ou tracker",
  "Filter downloads": "Filtrar downloads",
  "Finished": "Concluídos",
  "finished {when}": "concluído {when}",
@@ -966,7 +964,6 @@
  "Nothing here right now.": "Nada aqui agora.",
  "Nothing in any client.": "Nada em nenhum cliente.",
  "Nothing matches.": "Nada corresponde.",
- "Paste a magnet link or a web address": "Cole um link magnet ou um endereço web",
  "Pause": "Pausar",
  "Paused": "Pausado",
  "Queued": "Na fila",
@@ -1061,7 +1058,6 @@
  "Film": "Filme",
  "TV show": "Série",
  "Film or show name": "Nome do filme ou série",
- "Find a film or show by name": "Encontre um filme ou série pelo nome",
  "Hold to decline": "Segure para recusar",
  "New request": "Novo pedido",
  "Nothing on the way.": "Nada a caminho.",
@@ -1197,5 +1193,6 @@
  "Renamed": "Renomeado",
  "Seasons and episodes": "Temporadas e episódios",
  "Specials": "Especiais",
- "Untitled": "Sem título"
+ "Untitled": "Sem título",
+ "Paste settings here": "Cole as configurações aqui"
 }

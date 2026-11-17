@@ -653,7 +653,6 @@
  "Paste {file} from Homepage's config folder, or choose the files. Apps, groups, icons, descriptions and links come over. Widget blocks stay behind with their keys.": "Pega {file} de la carpeta de configuración de Homepage, o elige los archivos. Se traen apps, grupos, iconos, descripciones y enlaces. Los bloques de widgets se quedan fuera con sus claves.",
  "Paste it here": "Pégalo aquí",
  "Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you have.": "Pega su services.yaml y bookmarks.yaml, y las apps, grupos, iconos y enlaces se añaden junto a lo que ya tienes.",
- "Paste settings from another device": "Pegar ajustes de otro dispositivo",
  "Paste the key": "Pega la clave",
  "Patchboard": "Patchboard",
  "Patchboard address": "Dirección de Patchboard",
@@ -949,7 +948,6 @@
  "Downloading": "Descargando",
  "Failed": "Fallidas",
  "Files can be up to 10 MB": "Los archivos pueden ocupar hasta 10 MB",
- "Filter by name, category or tracker": "Filtrar por nombre, categoría o tracker",
  "Filter downloads": "Filtrar descargas",
  "Finished": "Terminadas",
  "finished {when}": "terminada {when}",
@@ -966,7 +964,6 @@
  "Nothing here right now.": "Nada aquí por ahora.",
  "Nothing in any client.": "No hay nada en ningún cliente.",
  "Nothing matches.": "Nada coincide.",
- "Paste a magnet link or a web address": "Pega un enlace magnet o una dirección web",
  "Pause": "Pausar",
  "Paused": "En pausa",
  "Queued": "En cola",
@@ -1061,7 +1058,6 @@
  "Film": "Película",
  "TV show": "Serie",
  "Film or show name": "Nombre de la película o serie",
- "Find a film or show by name": "Busca una película o serie por nombre",
  "Hold to decline": "Mantén pulsado para rechazar",
  "New request": "Nueva solicitud",
  "Nothing on the way.": "Nada en camino.",
@@ -1197,5 +1193,6 @@
  "Renamed": "Renombrado",
  "Seasons and episodes": "Temporadas y episodios",
  "Specials": "Especiales",
- "Untitled": "Sin título"
+ "Untitled": "Sin título",
+ "Paste settings here": "Pega los ajustes aquí"
 }

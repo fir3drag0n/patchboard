@@ -146,12 +146,14 @@ const POSTER_TONES = ['#304251', '#3c3846', '#2d453f', '#4a3e31', '#283a48', '#4
 
 /** Plex poster, or a typographic stand-in built from the title. */
 /** A list row led by a small poster: the Library and Requests pages. */
-export function PosterRow({ art, title, children, actions }: { art?: string; title: string; children: ReactNode; actions?: ReactNode }) {
+/** A row with a poster. `below` is something opened from it, given the row's whole width. */
+export function PosterRow({ art, title, children, actions, below }: { art?: string; title: string; children: ReactNode; actions?: ReactNode; below?: ReactNode }) {
   return (
     <li className="lib-row">
       <Poster title={title} thumb={art} small />
       <div className="lib-body">{children}</div>
       {actions && <div className="lib-actions">{actions}</div>}
+      {below && <div className="lib-below">{below}</div>}
     </li>
   );
 }
