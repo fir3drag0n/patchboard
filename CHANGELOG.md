@@ -1,186 +1,102 @@
 # Changelog
 
-## Unreleased
+## 1.15.0 (2026-11-16)
 
-- **Same words, same size:** the Media page says "22 min left" as Home
-  does, and Find a title by name keeps its box a name's width on a wide
-  screen, with Find beside it.
-- **Quick clicks don't undo each other:** allowing or blocking two domains
-  in a row, or switching two seasons' monitoring, now both stick in
-  AdGuard, Pi-hole and Sonarr. A Deluge file you set low stays low when
-  you change another. A second Search for the same subtitles waits for the
-  first. Overseerr's own reason shows when it refuses an approval, and a
-  speed limit above 2 GB/s no longer wraps around in qBittorrent.
-- **Every app leads to its page:** Right now links to Media, Requests to
-  all requests, and on the Media managers widget Prowlarr and Bazarr open
-  Indexers and Subtitles. An app's own page links to its Patchboard page:
-  Sonarr and Radarr to Library, a media server to Media, a download client
-  to Downloads, Overseerr to Requests. A stream's bar on the Media page
-  wears its server's color, as on Home.
-- **A stream's details wherever it plays:** the card that opens from a
-  stream on Home now opens from the Media page and from Plex's, Jellyfin's,
-  Emby's, Navidrome's and Audiobookshelf's own pages too. It has Stop, for
-  whoever runs the server, and on a phone or tablet, Open in the Plex app.
-- **Counts in the menu:** Downloads shows how many downloads aren't
-  finished and Requests how many wait for you, as Reading shows unread.
-  When a page with a count sits under More, More carries a dot.
-- **Plex without Tautulli:** with Plex's address and token in Settings,
-  Connections, Right now, Recently added and Watched read straight from
-  Plex, posters included, and the token never leaves your server. Set up
-  Tautulli as well and it carries on feeding the board as before.
-- **Phones use the whole width:** a poster row's buttons, and anything
-  opened from it, such as a show's seasons, run under the poster instead
-  of leaving an empty strip beside them. Filter and link boxes take a line
-  of their own, placeholders are shorter, and text too long for a box ends
-  in an ellipsis.
-- **Every tap lands where you aim:** on a touch screen, a row of buttons
-  that wraps no longer lets one button's tap area cover the line above, so
-  Details on a download can't reach Remove and delete files. The
-  accessibility check now taps through every page on a phone to keep it so.
-- **A show's seasons and episodes, and History, on the Library page:**
-  Seasons and episodes opens a show: each season with how many episodes
-  are on disk, Monitor and Search, and each episode with when it aired or
-  airs and Search when it's missing. History lists what Sonarr or Radarr
-  did lately: grabbed, imported, failed, deleted, with the release, the
-  quality and where it came from, and why a download failed.
-- **Open a torrent on the Downloads page:** Details lists its files with
-  how far along each is, and sets each to Skip, Normal or High, or every
-  file at once. Give the torrent its own download and upload limits, and
-  in qBittorrent pick its category. Works with qBittorrent, Transmission
-  and Deluge.
-- **Subtitles and Indexers on the Library page:** with Bazarr, Subtitles
-  lists each episode or film still missing subtitles and in which
-  languages, with Search for one and Search for all. With Prowlarr,
-  Indexers lists each indexer with its queries, grabs and response time,
-  and which ones Prowlarr has set aside after failing and when it tries
-  again. Test one, Test all, or turn one off.
-- **An Ad blocking page for Pi-hole and AdGuard Home:** Queries is the
-  live query log: which device asked for what, when, and what blocked it.
-  Filter by domain or show only blocks, then Allow a blocked domain or
-  Block one that got through. Your lists holds the domains you allowed or
-  blocked, with Remove, and a box to add one by name. Pause sits at the
-  top, as on Home. On Pi-hole, changing lists with an app password needs
-  `webserver.api.app_sudo` on; the page says so if it's off.
-- **A Media page for Plex, Jellyfin and Emby:** Watching lists every
-  stream with who, on what device, direct play or transcoding, and time
-  left. Hold Stop to end one; the viewer sees a note that you did.
-  Libraries lists each library with how much it holds and when it was last
-  scanned, and Scan starts a scan. Plex streams come through Tautulli; add
-  Plex's own address and token in Settings, Connections to scan Plex
-  libraries. Stopping a Plex stream needs Plex Pass.
-- **Hold hints stay on screen:** the "Hold to…" note on a button at the end
-  of a row opens to the left, so the Library queue and Downloads no longer
-  scroll sideways.
-- **Read a chart by pointing at it:** hover any line, or tap it on a phone,
-  and a small tag shows the value at that moment and when: CPU, memory,
-  pool, response time, speed tests, hashrate, the car, markets, the
-  weather strip and the Monitor page. It goes when you move off, or after a
-  moment on a phone.
-- **A Requests page for Overseerr and Jellyseerr:** every request waiting
-  for approval, not just the five on Home, with Approve and Decline. On the
-  way lists what's approved and not here yet. New request finds a film or
-  show by name, says whether it's already here, asked for or on the way,
-  and requests it, every season of a show. When Seerr refuses, you see its
-  reason. The Home widget's "more waiting" line opens the page.
-- **Pages that don't fit go under More:** on a narrower screen, or with
-  Downloads, Library and Requests all set up, the top bar keeps the
-  Patchboard name whole and lists the rest under More.
-- **A Library page for Sonarr and Radarr:** every show and film with its
-  poster, episodes on disk, size and monitoring. Switch monitoring or
-  search from the row. Missing lists each monitored episode or film without
-  a file, to search one by one or all at once. Queue has the whole queue
-  with Try another release and Remove. Add finds a show or film by name and
-  adds it with the quality profile and folder you pick. When Sonarr or
-  Radarr refuses, you see its reason.
-- **A Downloads page:** every torrent and NZB in qBittorrent, Transmission,
-  Deluge, SABnzbd and NZBGet on one list, finished and failed ones too,
-  with progress, speed, time left, size, ratio, category and tracker.
-  Pause, resume, remove, or remove with the files. Add a magnet link, a web
-  address, or a .torrent or .nzb file. It sits in the nav once a download
-  client is set up, and the Home widget links to it.
-- **Hide all and Show all on Stacks:** one tap folds or opens every stack.
-- **Reading's count follows Miniflux:** articles you read in Miniflux or
-  another reader leave the badge within a minute, opening Reading brings it
-  up to date at once, and while Miniflux can't be reached the badge hides
-  instead of holding an old number.
-- **Bigger icons, bigger files:** the app icon choices in Look are larger
-  tiles, with Upload as one of them, and Edit apps shows each app's icon
-  larger. Icons can now be any photo or image up to 10 MB; Patchboard
-  shrinks big photos to 512 pixels before saving them.
-- **A board's own colors:** Arrange board, Tools, Colors sets a theme, mode
-  and accent for that board, and every screen that shows it follows. A
-  device's pages in Settings, Devices have the same Colors beside each
-  board, saved as you pick.
-- **Devices to boards and back:** Edit board from a device opens the board
-  for arranging, and Save or Cancel lands you back on that device. Jump to
-  lists every board, wall boards included, and Settings: Devices.
-- **E-ink in Look stays put:** the screen choice now heads the Theme block,
-  with mode and accent under it. Picking E-ink folds that block and nothing
-  else on the page moves.
-- **Your own app icon:** upload a logo in Settings, Look, App icon, and it
-  replaces the P in the tab, on the home screen and in the install, on every
-  device. Patchboard draws every size and a black-and-white one for e-ink.
-  Use the P brings the P back.
-- **A read-only API, with MCP:** scripts, Home Assistant and AI assistants
-  can read what needs you, the containers, the server and any widget's
-  number. Make a key per tool in Settings, Connections, Sign-in and keys;
-  it opens nothing else and changes nothing. `/api/v1/mcp` lets Claude and
-  other MCP clients ask "is Plex running?". docs/API.md has the endpoints
-  and setup lines.
-- **The setup file in YAML:** Settings, Connections, Backup downloads your
-  boards, apps, page settings, notes and thresholds as YAML too, for a file
-  you can read, edit and keep in git. Import takes JSON or YAML.
-- **Tire warnings on your terms:** Settings, Alerts sets the pressure that
-  counts as low and how far under the others a tire may drift. 0 turns
-  either check off.
-- **A first run that takes a minute:** one sheet, filled in already, names
-  the server, takes an icon and finds your town by name for the weather and
-  sunrise. It shows the language, clock and units it read from your browser,
-  ticks the apps it found, and offers an optional password. Open Patchboard
-  works the moment it appears. The old Welcome checklist on Home is gone.
-- **Icons for nearly everything:** Patchboard looks up each app in two icon
-  sets, dashboard icons and selfh.st, by its image, container and service
-  names and their aliases, so `portainer-ce`, `pms-docker` and
-  `jellyfin-server` find theirs. Containers on Stacks get icons too. Tap an
-  app's icon in Edit apps to upload your own.
-- **Weather by town:** Settings, Weather finds your town by name and fills
-  in its coordinates. Settings also keeps one quiet Finish setup line while
-  the town or a password is still to do.
-- **Connect where the app is:** a tile for Sonarr, Plex or any app with an
-  integration shows Connect until you set it up, and it opens that setup.
-- **Several Docker hosts:** Settings, Connections, Other Docker hosts takes
-  your other machines, each through a Docker socket proxy
-  (`pi=tcp://192.168.1.20:2375`). Their containers join Stacks as their own
-  stacks, named like `pihole@pi`, with logs, history, alerts, start, stop and
-  restart; a host that stops answering raises an alert. Updates stay on
-  Patchboard's own host.
-- **Search shortcuts:** the Search widget takes `!` shortcuts. `!yt`,
-  `!w`, `!gh` and others are built in, your own apps with a search page
-  get theirs (`!sonarr`, `!jellyfin`, `!immich`), and the widget's
-  settings take your own. Type `!` to see the list; one Patchboard doesn't
-  know goes to DuckDuckGo.
-- **Color e-ink:** Look and Devices offer Color e-ink beside E-ink, for a
-  Kaleido or Spectra panel: the still, paper page, with status, warnings,
-  the accent and app icons in color again.
-- **Lights only when they mean something:** healthy widgets, playing
-  streams and ordinary changes no longer wear a light, so a warning or a
-  stop stands out.
-- **A color pass over every theme:**
-  - **E-ink meters show their track,** so 87% no longer reads as full, and
-    e-ink rows and empty posters have clean edges.
-  - **Forest's accent is teal,** where its green links read as healthy.
-  - **Paper's warning in light mode is brighter,** apart from body text.
-  - **An image update is the accent everywhere,** not a warning.
-  - **The Monitor's trouble colors match the rest of Patchboard.**
-  - **Accent swatches follow light and dark,** and with the white accent,
-    links keep an underline.
-- **Plainer words:** a pass over the README, the docs and the app's own text
-  trimmed filler and repeats.
-- **Showcase mode is gone:** it was for taking screenshots of this project,
-  and the demo covers that.
-- **Settings in your language:** Settings and the problem titles the server
-  writes now come in German, Spanish, French, Italian, Dutch and Brazilian
-  Portuguese too. Notifications and the API stay in English.
+- **A page for each app you run:** manage Sonarr, Radarr, Plex and the rest
+  from Patchboard instead of opening each one.
+  - **Downloads:** every torrent and NZB in qBittorrent, Transmission,
+    Deluge, SABnzbd and NZBGet on one list, with progress, speed, time left,
+    ratio, category and tracker. Pause, resume, remove, or remove with the
+    files, and add a magnet link, a web address or a file. Details opens a
+    torrent: set each file to Skip, Normal or High, give it its own speed
+    limits, and in qBittorrent move it to another category.
+  - **Library:** Sonarr's shows and Radarr's films with posters, what's on
+    disk and monitoring. Missing, Queue (with Try another release) and Add
+    by name sit beside it. Open a show for its seasons and episodes, to
+    monitor or search one season or one episode. History shows what was
+    grabbed, imported or failed, and why.
+  - **Subtitles and Indexers:** with Bazarr, what still lacks subtitles and
+    in which languages, with Search. With Prowlarr, how each indexer has
+    done, which are failing and when they try again, with Test and Turn off.
+  - **Requests:** everything waiting for Overseerr or Jellyseerr, with
+    Approve and Decline, what's on the way, and New request to find a film
+    or show by name and ask for it.
+  - **Media:** who's watching on Plex, Jellyfin and Emby, on what device,
+    with Stop; the viewer sees a note that you stopped it. Libraries shows
+    each library's size and last scan, with Scan.
+  - **Ad blocking:** Pi-hole's or AdGuard Home's live query log with Allow
+    and Block on each domain, your own lists, and Pause. On Pi-hole, list
+    changes with an app password need `webserver.api.app_sudo` on, and the
+    page says so.
+  - **When an app refuses,** you read its own reason, not an error code.
+- **Plex on its own:** add Plex's address and token in Settings, Connections,
+  and Right now, Recently added and Watched read from Plex itself, posters
+  included, with no Tautulli needed. The token stays on your server.
+- **A stream's card everywhere it plays:** the card from Home's Right now
+  opens on the Media page and on each media server's page too, with Stop,
+  and on a phone, Open in the Plex app.
+- **Finding your way:**
+  - **Counts in the menu:** Downloads shows what's unfinished and Requests
+    what waits for you, as Reading shows unread. More carries a dot when a
+    page inside it has a count.
+  - **Every app leads to its page:** Home's widgets and each app's own page
+    link to its Patchboard page, so Plex leads to Media and Prowlarr to
+    Indexers.
+  - **Pages that don't fit go under More,** so the top bar keeps the
+    Patchboard name whole.
+  - **Read a chart by pointing:** hover a line, or tap it on a phone, for
+    the value and the time.
+  - **Jump to** lists every board, wall boards too, and a device's Edit
+    board brings you back to that device.
+- **Setting up:**
+  - **A first run that takes a minute:** one sheet names the server, finds
+    your town for the weather, ticks the apps it found and offers a
+    password. Settings, Weather finds your town by name later too.
+  - **Connect where the app is:** a tile for an app Patchboard can read
+    shows Connect, and it opens that setup.
+  - **Several Docker hosts:** add your other machines through a socket proxy
+    and their containers join Stacks, named like `pihole@pi`, with logs,
+    alerts, start, stop and restart.
+  - **Icons for nearly everything:** each app finds its icon in two icon
+    sets by image, container or name. Upload your own for any app, any
+    image up to 10 MB, or replace the P with your own logo on every device.
+  - **A read-only API, with MCP:** a key per tool lets scripts, Home
+    Assistant or Claude read what needs you, the containers and any number.
+    It changes nothing. docs/API.md has the details.
+  - **The setup file in YAML,** to read, edit and keep in git. Import takes
+    JSON or YAML.
+  - **Search shortcuts:** `!yt`, `!gh` and the like in the Search widget,
+    plus one for each app with a search page, and your own.
+  - **Tire warnings on your terms** in Settings, Alerts.
+  - **Settings in your language:** German, Spanish, French, Italian, Dutch
+    and Brazilian Portuguese.
+- **How it looks:**
+  - **Color e-ink** for Kaleido and Spectra panels: the still paper page,
+    with status, the accent and app icons in color.
+  - **A board's own colors:** set a theme, mode and accent per board in
+    Arrange board, Tools, Colors.
+  - **Lights only when they mean something,** so a warning or a stop stands
+    out.
+  - **A color pass over every theme:** e-ink meters show their track,
+    Forest's accent is teal, and the Monitor's trouble colors match the rest.
+  - **Hide all and Show all on Stacks,** and E-ink in Look no longer moves
+    the page when picked.
+- **On a phone:**
+  - **Rows use the whole width:** buttons and opened panels run under the
+    poster, and search boxes take a line of their own.
+  - **Every tap lands where you aim:** buttons that wrap no longer cover the
+    line above. The accessibility check now taps through every page as a
+    phone.
+  - **No text cut off** in a box; anything too long ends in an ellipsis.
+- **Fixes:**
+  - **Quick clicks stick:** two changes in a row to AdGuard, Pi-hole or a
+    show's seasons both hold, a Deluge file set low stays low, and a speed
+    limit over 2 GB/s no longer wraps around in qBittorrent.
+  - **Reading's count follows Miniflux** within a minute, and hides while
+    Miniflux can't be reached.
+  - **Hold hints stay on screen** at the end of a row.
+  - **Plainer words** across the README, the docs and the app, and
+    Showcase mode is gone; the demo covers it.
 
 ## 1.14.0 (2026-11-15)
 

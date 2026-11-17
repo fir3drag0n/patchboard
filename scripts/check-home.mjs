@@ -155,7 +155,7 @@ try {
   if (original.custom) await action('/api/boards/home', original.board);
   else await page.request.delete(base + '/api/boards/home', { headers: { 'X-Patchboard': 'action' } });
   await go();
-  assert.equal(await page.locator('.nav-badge').innerText(), '1,006');
+  assert.equal(await page.locator('[data-nav="/reading"] .nav-badge').innerText(), '1,006');
   assert.match(await page.locator('#w-feeds .section-count').innerText(), /1,006 unread/);
   await page.goto(base + '/settings?tab=home');
   await page.getByLabel('Show server details', { exact: true }).uncheck();
