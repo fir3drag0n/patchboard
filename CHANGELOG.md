@@ -7,7 +7,8 @@
   Jellyfin. A show's new episodes share one poster with how many came in.
 - **Downloads reads like a torrent client:** small arrows mark speeds and
   totals down and up, figures line up in columns, the bar is a thin line,
-  and a finished torrent's ratio turns green at 1.00.
+  and a finished torrent's ratio turns green at 1.00. On a phone, a torrent
+  lists with Details alone, and its controls open with it.
 - **A turned-away webhook raises a warning:** when Diun posts without the
   token sign-in needs, Home says so and points to the address to copy.
 - **Save says whether it connects:** saving an app in Settings,
@@ -19,6 +20,11 @@
     answers 404 for those, the app reloads onto the new build by itself,
     and any other failure shows its own page with Reload.
   - **Plex reads On** in Connections once it's saved.
+  - **Touch targets on a wall tablet:** the busiest containers on Server
+    take the whole row, and Edit board and Colors on a device's pages no
+    longer overlap when they wrap.
+  - **A show with nothing yet** reads "No episodes yet" in Library, not
+    "0 of 0 episodes".
   - **Jellyfin's newest arrivals survive a season drop:** Jellyfin limits
     before it groups, so 28 new episodes of one show left 3 items in all.
     Patchboard now reads the newest 120 and groups them itself.
@@ -30,8 +36,8 @@
     it sits in.
 - **Fit, taps and hovers checked on every page:** `npm run test:fit` opens
   everything on every page at four sizes in two looks. `--full` adds an
-  iPad on its side, a wall tablet and a 1080p kiosk, and `FIT_BASE` points
-  it at your own install, read-only.
+  iPad on its side, a wall tablet, a 1080p kiosk and Compact density, and
+  `FIT_BASE` points it at your own install, read-only.
 
 ## 1.15.0 (2026-11-16)
 

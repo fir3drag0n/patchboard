@@ -7021,6 +7021,24 @@ a.date:hover {
     white-space: nowrap;
   }
 
+  /* On touch the ellipsis would clip the link's own tap area, so the row is the target. */
+  @media (pointer: coarse) {
+    .server .busiest li {
+      position: relative;
+      align-items: center;
+      min-height: 44px;
+      padding-block: 0;
+    }
+
+    .server .busiest li .ident {
+      position: static;
+    }
+
+    .server .busiest li .ident::after {
+      inset: 0;
+    }
+  }
+
   .server .busiest li .mono {
     flex: none;
   }
@@ -8855,14 +8873,14 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
   /* In a row of buttons that can wrap, a text button is really 44px tall
      instead of reaching past its line, so a wrapped second line never
      covers the first. */
-  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions, .dlp-files-head, .media-actions) .text-button,
+  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions, .dlp-files-head, .media-actions, .device-page-links) .text-button,
   .text-button.lib-open {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
   }
 
-  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions, .dlp-files-head, .media-actions) .text-button::after,
+  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions, .dlp-files-head, .media-actions, .device-page-links) .text-button::after,
   .text-button.lib-open::after {
     inset: 0 -6px;
   }
@@ -14739,6 +14757,11 @@ html[data-eink][data-eink-color] .led[data-state='ok'] {
   .dlp-head {
     flex-direction: column;
     gap: 2px;
+  }
+
+  /* A phone lists a torrent with Details alone; its controls open with it. */
+  .dlp-row.has-details:not(.is-open) .dlp-actions > :not(.dlp-details-toggle) {
+    display: none;
   }
 
   .dlp-how {

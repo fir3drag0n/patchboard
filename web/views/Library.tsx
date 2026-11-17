@@ -148,7 +148,9 @@ function Items({ app, shows, ro, act }: { app: ArrApp; shows: boolean; ro: boole
   const shown = all.filter((i) => !needle || `${i.title} ${i.year ?? ''} ${i.by ?? ''}`.toLowerCase().includes(needle));
   const onDisk = (i: LibraryItem) =>
     shows
-      ? tr('{have} of {total} episodes', { have: i.have, total: i.total })
+      ? i.total
+        ? tr('{have} of {total} episodes', { have: i.have, total: i.total })
+        : tr('No episodes yet')
       : i.have
         ? tr('On disk')
         : i.status === 'upcoming'
@@ -296,7 +298,7 @@ function ShowPanel({ app, id, title, ro, act }: { app: ArrApp; id: number; title
                 <button type="button" className="text-button lib-season-name" aria-expanded={shown === s.number} onClick={() => setSeason(shown === s.number ? -1 : s.number)}>
                   {name}
                 </button>
-                <span className={`lib-total ${short ? 'warn-text' : ''}`}>{tr('{have} of {total} episodes', { have: s.have, total: s.aired })}</span>
+                <span className={`lib-total ${short ? 'warn-text' : ''}`}>{s.aired ? tr('{have} of {total} episodes', { have: s.have, total: s.aired }) : tr('No episodes yet')}</span>
                 {s.size > 0 && <span className="lib-total">{size(s.size)}</span>}
                 {!ro && (
                   <span className="lib-season-actions">

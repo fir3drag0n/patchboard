@@ -55,6 +55,7 @@ const live = process.env.FIT_BASE?.replace(/\/+$/, '');
 const LOOKS = [
   { name: live ? 'yours' : 'default', look: null },
   { name: 'wide', look: { font: 'mono', density: 'large' } },
+  ...(full && !live ? [{ name: 'compact', look: { density: 'compact' } }] : []),
   ...(full && !live ? [{ name: 'paper', look: { theme: 'paper', scheme: 'light' } }] : []),
 ];
 // Openers to leave alone: they leave the page or change saved settings.
@@ -91,8 +92,11 @@ function inspect({ scope, touch }) {
     const dx = el.scrollWidth - el.clientWidth;
     const dy = el.scrollHeight - el.clientHeight;
     if ((!sx || dx <= 1) && (!sy || dy <= 1)) continue;
-    if (el.matches('textarea, pre, code, .logs-lines, .log-lines')) continue;
+    // A live log gains lines between one measure and the next.
+    if (el.matches('textarea, pre, code, [role=log]')) continue;
     const r = el.getBoundingClientRect();
+    // Density zooms the page: boxes measure zoomed, scroll sizes don't.
+    const z = el.offsetHeight ? r.height / el.offsetHeight : 1;
     let right = 0;
     let bottom = 0;
     for (const d of el.querySelectorAll('*')) {
@@ -100,8 +104,8 @@ function inspect({ scope, touch }) {
       const b = d.getBoundingClientRect();
       if (!b.width || !b.height) continue;
       const m = getComputedStyle(d);
-      right = Math.max(right, b.right + Math.max(0, parseFloat(m.marginRight)) - r.left - el.clientLeft + el.scrollLeft);
-      bottom = Math.max(bottom, b.bottom + Math.max(0, parseFloat(m.marginBottom)) - r.top - el.clientTop + el.scrollTop);
+      right = Math.max(right, (b.right - r.left) / z + Math.max(0, parseFloat(m.marginRight)) - el.clientLeft + el.scrollLeft);
+      bottom = Math.max(bottom, (b.bottom - r.top) / z + Math.max(0, parseFloat(m.marginBottom)) - el.clientTop + el.scrollTop);
     }
     const reachX = right + parseFloat(cs.paddingRight);
     const reachY = bottom + parseFloat(cs.paddingBottom);

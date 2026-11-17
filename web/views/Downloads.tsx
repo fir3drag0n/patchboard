@@ -234,7 +234,7 @@ function EntryRow({ r, many, ro, busy, onAct }: { r: Row; many: boolean; ro: boo
       tr(STATE[r.state])
     );
   return (
-    <li className={`dlp-row is-${r.state}`}>
+    <li className={`dlp-row is-${r.state}${r.kind === 'torrent' ? ' has-details' : ''}${open ? ' is-open' : ''}`}>
       <div className="dlp-head">
         <span className="dlp-name" title={r.name}>
           {breakable(r.name)}
@@ -264,7 +264,7 @@ function EntryRow({ r, many, ro, busy, onAct }: { r: Row; many: boolean; ro: boo
       {(r.kind === 'torrent' || !ro) && (
         <div className="dlp-actions">
           {r.kind === 'torrent' && (
-            <button type="button" className="text-button" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+            <button type="button" className="text-button dlp-details-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
               {open ? tr('Hide details') : tr('Details')}
             </button>
           )}

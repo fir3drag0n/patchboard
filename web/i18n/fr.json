@@ -1213,5 +1213,6 @@
  "This page hit an error.": "Cette page a rencontré une erreur.",
  "Reload to try again. If it keeps happening, the message below says what broke.": "Rechargez pour réessayer. Si cela continue, le message ci-dessous dit ce qui a cassé.",
  "This page didn’t load.": "Cette page ne s’est pas chargée.",
- "Patchboard was updated, or the connection dropped while it loaded. Reload to open it.": "Patchboard a été mis à jour, ou la connexion a coupé pendant le chargement. Rechargez pour l’ouvrir."
+ "Patchboard was updated, or the connection dropped while it loaded. Reload to open it.": "Patchboard a été mis à jour, ou la connexion a coupé pendant le chargement. Rechargez pour l’ouvrir.",
+ "No episodes yet": "Pas encore d’épisodes"
 }
