@@ -932,8 +932,6 @@
  "{done} of {size}": "{done} van {size}",
  "{n} downloading": "{n} aan het downloaden",
  "{name}, {pct}%": "{name}, {pct}%",
- "{speed} down": "{speed} omlaag",
- "{speed} up": "{speed} omhoog",
  "Add": "Toevoegen",
  "Add a file": "Bestand toevoegen",
  "Added {name}.": "{name} toegevoegd.",
@@ -975,7 +973,6 @@
  "Removed {name}. Its files stay.": "{name} verwijderd. De bestanden blijven.",
  "Resume": "Hervatten",
  "Seeding": "Seeden",
- "Seeding at {speed}": "Seedt met {speed}",
  "speed limited": "snelheid beperkt",
  "Stalled": "Vastgelopen",
  "{have} of {total} episodes": "{have} van {total} afleveringen",
@@ -1206,5 +1203,10 @@
  "Nothing added yet.": "Nog niets toegevoegd.",
  "Added lately": "Onlangs toegevoegd",
  "{n} new episode": "{n} nieuwe aflevering",
- "{n} new episodes": "{n} nieuwe afleveringen"
+ "{n} new episodes": "{n} nieuwe afleveringen",
+ "Downloading at": "Downloadt met",
+ "Uploading at": "Uploadt met",
+ "Seeding at": "Seedt met",
+ "Downloaded": "Gedownload",
+ "Uploaded": "Geüpload"
 }

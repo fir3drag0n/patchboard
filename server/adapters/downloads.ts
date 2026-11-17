@@ -113,7 +113,7 @@ export function transmissionClient() {
   const manage: DownloadManager = {
     async list() {
       const { torrents } = await rpc<{ torrents: TrFull[] }>('torrent-get', {
-        fields: ['hashString', 'name', 'status', 'percentDone', 'sizeWhenDone', 'haveValid', 'rateDownload', 'rateUpload', 'eta', 'uploadRatio', 'labels', 'addedDate', 'trackers', 'error', 'errorString'],
+        fields: ['hashString', 'name', 'status', 'percentDone', 'sizeWhenDone', 'haveValid', 'rateDownload', 'rateUpload', 'eta', 'uploadRatio', 'uploadedEver', 'labels', 'addedDate', 'trackers', 'error', 'errorString'],
       });
       return { kind: 'torrent', entries: torrents.map(fromTransmission) };
     },
@@ -184,6 +184,7 @@ interface TrFull {
   rateUpload: number;
   eta: number;
   uploadRatio: number;
+  uploadedEver?: number;
   labels?: string[];
   addedDate: number;
   trackers?: { announce: string }[];
@@ -207,6 +208,7 @@ export function fromTransmission(t: TrFull): DownloadEntry {
     up: t.rateUpload,
     etaSec: eta(t.eta),
     ratio: t.uploadRatio >= 0 ? t.uploadRatio : undefined,
+    ...(t.uploadedEver != null && t.uploadedEver >= 0 ? { uploaded: t.uploadedEver } : {}),
     category: t.labels?.[0],
     added: ms(t.addedDate),
     tracker: trackerHost(t.trackers?.[0]?.announce),
@@ -309,7 +311,7 @@ export function delugeClient() {
     list: () =>
       withLogin(async () => {
         const ui = await call<{ torrents: Record<string, DeFull> }>('web.update_ui', [
-          ['name', 'state', 'progress', 'total_wanted', 'total_done', 'download_payload_rate', 'upload_payload_rate', 'eta', 'ratio', 'label', 'time_added', 'tracker_host', 'message'],
+          ['name', 'state', 'progress', 'total_wanted', 'total_done', 'download_payload_rate', 'upload_payload_rate', 'eta', 'ratio', 'total_uploaded', 'label', 'time_added', 'tracker_host', 'message'],
           {},
         ]);
         return { kind: 'torrent', entries: Object.entries(ui.torrents ?? {}).map(([id, t]) => fromDeluge(id, t)) };
@@ -378,6 +380,7 @@ interface DeFull {
   upload_payload_rate: number;
   eta: number;
   ratio: number;
+  total_uploaded?: number;
   label?: string;
   time_added: number;
   tracker_host?: string;
@@ -400,6 +403,7 @@ export function fromDeluge(id: string, t: DeFull): DownloadEntry {
     up: t.upload_payload_rate,
     etaSec: finished ? -1 : eta(t.eta || -1),
     ratio: t.ratio >= 0 ? t.ratio : undefined,
+    ...(t.total_uploaded != null && t.total_uploaded >= 0 ? { uploaded: t.total_uploaded } : {}),
     category: t.label || undefined,
     added: ms(t.time_added),
     tracker: t.tracker_host || undefined,

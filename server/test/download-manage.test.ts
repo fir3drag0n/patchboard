@@ -33,6 +33,12 @@ test('every client says the same thing about a download in its own words', () =>
   assert.equal(fromDeluge('x', { ...de, state: 'Paused', progress: 40 }).state, 'paused');
   assert.equal(fromDeluge('x', { ...de, state: 'Error', message: 'Disk full' }).error, 'Disk full');
 
+  // What each torrent gave back, for the arrow up beside its ratio.
+  assert.equal(fromQbit({ ...base, state: 'uploading', uploaded: 3 * GB }).uploaded, 3 * GB);
+  assert.equal(fromTransmission({ ...tr, status: 6, uploadedEver: GB }).uploaded, GB);
+  assert.equal(fromDeluge('x', { ...de, state: 'Seeding', total_uploaded: 2 * GB }).uploaded, 2 * GB);
+  assert.equal(fromQbit({ ...base, state: 'uploading' }).uploaded, undefined);
+
   const sab = fromSabQueue({ nzo_id: 'a', filename: 'n', percentage: '25', mb: '1024', mbleft: '768', timeleft: '0:10:00', status: 'Downloading', cat: '*' }, 5e6, false);
   assert.deepEqual([sab.state, sab.etaSec, sab.done, sab.category], ['downloading', 600, 256 * 1024 * 1024, undefined]);
   assert.equal(fromSabQueue({ nzo_id: 'a', filename: 'n', percentage: '25', mb: '1', mbleft: '1', timeleft: '0:00:00', status: 'Queued' }, 0, true).state, 'paused');

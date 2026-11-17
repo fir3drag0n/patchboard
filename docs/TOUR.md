@@ -230,8 +230,9 @@ tonight's moon. Countdown counts the days to the dates you name.
 ![Bookmarks, Search, Clocks, Feeds and Releases on the board](screenshots/everyday.webp)
 
 **Downloads:** everything in qBittorrent, Transmission, Deluge, SABnzbd and
-NZBGet on one list, running or failed first: progress, speed, time left,
-size, ratio, category and tracker. Filter by what it's doing or by name.
+NZBGet on one list, running or failed first: progress, speeds down and
+up, time left, size, what each torrent took and gave back, its ratio,
+category and tracker. Filter by what it's doing or by name.
 Pause and resume are a tap; remove is a hold, and a torrent can go with
 its files or without them. Paste a magnet link or a web address, or add a
 .torrent or .nzb file; Patchboard sends it to the client that takes it.

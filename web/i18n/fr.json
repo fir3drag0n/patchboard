@@ -932,8 +932,6 @@
  "{done} of {size}": "{done} sur {size}",
  "{n} downloading": "{n} en téléchargement",
  "{name}, {pct}%": "{name}, {pct} %",
- "{speed} down": "{speed} en réception",
- "{speed} up": "{speed} en envoi",
  "Add": "Ajouter",
  "Add a file": "Ajouter un fichier",
  "Added {name}.": "{name} ajouté.",
@@ -975,7 +973,6 @@
  "Removed {name}. Its files stay.": "{name} retiré. Ses fichiers restent.",
  "Resume": "Reprendre",
  "Seeding": "En partage",
- "Seeding at {speed}": "En partage à {speed}",
  "speed limited": "vitesse limitée",
  "Stalled": "Bloqué",
  "{have} of {total} episodes": "{have} sur {total} épisodes",
@@ -1206,5 +1203,10 @@
  "Nothing added yet.": "Rien d’ajouté pour l’instant.",
  "Added lately": "Ajouté récemment",
  "{n} new episode": "{n} nouvel épisode",
- "{n} new episodes": "{n} nouveaux épisodes"
+ "{n} new episodes": "{n} nouveaux épisodes",
+ "Downloading at": "Téléchargement à",
+ "Uploading at": "Envoi à",
+ "Seeding at": "Partage à",
+ "Downloaded": "Téléchargé",
+ "Uploaded": "Envoyé"
 }

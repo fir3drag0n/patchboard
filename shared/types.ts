@@ -1318,6 +1318,8 @@ export interface DownloadEntry {
   etaSec: number;
   /** Uploaded over downloaded, for a torrent. */
   ratio?: number;
+  /** Bytes uploaded in all, for a torrent. */
+  uploaded?: number;
   category?: string;
   /** When it was added, in ms. */
   added?: number;

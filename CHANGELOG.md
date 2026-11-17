@@ -5,6 +5,9 @@
 - **Open a library** on the Media page: its episodes or tracks, the folders
   it reads, and what came in last, with posters that open in Plex or
   Jellyfin. A show's new episodes share one poster with how many came in.
+- **Downloads reads like a torrent client:** small arrows mark speeds and
+  totals down and up, figures line up in columns, the bar is a thin line,
+  and a finished torrent's ratio turns green at 1.00.
 - **Save says whether it connects:** saving an app in Settings,
   Connections tests it and shows what it found or why it failed.
 - **Fixes:**

@@ -46,6 +46,7 @@ interface QbitFull extends Torrent {
   completed: number;
   upspeed: number;
   ratio: number;
+  uploaded?: number;
   category: string;
   added_on: number;
   tracker: string;
@@ -80,6 +81,7 @@ export function fromQbit(t: QbitFull): DownloadEntry {
     up: t.upspeed,
     etaSec: finished || t.eta >= 8_640_000 ? -1 : t.eta,
     ratio: t.ratio >= 0 ? t.ratio : undefined,
+    ...(t.uploaded != null && t.uploaded >= 0 ? { uploaded: t.uploaded } : {}),
     category: t.category || undefined,
     added: t.added_on ? t.added_on * 1000 : undefined,
     tracker: trackerHost(t.tracker),

@@ -932,8 +932,6 @@
  "{done} of {size}": "{done} di {size}",
  "{n} downloading": "{n} in download",
  "{name}, {pct}%": "{name}, {pct}%",
- "{speed} down": "{speed} in download",
- "{speed} up": "{speed} in upload",
  "Add": "Aggiungi",
  "Add a file": "Aggiungi un file",
  "Added {name}.": "{name} aggiunto.",
@@ -975,7 +973,6 @@
  "Removed {name}. Its files stay.": "{name} rimosso. I file restano.",
  "Resume": "Riprendi",
  "Seeding": "In seed",
- "Seeding at {speed}": "In seed a {speed}",
  "speed limited": "velocità limitata",
  "Stalled": "Bloccato",
  "{have} of {total} episodes": "{have} di {total} episodi",
@@ -1206,5 +1203,10 @@
  "Nothing added yet.": "Ancora niente di aggiunto.",
  "Added lately": "Aggiunto di recente",
  "{n} new episode": "{n} nuovo episodio",
- "{n} new episodes": "{n} nuovi episodi"
+ "{n} new episodes": "{n} nuovi episodi",
+ "Downloading at": "Download a",
+ "Uploading at": "Upload a",
+ "Seeding at": "Seed a",
+ "Downloaded": "Scaricato",
+ "Uploaded": "Caricato"
 }

@@ -147,8 +147,8 @@ export function Downloads() {
       <div className="page-head">
         <h1 className="page-title">{tr('Downloads')}</h1>
         <p className="dlp-total">
-          <span>{tr('{speed} down', { speed: speed(down) })}</span>
-          {up > 0 && <span>{tr('{speed} up', { speed: speed(up) })}</span>}
+          <Flow dir="down" label={tr('Downloading at')}>{speed(down)}</Flow>
+          {up > 0 && <Flow dir="up" label={tr('Uploading at')}>{speed(up)}</Flow>}
         </p>
       </div>
 
@@ -218,13 +218,21 @@ function EntryRow({ r, many, ro, busy, onAct }: { r: Row; many: boolean; ro: boo
   const canPause = !r.history && ['downloading', 'stalled', 'queued', 'seeding', 'checking'].includes(r.state);
   const canResume = !r.history && (r.state === 'paused' || (r.state === 'errored' && r.kind === 'torrent'));
   const level = r.state === 'errored' ? 'crit' : r.state === 'stalled' ? 'warn' : 'ok';
-  // The one line that says how it's doing: speed and time left while it runs, else its state.
+  // The one line that says how it's doing: speeds and time left while it runs, else its state.
+  const torrent = r.kind === 'torrent';
+  const uploaded = torrent ? (r.uploaded ?? (r.ratio !== undefined ? r.ratio * r.done : undefined)) : undefined;
   const how =
-    r.state === 'downloading'
-      ? [speed(r.down), eta(r.etaSec)].filter(Boolean).join(', ')
-      : r.state === 'seeding'
-        ? tr('Seeding at {speed}', { speed: speed(r.up) })
-        : tr(STATE[r.state]);
+    r.state === 'downloading' ? (
+      <>
+        <Flow dir="down" label={tr('Downloading at')}>{speed(r.down)}</Flow>
+        {r.up > 0 && <Flow dir="up" label={tr('Uploading at')}>{speed(r.up)}</Flow>}
+        {eta(r.etaSec) && <span className="dlp-eta">{eta(r.etaSec)}</span>}
+      </>
+    ) : r.state === 'seeding' && r.up > 0 ? (
+      <Flow dir="up" label={tr('Seeding at')}>{speed(r.up)}</Flow>
+    ) : (
+      tr(STATE[r.state])
+    );
   return (
     <li className={`dlp-row is-${r.state}`}>
       <div className="dlp-head">
@@ -237,8 +245,15 @@ function EntryRow({ r, many, ro, busy, onAct }: { r: Row; many: boolean; ro: boo
       <div className="dlp-foot">
       <div className="dlp-info">
       <div className="dlp-meta">
-        <span>{unfinished ? tr('{done} of {size}', { done: size(r.done), size: size(r.size) }) : size(r.size)}</span>
-        {r.ratio !== undefined && r.kind === 'torrent' && <span>{tr('ratio {n}', { n: r.ratio.toFixed(2) })}</span>}
+        {unfinished && <span className="dlp-pct">{Math.floor(r.progress * 100)}%</span>}
+        <span>{unfinished && !torrent ? tr('{done} of {size}', { done: size(r.done), size: size(r.size) }) : size(r.size)}</span>
+        {torrent && (
+          <span className="dlp-flows">
+            <Flow dir="down" label={tr('Downloaded')}>{size(r.done)}</Flow>
+            {uploaded !== undefined && <Flow dir="up" label={tr('Uploaded')}>{size(uploaded)}</Flow>}
+          </span>
+        )}
+        {r.ratio !== undefined && torrent && <Ratio value={r.ratio} judged={!unfinished} />}
         {r.category && <span className="dlp-tag">{r.category}</span>}
         {r.tracker && <span>{r.tracker}</span>}
         {many && <span>{r.client.label}</span>}
@@ -290,6 +305,32 @@ function EntryRow({ r, many, ro, busy, onAct }: { r: Row; many: boolean; ro: boo
       </div>
       {open && <TorrentPanel r={r} ro={ro} />}
     </li>
+  );
+}
+
+/** A speed or an amount with a small arrow: down is what came in, up is what went out. */
+function Flow({ dir, label, children }: { dir: 'down' | 'up'; label: string; children: string }) {
+  return (
+    <span className={`dlp-flow is-${dir}`}>
+      <svg viewBox="0 0 10 10" width="9" height="9" aria-hidden>
+        <path d={dir === 'down' ? 'M5 1.5v7M2 5.5l3 3 3-3' : 'M5 8.5v-7M2 4.5l3-3 3 3'} />
+      </svg>
+      <span className="sr-only">{label} </span>
+      {children}
+    </span>
+  );
+}
+
+/**
+ * Uploaded over downloaded. 1.00 gives back what it took: green from there,
+ * amber on the way, red well short. Still downloading, it isn't judged yet.
+ */
+function Ratio({ value, judged }: { value: number; judged: boolean }) {
+  const level = !judged ? '' : value >= 1 ? 'is-ok' : value >= 0.5 ? 'is-warn' : 'is-crit';
+  return (
+    <span className={`dlp-ratio ${level}`}>
+      {tr('ratio {n}', { n: value.toFixed(2) })}
+    </span>
   );
 }
 
