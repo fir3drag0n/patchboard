@@ -30,6 +30,7 @@
     "test:zoom": "npm run build && node scripts/check-zoom.mjs",
     "test:a11y": "npm run build && node scripts/check-accessibility.mjs",
     "test:ui": "npm run build && node scripts/check-home.mjs",
+    "test:fit": "npm run build && node scripts/check-fit.mjs",
     "typecheck": "tsc --noEmit",
     "pretest": "node -e \"require('fs').rmSync('data-test',{recursive:true,force:true})\"",
     "test": "cross-env DATA_DIR=./data-test DOCS_PATH=server/test/fixtures LOGS_PATH=server/test/fixtures CHECK_DOMAINS=example.org node --disable-warning=ExperimentalWarning --test --test-concurrency=1 \"server/test/*.test.ts\""

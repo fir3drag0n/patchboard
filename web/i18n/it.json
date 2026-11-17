@@ -722,7 +722,6 @@
  "Saved, Hardcover is in use": "Salvato, Hardcover è in uso",
  "Saved.": "Salvato.",
  "Saved. Needs attention uses the new numbers now.": "Salvato. Richiede attenzione ora usa i nuovi valori.",
- "Saved. Patchboard connects now; the status above updates within a few seconds.": "Salvato. Patchboard si collega ora; lo stato qui sopra si aggiorna entro pochi secondi.",
  "Saved. Type to replace it.": "Salvata. Scrivi per sostituirla.",
  "Saving...": "Salvataggio in corso...",
  "searched again for": "ha cercato di nuovo",
@@ -1198,5 +1197,12 @@
  "something new inside": "c’è qualcosa di nuovo",
  "That did not work.": "Non ha funzionato.",
  "The server did not answer.": "Il server non ha risposto.",
- "All requests": "Tutte le richieste"
+ "All requests": "Tutte le richieste",
+ "Saved and connected. {summary}": "Salvato e collegato. {summary}",
+ "Saved, but it doesn’t connect yet: {error}": "Salvato, ma non si collega ancora: {error}",
+ "What’s in it": "Cosa contiene",
+ "{n} episodes": "{n} episodi",
+ "{n} tracks": "{n} brani",
+ "Nothing added yet.": "Ancora niente di aggiunto.",
+ "Added lately": "Aggiunto di recente"
 }

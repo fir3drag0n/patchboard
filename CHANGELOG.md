@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- **Open a library** on the Media page: its episodes or tracks, the folders
+  it reads, and what came in last, with posters that open in Plex or
+  Jellyfin.
+- **Save says whether it connects:** saving an app in Settings,
+  Connections tests it and shows what it found or why it failed.
+- **Fixes:**
+  - **Plex reads On** in Connections once it's saved.
+  - **A stream's card no longer scrolls:** the hidden Stop hint and the
+    phone tap areas stretched it sideways and down.
+  - **Hold hints exist only while they show,** so none stretches the box
+    it sits in.
+- **Fit, taps and hovers checked on every page:** `npm run test:fit` opens
+  everything on every page at four sizes in two looks.
+
 ## 1.15.0 (2026-11-16)
 
 - **A page for each app you run:** manage Sonarr, Radarr, Plex and the rest

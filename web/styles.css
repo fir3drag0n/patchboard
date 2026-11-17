@@ -8855,13 +8855,15 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
   /* In a row of buttons that can wrap, a text button is really 44px tall
      instead of reaching past its line, so a wrapped second line never
      covers the first. */
-  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions, .dlp-files-head, .media-actions) .text-button {
+  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions, .dlp-files-head, .media-actions) .text-button,
+  .text-button.lib-open {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
   }
 
-  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions, .dlp-files-head, .media-actions) .text-button::after {
+  :is(.dlp-actions, .lib-actions, .req-actions, .dlp-client-actions, .dns-actions, .lib-season-actions, .dlp-files-head, .media-actions) .text-button::after,
+  .text-button.lib-open::after {
     inset: 0 -6px;
   }
 
@@ -10933,9 +10935,11 @@ a.req-come:hover .req-title {
   }
 }
 
-/* With a mouse or keyboard, a hold button says so before you press it. */
+/* With a mouse or keyboard, a hold button says so before you press it.
+   The hint exists only while it shows, so a hidden one never stretches the
+   box it sits in. */
 @media (hover: hover) {
-  .hold::after {
+  .hold:is(:hover, :focus-visible)::after {
     content: attr(data-hint);
     position: absolute;
     left: 50%;
@@ -10948,19 +10952,12 @@ a.req-come:hover .req-title {
     font: 500 12px/1.2 var(--f-body);
     white-space: nowrap;
     transform: translateX(-50%);
-    opacity: 0;
     pointer-events: none;
-    transition: opacity 120ms ease;
-  }
-
-  .hold:hover::after,
-  .hold:focus-visible::after {
-    opacity: 1;
-    transition-delay: 300ms;
+    animation: hold-hint 120ms 300ms ease both;
   }
 
   .hold.is-holding::after {
-    opacity: 0;
+    content: none;
   }
 
   /* At the end of a row the hint opens leftward, so it never leaves the page. */
@@ -10968,6 +10965,22 @@ a.req-come:hover .req-title {
     left: auto;
     right: 0;
     transform: none;
+  }
+
+  /* Stop sits at the foot of a stream's card: its hint opens up and left,
+     inside the card. */
+  .playback-actions .hold::after {
+    top: auto;
+    bottom: calc(100% + 6px);
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+}
+
+@keyframes hold-hint {
+  from {
+    opacity: 0;
   }
 }
 
@@ -11315,6 +11328,40 @@ a.req-come:hover .req-title {
   padding-inline: 4px;
 }
 
+/* A stream's card never scrolls sideways. On touch its controls are real
+   44px targets, so no tap area reaches past the card's edge. */
+.playback-preview {
+  overflow-x: hidden;
+}
+
+@media (pointer: coarse) {
+  .playback-preview :is(.text-button, .section-action) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .playback-preview :is(.text-button, .section-action)::after {
+    inset: 0 -6px;
+  }
+
+  /* Stop lines up with Close above it. */
+  .playback-preview .text-button.hold {
+    padding: 0 4px;
+    margin: 0 0 0 auto;
+  }
+
+  .playback-preview-head {
+    align-items: center;
+    margin-block: -8px 4px;
+  }
+
+  .playback-actions {
+    gap: 0 16px;
+    margin-top: 4px;
+  }
+}
+
 /* Reading's tools: one grid with even 10px steps, the same 20px gutter as
    the heading and the chips, and a rule under it only beside an open article. */
 .feeds-tools {
@@ -11608,6 +11655,26 @@ a.req-title:hover {
   box-shadow: var(--float-shadow);
   font-size: 13px;
   line-height: 1.35;
+}
+
+/* Tablet widths: the status card spans the page and the link may sit
+   anywhere on it, so the panel hangs from the card's edge, under the link's
+   line, at its own width. */
+@media (min-width: 761px) and (max-width: 1279px) {
+  .home-header .masthead-status {
+    position: relative;
+  }
+
+  .head-alert-more {
+    position: static;
+  }
+
+  .head-alert-pop {
+    top: auto;
+    left: 12px;
+    max-width: min(460px, calc(100% - 24px));
+    margin-top: 8px;
+  }
 }
 
 /* Narrow screens: the panel spans the status card instead of hanging off
@@ -15114,4 +15181,31 @@ a.lib-title:hover {
 
 .lib-row.no-art > .lib-below {
   grid-column: 1 / -1;
+}
+
+/* A library opened: its counts and folders, then what came in last on a
+   shelf that scrolls sideways inside the row. */
+.media-lib-folder {
+  font-family: var(--f-mono);
+  overflow-wrap: anywhere;
+}
+
+.media-lib-posters {
+  --poster-w: 112px;
+  gap: 14px;
+  padding-top: 12px;
+}
+
+@media (max-width: 760px) {
+  .media-lib-posters {
+    --poster-w: 96px;
+  }
+}
+
+/* Touch: lines in the version row sit far enough apart that Check now's tap
+   area stops short of the help links under it. */
+@media (pointer: coarse) {
+  .app-version {
+    row-gap: 18px;
+  }
 }

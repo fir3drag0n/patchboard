@@ -1450,15 +1450,31 @@ app.get('/api/media/libraries', async (c) => {
           try {
             const libraries = await ctl.libraries();
             for (const l of libraries) librarySeen.set(`${id}:${l.id}`, { at: Date.now(), name: l.name });
-            return { id, name: MEDIA_NAME[id], libraries, canScan: !!ctl.scan };
+            return { id, name: MEDIA_NAME[id], libraries, canScan: !!ctl.scan, canOpen: !!ctl.library };
           } catch (err) {
-            return { id, name: MEDIA_NAME[id], libraries: [], error: (err as Error).message, canScan: !!ctl.scan };
+            return { id, name: MEDIA_NAME[id], libraries: [], error: (err as Error).message, canScan: !!ctl.scan, canOpen: !!ctl.library };
           }
         })(),
       ];
     }),
   );
   return c.json({ servers } satisfies MediaLibraries);
+});
+
+// One library opened: only one the page was just shown.
+app.get('/api/media/:server/library/:library', async (c) => {
+  const server = c.req.param('server') as MediaServerId;
+  if (!MEDIA_SERVERS.includes(server)) return c.json({ error: 'Unknown server' }, 404);
+  const ctl = controlOf(server);
+  if (!ctl?.library) return c.json({ error: server === 'plex' ? 'To open a library, add Plex’s address and token: Settings, Connections, Plex.' : `${MEDIA_NAME[server]} is not set up` }, 404);
+  const id = c.req.param('library');
+  const seen = librarySeen.get(`${server}:${id}`);
+  if (!seen || Date.now() - seen.at > 600_000) return c.json({ error: 'Reload the page, then open it.' }, 404);
+  try {
+    return c.json(await ctl.library(id));
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
 });
 
 app.post('/api/media/:server/stop/:session', async (c) => {
@@ -1729,8 +1745,19 @@ app.put('/api/setup/integrations/:id', async (c) => {
   saveValues(checked.values);
   recordAudit(who(c), 'setup.save', i.id, Object.keys(checked.values).join(', '));
   hub.replaceAdapters(realAdapters());
-  return c.json({ integrations: describeSetup() });
+  // Save says whether it connects, so a typo shows now instead of as a quiet Off.
+  // Notification channels skip it: their test sends you a message.
+  let check: { ok: boolean; text: string } | undefined;
+  if (!NOTIFY_IDS.includes(i.id)) {
+    try {
+      check = { ok: true, text: await testIntegration(i.id) };
+    } catch (err) {
+      check = { ok: false, text: (err as Error).message };
+    }
+  }
+  return c.json({ integrations: describeSetup(), ...(check ? { check } : {}) });
 });
+const NOTIFY_IDS = ['ntfy', 'gotify', 'pushover', 'email', 'discord', 'webhook'];
 
 // Copy every integration value from the environment into Patchboard, so the
 // .env lines can be removed. Values never leave the server.

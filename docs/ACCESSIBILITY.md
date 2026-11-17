@@ -45,6 +45,24 @@ Home header with Chromium's dark forced-color palette:
 
 ![High-contrast Home header retains card outlines and visible usage bars](screenshots/home-header-contrast.webp)
 
+## Fit, taps and hovers
+
+`npm run test:fit` visits every page at desktop, laptop, tablet and iPhone
+sizes, in the default look and a wide one (mono font, large density), and
+opens everything a button opens on each. It fails when:
+
+- the page scrolls sideways;
+- a box scrolls further than what's in it, as when an invisible tap area or
+  hint stretches it;
+- text is cut off without an ellipsis;
+- anything opened leaves the screen;
+- on touch, a control answers less than 44 pixels around its middle, or
+  another control's tap area covers it;
+- on desktop, hovering a hold button or a chart makes anything scroll.
+
+`--full` adds a 360-pixel phone and the light Paper theme; `--only=/media`
+checks one page.
+
 ## Actual browser zoom and enlarged text
 
 `npm run test:zoom` uses a temporary Chromium profile and the browser's own

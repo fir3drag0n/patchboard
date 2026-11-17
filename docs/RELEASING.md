@@ -70,7 +70,8 @@ few bold leads, as 1.0.0 and 1.1.0 do.
    `npm run build`, and `npm run screenshots` when the change shows on screen.
    Run `npm run test:ui` for Home, Fit or board keyboard changes, and
    `npm run test:a11y` for accessible names, reflow and high-contrast graphics.
-   Run `npm run test:zoom` for browser zoom and enlarged-text checks.
+   Run `npm run test:zoom` for browser zoom and enlarged-text checks, and
+   `npm run test:fit` for anything that changes layout, taps or hovers.
    See [Accessibility checks](ACCESSIBILITY.md) for coverage and manual checks.
 5. Run `npm run release:check -- v1.2.0`. It checks the tag against
    `package.json` and both lockfile versions, and requires one matching,

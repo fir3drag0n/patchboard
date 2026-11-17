@@ -2,7 +2,7 @@ import { strict as assert } from 'node:assert';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { test } from 'node:test';
-import { fromPlexSections, fromTautulliLibraries, fromVirtualFolders } from '../adapters/media-control.ts';
+import { fromPlexSections, fromTautulliLibraries, fromVirtualFolders, jellyLibraryDetail, plexLibraryDetail } from '../adapters/media-control.ts';
 import { toStream } from '../adapters/mediaserver.ts';
 import { toTautulliStream } from '../adapters/tautulli.ts';
 
@@ -74,4 +74,25 @@ test('Plex: scan asks Plex itself, and stopping without Plex Pass says so', asyn
   } finally {
     server.close();
   }
+});
+
+test('an opened Plex library has its episodes, folders and newest arrivals', () => {
+  const d = plexLibraryDetail(
+    { key: '2', title: 'TV', type: 'show', Location: [{ path: '/data/tv' }] },
+    [{ ratingKey: '9', type: 'episode', grandparentTitle: 'Silo', title: 'Descent', parentIndex: 2, index: 10, addedAt: 1_700_000_000 }],
+    6120,
+  );
+  assert.equal(d.episodes, 6120);
+  assert.equal(d.tracks, undefined);
+  assert.deepEqual(d.folders, ['/data/tv']);
+  assert.deepEqual([d.recent[0].title, d.recent[0].subtitle, d.recent[0].addedAt], ['Silo', 'S02E10 Descent', 1_700_000_000_000]);
+  // A film library counts nothing more than its films.
+  assert.equal(plexLibraryDetail({ key: '1', title: 'Films', type: 'movie' }, [], 40).episodes, undefined);
+});
+
+test('an opened Jellyfin library reads the same way', () => {
+  const d = jellyLibraryDetail('jellyfin', { Name: 'Music', ItemId: 'm', CollectionType: 'music', Locations: ['/data/music'] }, [{ Id: 'a1', Name: 'Blue', Type: 'MusicAlbum', DateCreated: '2026-01-02T00:00:00Z' }], 900);
+  assert.deepEqual([d.tracks, d.episodes, d.folders], [900, undefined, ['/data/music']]);
+  assert.equal(d.recent[0].title, 'Blue');
+  assert.equal(d.recent[0].thumb, '/api/img/jellyfin?id=a1');
 });

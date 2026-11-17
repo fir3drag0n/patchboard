@@ -10,7 +10,7 @@ import { getJson, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
 import { plexItemPath } from './tautulli.ts';
 
-interface PlexItem {
+export interface PlexItem {
   ratingKey?: string;
   type?: string;
   title?: string;

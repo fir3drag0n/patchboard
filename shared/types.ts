@@ -612,9 +612,21 @@ export interface MediaLibrary {
   canScan: boolean;
 }
 
+/** One library opened: what it holds and what came in last. */
+export interface LibraryDetail {
+  /** Episodes in a shows library. */
+  episodes?: number;
+  /** Tracks in a music library. */
+  tracks?: number;
+  /** The folders it reads, as the server sees them. */
+  folders: string[];
+  /** Newest first. */
+  recent: RecentItem[];
+}
+
 /** Each server's libraries, or why they couldn't be read. */
 export interface MediaLibraries {
-  servers: { id: MediaServerId; name: string; libraries: MediaLibrary[]; error?: string; canScan: boolean }[];
+  servers: { id: MediaServerId; name: string; libraries: MediaLibrary[]; error?: string; canScan: boolean; canOpen: boolean }[];
 }
 
 export interface RecentItem {

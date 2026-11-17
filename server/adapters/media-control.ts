@@ -4,10 +4,11 @@
 // their API key. Every call goes from this server; the browser never talks
 // to a media server.
 
-import type { MediaLibrary, MediaServerId } from '../../shared/types.ts';
+import type { LibraryDetail, MediaLibrary, MediaServerId } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { getJson, HttpError, request } from '../http.ts';
-import { authHeaders, type MediaKind } from './mediaserver.ts';
+import { authHeaders, type Item, type MediaKind, toRecent } from './mediaserver.ts';
+import { fromPlexRecent, type PlexItem } from './plex.ts';
 
 /** What a viewer reads when their stream stops. */
 export const STOP_MESSAGE = 'The server’s owner stopped this stream.';
@@ -17,7 +18,12 @@ export interface MediaControl {
   libraries: () => Promise<MediaLibrary[]>;
   /** Missing when this server can list libraries but not scan them. */
   scan?: (id: string) => Promise<void>;
+  /** What one library holds and what came in last; missing without the server's own API. */
+  library?: (id: string) => Promise<LibraryDetail>;
 }
+
+/** How many to show of what came in last. */
+const RECENT = 12;
 
 // ---------- Plex ----------
 
@@ -27,6 +33,7 @@ interface PlexSection {
   type?: string;
   refreshing?: boolean;
   scannedAt?: number;
+  Location?: { path?: string }[];
 }
 
 const PLEX_KIND: Record<string, MediaLibrary['kind']> = { movie: 'movies', show: 'shows', artist: 'music', photo: 'photos' };
@@ -42,6 +49,17 @@ export function fromPlexSections(dirs: PlexSection[], counts: Map<string, number
     ...(d.scannedAt ? { scannedAt: d.scannedAt * 1000 } : {}),
     canScan: true,
   }));
+}
+
+/** A Plex library opened: its folders, its newest arrivals, and episodes or tracks when it has them. */
+export function plexLibraryDetail(section: PlexSection | undefined, recent: PlexItem[], total?: number): LibraryDetail {
+  const kind = PLEX_KIND[section?.type ?? ''];
+  return {
+    ...(total != null && kind === 'shows' ? { episodes: total } : {}),
+    ...(total != null && kind === 'music' ? { tracks: total } : {}),
+    folders: (section?.Location ?? []).map((l) => l.path ?? '').filter(Boolean),
+    recent: fromPlexRecent(recent).slice(0, RECENT),
+  };
 }
 
 function plex() {
@@ -101,6 +119,7 @@ interface VirtualFolder {
   Id?: string;
   CollectionType?: string;
   RefreshStatus?: string;
+  Locations?: string[];
 }
 
 const JELLY_KIND: Record<string, MediaLibrary['kind']> = { movies: 'movies', tvshows: 'shows', music: 'music', homevideos: 'photos', photos: 'photos' };
@@ -116,6 +135,17 @@ export function fromVirtualFolders(server: MediaKind, folders: VirtualFolder[]):
       scanning: f.RefreshStatus === 'Active' || f.RefreshStatus === 'Running',
       canScan: true,
     }));
+}
+
+/** A Jellyfin or Emby library opened, in the same shape as Plex's. */
+export function jellyLibraryDetail(server: MediaKind, folder: VirtualFolder | undefined, recent: Item[], total?: number): LibraryDetail {
+  const kind = JELLY_KIND[folder?.CollectionType ?? ''];
+  return {
+    ...(total != null && kind === 'shows' ? { episodes: total } : {}),
+    ...(total != null && kind === 'music' ? { tracks: total } : {}),
+    folders: folder?.Locations ?? [],
+    recent: recent.map((it) => toRecent(server, it)).slice(0, RECENT),
+  };
 }
 
 function jellyControl(kind: MediaKind): MediaControl {
@@ -143,6 +173,19 @@ function jellyControl(kind: MediaKind): MediaControl {
         }),
       );
       return libs;
+    },
+    async library(id) {
+      const folder = (await getJson<VirtualFolder[]>(`${url}/Library/VirtualFolders`, { headers }, 15_000)).find((f) => String(f.ItemId ?? f.Id) === id);
+      if (!folder) throw new Error(`${kind === 'jellyfin' ? 'Jellyfin' : 'Emby'} no longer has that library.`);
+      const lib = JELLY_KIND[folder.CollectionType ?? ''] ?? 'other';
+      const p = encodeURIComponent(id);
+      const newest = lib === 'shows' ? 'Episode' : lib === 'music' ? 'MusicAlbum' : lib === 'movies' ? 'Movie' : 'Movie,Episode,MusicAlbum,Video,Photo';
+      const counted = lib === 'shows' ? 'Episode' : lib === 'music' ? 'Audio' : '';
+      const [recent, all] = await Promise.all([
+        getJson<{ Items?: Item[] }>(`${url}/Items?ParentId=${p}&Recursive=true&SortBy=DateCreated&SortOrder=Descending&IncludeItemTypes=${newest}&Limit=${RECENT}&Fields=DateCreated,ProductionYear`, { headers }, 15_000),
+        counted ? getJson<{ TotalRecordCount?: number }>(`${url}/Items?ParentId=${p}&Recursive=true&IncludeItemTypes=${counted}&Limit=0`, { headers }, 15_000).catch(() => undefined) : undefined,
+      ]);
+      return jellyLibraryDetail(kind, folder, recent.Items ?? [], all?.TotalRecordCount);
     },
     async scan(id) {
       await request(`${url}/Items/${encodeURIComponent(id)}/Refresh?Recursive=true&ImageRefreshMode=Default&MetadataRefreshMode=Default&ReplaceAllImages=false&ReplaceAllMetadata=false`, { method: 'POST', headers }, 15_000);
@@ -173,6 +216,20 @@ export function mediaControl(server: MediaServerId): MediaControl | undefined {
       },
       async scan(id) {
         await plexCall(`/library/sections/${encodeURIComponent(id)}/refresh`);
+      },
+      async library(id) {
+        const { url, headers } = plex();
+        const get = <T>(path: string) => getJson<{ MediaContainer?: T }>(`${url}${path}`, { headers }, 15_000).then((r) => r.MediaContainer);
+        const section = (await plexSections()).find((s) => String(s.key) === id);
+        if (!section) throw new Error('Plex no longer has that library.');
+        const e = encodeURIComponent(id);
+        // Plex's types: 4 is an episode, 10 a track. Size 0 asks for the count alone.
+        const type = ({ show: 4, artist: 10 } as Record<string, number>)[section.type ?? ''];
+        const [recent, all] = await Promise.all([
+          get<{ Metadata?: PlexItem[] }>(`/library/sections/${e}/recentlyAdded?X-Plex-Container-Start=0&X-Plex-Container-Size=${RECENT}`),
+          type ? get<{ totalSize?: number }>(`/library/sections/${e}/all?type=${type}&X-Plex-Container-Start=0&X-Plex-Container-Size=0`).catch(() => undefined) : undefined,
+        ]);
+        return plexLibraryDetail(section, recent?.Metadata ?? [], all?.totalSize);
       },
     };
   }

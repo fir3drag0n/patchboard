@@ -447,8 +447,21 @@ export function demoMediaControl(server: 'plex' | 'jellyfin' | 'emby'): MediaCon
     async scan(id) {
       demoLibScan.set(`${server}:${id}`, Date.now() + 8000);
     },
+    async library(id) {
+      const kind = DEMO_LIBRARIES[server].find((l) => l[0] === id)?.[2];
+      const titles = kind === 'shows' ? DEMO_LIB_SHOWS : kind === 'movies' ? DEMO_LIB_FILMS : [];
+      return {
+        ...(kind === 'shows' ? { episodes: server === 'plex' ? 9418 : 7260 } : {}),
+        ...(kind === 'music' ? { tracks: 21877 } : {}),
+        folders: [kind === 'shows' ? '/data/media/tv' : kind === 'music' ? '/data/media/music' : '/data/media/movies'],
+        recent: titles.map(([title, subtitle], i) => ({ id: `${server}-${id}-${i}`, type: kind === 'shows' ? 'episode' : 'movie', title, subtitle, thumb: poster(title), addedAt: Date.now() - (i * 9 + 2) * H })),
+      };
+    },
   };
 }
+
+const DEMO_LIB_SHOWS: [string, string][] = [['Silo', 'S02E10'], ['Slow Horses', 'S05E02'], ['The Pitt', 'S01E15'], ['Andor', 'S02E12'], ['Fallout', 'S01E08'], ['Severance', 'S02E10'], ['The Bear', 'S04E01'], ['Shōgun', 'S01E10']];
+const DEMO_LIB_FILMS: [string, string][] = [['Weapons', '2025'], ['Sinners', '2025'], ['One Battle After Another', '2025'], ['Dune: Part Two', '2024'], ['Poor Things', '2023'], ['Past Lives', '2023'], ['The Holdovers', '2023'], ['Oppenheimer', '2023']];
 
 const demoJellyfin = (): MediaServerData => ({
   streams: [{ user: 'Jo', title: 'Slow Horses', subtitle: 'S05E02', ...demoPlaying(22, 2700), state: 'playing' as const, transcode: false, thumb: poster('Slow Horses'), session: 'jf-1', device: 'Bedroom Shield' }].filter((s) => !demoStreamStopped.has(s.session)),

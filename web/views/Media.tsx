@@ -4,13 +4,13 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { MediaLibraries, MediaLibrary, Stream } from '../../shared/types.ts';
+import type { LibraryDetail, MediaLibraries, MediaLibrary, Stream } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
-import { Empty, Meter, PosterRow as Row } from '../components/ui.tsx';
-import { agoLong, eta } from '../lib/format.ts';
+import { Empty, Episode, Meter, Poster, PosterRow as Row } from '../components/ui.tsx';
+import { ago, agoLong, eta } from '../lib/format.ts';
 import { msg, t as tr } from '../lib/i18n.ts';
 import { ACTION, call, useList } from '../lib/live-list.ts';
-import { type MediaServer, streamProps, useMediaServers } from '../lib/media.ts';
+import { itemHref, type MediaServer, streamProps, useMediaServers } from '../lib/media.ts';
 import { StreamRow } from '../components/StreamRow.tsx';
 import { useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
@@ -146,8 +146,65 @@ const KIND_COUNT: Record<MediaLibrary['kind'], string> = {
   other: msg('{n} items'),
 };
 
+const SOURCE: Record<MediaLibrary['server'], string> = { plex: 'tautulli', jellyfin: 'jellyfin', emby: 'emby' };
+
+/** One library opened: how much it holds, where it reads from, and what came in last. */
+function LibraryPanel({ library: l }: { library: MediaLibrary }) {
+  const { data, err } = useList<LibraryDetail>(`/api/media/${l.server}/library/${encodeURIComponent(l.id)}`);
+  const { servers } = useMediaServers();
+  const server = servers.find((s) => s.id === SOURCE[l.server]);
+  if (err) return <p className="crit-text lib-panel">{err}</p>;
+  if (!data) return <div className="dlp-loading lib-panel" aria-busy="true" />;
+  return (
+    <div className="lib-panel media-lib">
+      {(data.episodes != null || data.tracks != null || data.folders.length > 0) && (
+        <div className="dlp-meta">
+          {data.episodes != null && <span>{tr('{n} episodes', { n: data.episodes.toLocaleString() })}</span>}
+          {data.tracks != null && <span>{tr('{n} tracks', { n: data.tracks.toLocaleString() })}</span>}
+          {data.folders.map((f) => (
+            <span key={f} className="media-lib-folder">
+              {f}
+            </span>
+          ))}
+        </div>
+      )}
+      {data.recent.length === 0 ? (
+        <p className="lib-total">{tr('Nothing added yet.')}</p>
+      ) : (
+        <ul className="posters media-lib-posters" aria-label={tr('Added lately')}>
+          {data.recent.map((r) => {
+            const href = server && itemHref(server, r.id);
+            const inner = (
+              <>
+                <Poster title={r.title} thumb={r.thumb} />
+                <span className="poster-title">{r.title}</span>
+                <span className="poster-sub">
+                  {r.subtitle && <Episode text={r.subtitle} />}
+                  <time>{ago(r.addedAt)}</time>
+                </span>
+              </>
+            );
+            return (
+              <li key={`${r.id}:${r.subtitle ?? ''}`}>
+                {href ? (
+                  <a className="poster-link" href={href} target="_blank" rel="noreferrer">
+                    {inner}
+                  </a>
+                ) : (
+                  <div className="poster-link is-plain">{inner}</div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function Libraries({ ro, onSaid, onErr }: { ro: boolean; onSaid: (s: string) => void; onErr: (s: string) => void }) {
   const { data, err, reload } = useList<MediaLibraries>('/api/media/libraries');
+  const [opened, setOpened] = useState('');
   const scanning = data?.servers.some((s) => s.libraries.some((l) => l.scanning));
   // While a scan runs, look again every few seconds to see it finish.
   useEffect(() => {
@@ -185,7 +242,9 @@ function Libraries({ ro, onSaid, onErr }: { ro: boolean; onSaid: (s: string) => 
             <Empty>{tr('No libraries.')}</Empty>
           ) : (
             <ul className="lib-list">
-              {server.libraries.map((l) => (
+              {server.libraries.map((l) => {
+                const key = `${l.server}:${l.id}`;
+                return (
                 <li key={l.id} className="lib-row no-art">
                   <div className="lib-body">
                     <span className="lib-title">{l.name}</span>
@@ -193,6 +252,11 @@ function Libraries({ ro, onSaid, onErr }: { ro: boolean; onSaid: (s: string) => 
                       {l.count != null && <span>{tr(KIND_COUNT[l.kind], { n: l.count.toLocaleString() })}</span>}
                       {l.scanning ? <span className="media-scanning">{tr('Scanning')}</span> : l.scannedAt ? <span>{tr('scanned {when}', { when: agoLong(l.scannedAt) })}</span> : null}
                     </div>
+                    {server.canOpen && (
+                      <button type="button" className="text-button lib-open" aria-expanded={opened === key} onClick={() => setOpened(opened === key ? '' : key)}>
+                        {opened === key ? tr('Hide') : tr('What’s in it')}
+                      </button>
+                    )}
                   </div>
                   {!ro && l.canScan && (
                     <div className="lib-actions">
@@ -201,8 +265,14 @@ function Libraries({ ro, onSaid, onErr }: { ro: boolean; onSaid: (s: string) => 
                       </button>
                     </div>
                   )}
+                  {opened === key && (
+                    <div className="lib-below">
+                      <LibraryPanel library={l} />
+                    </div>
+                  )}
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </section>

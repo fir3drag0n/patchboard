@@ -722,7 +722,6 @@
  "Saved, Hardcover is in use": "Opgeslagen, Hardcover is in gebruik",
  "Saved.": "Opgeslagen.",
  "Saved. Needs attention uses the new numbers now.": "Opgeslagen. Vraagt aandacht gebruikt nu de nieuwe getallen.",
- "Saved. Patchboard connects now; the status above updates within a few seconds.": "Opgeslagen. Patchboard maakt nu verbinding. De status hierboven wordt binnen enkele seconden bijgewerkt.",
  "Saved. Type to replace it.": "Opgeslagen. Typ een nieuwe waarde om de bestaande te vervangen.",
  "Saving...": "Opslaan...",
  "searched again for": "zocht opnieuw naar",
@@ -1198,5 +1197,12 @@
  "something new inside": "er staat iets nieuws in",
  "That did not work.": "Dat lukte niet.",
  "The server did not answer.": "De server gaf geen antwoord.",
- "All requests": "Alle verzoeken"
+ "All requests": "Alle verzoeken",
+ "Saved and connected. {summary}": "Opgeslagen en verbonden. {summary}",
+ "Saved, but it doesn’t connect yet: {error}": "Opgeslagen, maar er is nog geen verbinding: {error}",
+ "What’s in it": "Wat erin staat",
+ "{n} episodes": "{n} afleveringen",
+ "{n} tracks": "{n} nummers",
+ "Nothing added yet.": "Nog niets toegevoegd.",
+ "Added lately": "Onlangs toegevoegd"
 }

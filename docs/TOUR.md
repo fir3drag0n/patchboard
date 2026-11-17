@@ -271,7 +271,8 @@ the way, and requests it.
 who, on what device, direct play or transcoding, and the time left. Hold
 Stop to end one, and the viewer sees a note that you did. Libraries lists
 each library with how much it holds and when it was last scanned, with
-Scan beside it. Plex works on its own with its address and token, or
+Scan beside it. Open one for its episodes or tracks, the folders it reads
+and what came in last. Plex works on its own with its address and token, or
 through Tautulli. A stream's title opens the same card as on Home, with
 Stop, and on a phone, Open in the Plex app.
 

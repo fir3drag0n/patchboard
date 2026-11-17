@@ -83,7 +83,14 @@ export function IntegrationForm({
       const r = await call(`/api/setup/integrations/${integration.id}`, 'PUT', { values: payload() });
       onSaved(r.integrations as SetupIntegration[]);
       setValues((prev) => Object.fromEntries(Object.entries(prev).filter(([k]) => setup.fields.find((f) => f.name === k)?.kind !== 'secret')));
-      setResult({ ok: true, text: tr('Saved. Patchboard connects now; the status above updates within a few seconds.') });
+      const check = r.check as { ok: boolean; text: string } | undefined;
+      setResult(
+        !check
+          ? { ok: true, text: tr('Saved.') }
+          : check.ok
+            ? { ok: true, text: tr('Saved and connected. {summary}', { summary: check.text }) }
+            : { ok: false, text: tr('Saved, but it doesn’t connect yet: {error}', { error: check.text }) },
+      );
     } catch (err) {
       setResult({ ok: false, text: (err as Error).message });
     } finally {
