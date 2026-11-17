@@ -48,7 +48,7 @@ there. Coming from Homepage? Settings imports its `services.yaml`.
 
 Then connect what you run from Settings, Connections: press **Set up**,
 paste the address and key, test, save. It connects at once, and the server
-stores the key encrypted. There are 69 integrations, among them Sonarr,
+stores the key encrypted. There are 71 integrations, among them Sonarr,
 Radarr, Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission,
 Deluge, SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole,
 AdGuard Home, Speedtest Tracker, Overseerr, Paperless, Nextcloud, BitAxe,

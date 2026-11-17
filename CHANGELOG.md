@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.16.0 (2026-11-17)
 
 - **Open a library** on the Media page: its episodes or tracks, the folders
   it reads, and what came in last, with posters that open in Plex or
@@ -11,50 +11,46 @@
   lists with Details alone, and its controls open with it.
 - **Suggest an idea or report a problem from Patchboard:** Help (the `?`)
   and a phone's More open the matching GitHub form with the version, browser
-  or page filled in, and nothing private. Tab and Shift-Tab still wrap
-  inside Help.
-- **A turned-away webhook raises a warning:** when Diun posts without the
-  token sign-in needs, Home says so and points to the address to copy.
-- **Save says whether it connects:** saving an app in Settings,
-  Connections tests it and shows what it found or why it failed.
-- **Fixes:**
+  or page filled in, and nothing private.
+- **Patchboard tells you when something doesn't connect:**
+  - **Save tests the connection:** saving an app in Settings, Connections
+    shows what it found or why it failed.
+  - **A turned-away webhook raises a warning:** when Diun posts without the
+    token sign-in needs, Home says so and points to the address to copy.
+  - **Plex reads On** in Connections once it's saved.
+- **Updates go smoothly:**
   - **No more "Unexpected Application Error" after an update:** a tab or
     home-screen app opened before an update asked for build files the
-    update replaced, and got the page back in their place. Patchboard now
-    answers 404 for those, the app reloads onto the new build by itself,
-    and any other failure shows its own page with Reload.
-  - **Plex reads On** in Connections once it's saved.
-  - **A wall page's clock is right the moment you swipe to it:** it showed
-    the time it was hidden until the next tick, up to a minute behind.
-  - **Updates restart faster:** Patchboard now stops when Docker asks,
-    closing its live lines to Jellyfin and the rest, instead of waiting out
-    Docker's 10 seconds to be killed.
+    update replaced. Patchboard now answers 404 for those, the app reloads
+    onto the new build by itself, and any other failure shows its own page
+    with Reload.
+  - **Restarts take a second, not ten:** Patchboard stops when Docker asks
+    and closes its live lines to Jellyfin and the rest, instead of waiting
+    to be killed.
+- **Fixes:**
+  - **Jellyfin's newest arrivals survive a season drop:** 28 new episodes
+    of one show used to leave 3 items in all. Patchboard now reads the
+    newest 120 and groups them itself.
+  - **Copy works at a plain http address,** such as http://your-server:3200:
+    Diun's webhook, API keys, a device's link, runbook code, carried
+    settings and the catalog's YAML. Diun's address sits in a field that
+    selects itself if a browser still refuses.
+  - **A wall page's clock is right the moment you swipe to it,** not up to a
+    minute behind.
   - **Monitor trusts an app's own level:** Jellyfin's "[WRN] … error
     receiving data" shows as a warning, not an error.
-  - **Copy works at a plain http address:** every Copy (Diun's webhook, API
-    keys, a device's link, runbook code, carried settings, the catalog's
-    YAML) copied only over https. They copy at
-    http://your-server:3200 too, and Diun's address now sits in a field
-    that selects itself if a browser still refuses.
+  - **Posters open from anywhere:** when your app's tile uses plain http and
+    Connections holds an https address, posters link through the https one.
   - **Touch targets on a wall tablet:** the busiest containers on Server
     take the whole row, and Edit board and Colors on a device's pages no
     longer overlap when they wrap.
-  - **A show with nothing yet** reads "No episodes yet" in Library, not
-    "0 of 0 episodes".
-  - **Jellyfin's newest arrivals survive a season drop:** Jellyfin limits
-    before it groups, so 28 new episodes of one show left 3 items in all.
-    Patchboard now reads the newest 120 and groups them itself.
-  - **Posters open from anywhere:** when your app's tile uses plain http and
-    Connections holds an https address, posters link through the https one.
-  - **A stream's card no longer scrolls:** the hidden Stop hint and the
-    phone tap areas stretched it sideways and down.
-  - **Hold hints exist only while they show,** so none stretches the box
-    it sits in.
+  - **A stream's card no longer scrolls,** and hold hints no longer stretch
+    the box they sit in.
+  - **A show with nothing yet** reads "No episodes yet" in Library.
 - **Fit, taps and hovers checked on every page:** `npm run test:fit` opens
-  everything on every page at four sizes in two looks. `--full` adds an
-  iPad on its side, a wall tablet, a 1080p kiosk and Compact density, and
-  `FIT_BASE` points it at your own install, read-only. It reads each page's
-  zoom from Chrome, so density never makes a false alarm.
+  everything on every page at phone, tablet, laptop and desktop sizes, with
+  `--full` for an iPad on its side, a wall tablet, a 1080p kiosk and Compact
+  density. `FIT_BASE` points it at your own install, read-only.
 
 ## 1.15.0 (2026-11-16)
 
