@@ -1209,5 +1209,9 @@
  "Seeding at": "Seedet mit",
  "Downloaded": "Heruntergeladen",
  "Uploaded": "Hochgeladen",
- "Patchboard turned away a webhook from {name}": "Patchboard hat einen Webhook von {name} abgewiesen"
+ "Patchboard turned away a webhook from {name}": "Patchboard hat einen Webhook von {name} abgewiesen",
+ "This page hit an error.": "Auf dieser Seite ist ein Fehler aufgetreten.",
+ "Reload to try again. If it keeps happening, the message below says what broke.": "Lade neu, um es erneut zu versuchen. Passiert es wieder, steht unten, was kaputt ist.",
+ "This page didn’t load.": "Diese Seite wurde nicht geladen.",
+ "Patchboard was updated, or the connection dropped while it loaded. Reload to open it.": "Patchboard wurde aktualisiert, oder die Verbindung brach beim Laden ab. Lade neu, um sie zu öffnen."
 }

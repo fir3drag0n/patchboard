@@ -13,6 +13,11 @@
 - **Save says whether it connects:** saving an app in Settings,
   Connections tests it and shows what it found or why it failed.
 - **Fixes:**
+  - **No more "Unexpected Application Error" after an update:** a tab or
+    home-screen app opened before an update asked for build files the
+    update replaced, and got the page back in their place. Patchboard now
+    answers 404 for those, the app reloads onto the new build by itself,
+    and any other failure shows its own page with Reload.
   - **Plex reads On** in Connections once it's saved.
   - **Jellyfin's newest arrivals survive a season drop:** Jellyfin limits
     before it groups, so 28 new episodes of one show left 3 items in all.

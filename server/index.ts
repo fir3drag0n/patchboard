@@ -2670,6 +2670,9 @@ app.use('/*', async (c, next) => {
 app.use('/*', serveStatic({ root: config.staticDir }));
 app.get('*', (c) => {
   if (c.req.path.startsWith('/api/')) return c.json({ error: 'Not found' }, 404);
+  // A build file that's gone (a tab older than the last update) is a 404, never
+  // the page: a browser can't run HTML as a script, and must not keep it as one.
+  if (c.req.path.startsWith('/assets/')) return c.text('Not found', 404, { 'Cache-Control': 'no-store' });
   if (!existsSync(indexPath)) return c.text('Client not built. Run `npm run build`, or use `npm run dev`.', 503);
   return c.html(readFileSync(indexPath, 'utf8'));
 });

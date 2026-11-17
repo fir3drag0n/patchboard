@@ -3,7 +3,8 @@
 // dashboard showing stale numbers as if they were current is worse than one
 // that says it's offline.
 
-const CACHE = 'patchboard-v8';
+// v9: drops copies of the page that v8 could keep in place of a missing build file.
+const CACHE = 'patchboard-v9';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/manifest-light.webmanifest', '/icon-192.png', '/icon-light-192.png', '/favicon.png'])));
@@ -35,15 +36,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Hashed build assets never change, so cache first.
+  // Hashed build assets never change, so cache first. Only a real file is
+  // kept: a 404 or an HTML page in its place would stick until the next version.
   if (url.pathname.startsWith('/assets/')) {
     event.respondWith(
       caches.match(event.request).then(
         (hit) =>
           hit ||
           fetch(event.request).then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(event.request, copy));
+            if (res.ok && !(res.headers.get('content-type') ?? '').includes('text/html')) {
+              const copy = res.clone();
+              caches.open(CACHE).then((c) => c.put(event.request, copy));
+            }
             return res;
           }),
       ),

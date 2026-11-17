@@ -9074,6 +9074,16 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
   text-align: center;
 }
 
+.route-error-text {
+  max-width: min(40em, 100%);
+  margin: 12px 0 0;
+  color: var(--ink-3);
+  font: 12.5px/1.5 var(--f-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
 /* A narrow phone: the demo label gives way so the name and icons fit. */
 @media (max-width: 400px) {
   .topbar-end .demo-pill {
