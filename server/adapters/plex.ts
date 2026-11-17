@@ -8,10 +8,12 @@ import type { Play, RecentItem, Stream, TautulliData } from '../../shared/types.
 import { config } from '../config.ts';
 import { getJson, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
+import { webUrl } from './mediaserver.ts';
 import { plexItemPath } from './tautulli.ts';
 
 export interface PlexItem {
   ratingKey?: string;
+  grandparentRatingKey?: string;
   type?: string;
   title?: string;
   grandparentTitle?: string;
@@ -120,7 +122,7 @@ export function plexAdapter(): Adapter<TautulliData> {
       const sessions = await get<{ Metadata?: PlexItem[] }>('/status/sessions');
       const streams = fromPlexSessions(sessions.Metadata ?? []);
       watching = streams.length > 0;
-      return { streams, recent: slow.recent, ...(slow.watched ? { watched: slow.watched } : {}), ...(machine ? { itemPath: plexItemPath(machine) } : {}) };
+      return { streams, recent: slow.recent, ...(slow.watched ? { watched: slow.watched } : {}), ...(machine ? { itemPath: plexItemPath(machine) } : {}), ...webUrl(url) };
     },
   };
 }

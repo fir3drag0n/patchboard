@@ -35,7 +35,9 @@ export function useMediaServers(): { servers: MediaServer[]; configured: boolean
     const data = states[i].data;
     if (!data) return;
     const app = apps.find((a) => a.container === s.container || a.name.toLowerCase() === s.label.toLowerCase());
-    const href = app?.href && app.href !== '#' ? app.href.replace(/\/+$/, '') : undefined;
+    const tile = app?.href && app.href !== '#' ? app.href.replace(/\/+$/, '') : undefined;
+    // The app's tile, unless it's plain http and Connections holds an https address.
+    const href = data.webUrl && !tile?.startsWith('https:') ? data.webUrl : tile;
     servers.push({ ...s, container: app?.container ?? findContainer(snap, s.container, s.label), data, href });
   });
   return { servers, configured: states.some((s) => s.state) };

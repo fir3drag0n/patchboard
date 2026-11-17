@@ -636,6 +636,8 @@ export interface RecentItem {
   type: string;
   addedAt: number;
   thumb?: string;
+  /** A show's episodes that came in together, when more than one: the poster stands for the show. */
+  episodes?: number;
 }
 
 /** One play on a media server, newest first in a list. */
@@ -665,6 +667,8 @@ export interface TautulliData {
   library?: LibraryCounts;
   /** Plex: after the web app's address, then the item id, opens that title. Missing until Plex's server id is known. */
   itemPath?: string;
+  /** The server's address from Connections, when it's https: one that opens away from home too. */
+  webUrl?: string;
 }
 
 /** Jellyfin and Emby: the Plex shape plus the episodes you watch next. */

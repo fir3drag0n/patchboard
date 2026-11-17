@@ -125,6 +125,9 @@ export const ITEM_PATH: Record<MediaKind, string> = {
   emby: '/web/index.html#!/item?id=',
 };
 
+/** The Connections address, for links, when a browser anywhere can open it. */
+export const webUrl = (url: string): { webUrl?: string } => (/^https:\/\//i.test(url) ? { webUrl: url.replace(/\/+$/, '') } : {});
+
 export function mediaServerAdapter(kind: MediaKind): Adapter<MediaServerData> {
   let userId: string | null = null;
   let userName = 'Someone';
@@ -236,6 +239,7 @@ export function mediaServerAdapter(kind: MediaKind): Adapter<MediaServerData> {
         recent: added.map((it) => toRecent(kind, it)).sort((a, b) => b.addedAt - a.addedAt),
         nextUp: next.Items.map((it) => ({ ...toRecent(kind, it), id: it.Id })),
         itemPath: ITEM_PATH[kind],
+        ...webUrl(settings(kind).url),
         ...(watched ? { watched } : {}),
         ...(library ? { library } : {}),
       });

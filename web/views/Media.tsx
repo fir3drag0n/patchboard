@@ -8,7 +8,7 @@ import type { LibraryDetail, MediaLibraries, MediaLibrary, Stream } from '../../
 import { HoldButton } from '../components/Hold.tsx';
 import { Empty, Episode, Meter, Poster, PosterRow as Row } from '../components/ui.tsx';
 import { ago, agoLong, eta } from '../lib/format.ts';
-import { msg, t as tr } from '../lib/i18n.ts';
+import { msg, tn, t as tr } from '../lib/i18n.ts';
 import { ACTION, call, useList } from '../lib/live-list.ts';
 import { itemHref, type MediaServer, streamProps, useMediaServers } from '../lib/media.ts';
 import { StreamRow } from '../components/StreamRow.tsx';
@@ -179,7 +179,7 @@ function LibraryPanel({ library: l }: { library: MediaLibrary }) {
                 <Poster title={r.title} thumb={r.thumb} />
                 <span className="poster-title">{r.title}</span>
                 <span className="poster-sub">
-                  {r.subtitle && <Episode text={r.subtitle} />}
+                  {r.episodes ? tn(r.episodes, '{n} new episode', '{n} new episodes') : r.subtitle && <Episode text={r.subtitle} />}
                   <time>{ago(r.addedAt)}</time>
                 </span>
               </>

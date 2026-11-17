@@ -1204,5 +1204,7 @@
  "{n} episodes": "{n} Folgen",
  "{n} tracks": "{n} Titel",
  "Nothing added yet.": "Noch nichts hinzugefügt.",
- "Added lately": "Kürzlich hinzugefügt"
+ "Added lately": "Kürzlich hinzugefügt",
+ "{n} new episode": "{n} neue Folge",
+ "{n} new episodes": "{n} neue Folgen"
 }

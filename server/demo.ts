@@ -70,7 +70,7 @@ import type {
 import type { Adapter } from './adapters/adapter.ts';
 import type { DownloadManager } from './adapters/downloads.ts';
 import type { SeerrClient } from './adapters/seerr.ts';
-import type { MediaControl } from './adapters/media-control.ts';
+import { byShow, type MediaControl } from './adapters/media-control.ts';
 import type { DnsDomains } from './adapters/dns.ts';
 import type { IndexerControl } from './adapters/indexers.ts';
 import type { SubtitleControl } from './adapters/subtitles.ts';
@@ -454,13 +454,13 @@ export function demoMediaControl(server: 'plex' | 'jellyfin' | 'emby'): MediaCon
         ...(kind === 'shows' ? { episodes: server === 'plex' ? 9418 : 7260 } : {}),
         ...(kind === 'music' ? { tracks: 21877 } : {}),
         folders: [kind === 'shows' ? '/data/media/tv' : kind === 'music' ? '/data/media/music' : '/data/media/movies'],
-        recent: titles.map(([title, subtitle], i) => ({ id: `${server}-${id}-${i}`, type: kind === 'shows' ? 'episode' : 'movie', title, subtitle, thumb: poster(title), addedAt: Date.now() - (i * 9 + 2) * H })),
+        recent: byShow(titles.map(([title, subtitle], i) => ({ id: `${server}-${id}-${i}`, type: kind === 'shows' ? 'episode' : 'movie', title, subtitle, thumb: poster(title), addedAt: Date.now() - (i * 9 + 2) * H }))),
       };
     },
   };
 }
 
-const DEMO_LIB_SHOWS: [string, string][] = [['Silo', 'S02E10'], ['Slow Horses', 'S05E02'], ['The Pitt', 'S01E15'], ['Andor', 'S02E12'], ['Fallout', 'S01E08'], ['Severance', 'S02E10'], ['The Bear', 'S04E01'], ['Shōgun', 'S01E10']];
+const DEMO_LIB_SHOWS: [string, string][] = [['Silo', 'S02E10'], ['Silo', 'S02E09'], ['Silo', 'S02E08'], ['Slow Horses', 'S05E02'], ['The Pitt', 'S01E15'], ['Andor', 'S02E12'], ['Fallout', 'S01E08'], ['Severance', 'S02E10'], ['The Bear', 'S04E01'], ['Shōgun', 'S01E10']];
 const DEMO_LIB_FILMS: [string, string][] = [['Weapons', '2025'], ['Sinners', '2025'], ['One Battle After Another', '2025'], ['Dune: Part Two', '2024'], ['Poor Things', '2023'], ['Past Lives', '2023'], ['The Holdovers', '2023'], ['Oppenheimer', '2023']];
 
 const demoJellyfin = (): MediaServerData => ({

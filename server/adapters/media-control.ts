@@ -4,7 +4,7 @@
 // their API key. Every call goes from this server; the browser never talks
 // to a media server.
 
-import type { LibraryDetail, MediaLibrary, MediaServerId } from '../../shared/types.ts';
+import type { LibraryDetail, MediaLibrary, MediaServerId, RecentItem } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { getJson, HttpError, request } from '../http.ts';
 import { authHeaders, type Item, type MediaKind, toRecent } from './mediaserver.ts';
@@ -24,6 +24,29 @@ export interface MediaControl {
 
 /** How many to show of what came in last. */
 const RECENT = 12;
+/** How many to read for them: a season drop takes many episodes, and they share one poster. */
+const NEWEST = 60;
+
+/**
+ * Episodes of one show land together, so one poster stands for the show with
+ * how many came in, and a season drop leaves room for the rest. `showId`
+ * turns an episode's id into its show's, for the poster's link.
+ */
+export function byShow(items: RecentItem[], showId: (episode: string) => string | undefined = () => undefined): RecentItem[] {
+  const out: RecentItem[] = [];
+  const shows = new Map<string, RecentItem>();
+  for (const r of items) {
+    const seen = r.type === 'episode' ? shows.get(r.title) : undefined;
+    if (seen) {
+      seen.episodes = (seen.episodes ?? 1) + 1;
+      continue;
+    }
+    const copy = { ...r };
+    if (r.type === 'episode') shows.set(r.title, copy);
+    out.push(copy);
+  }
+  return out.slice(0, RECENT).map(({ subtitle, ...r }) => (r.episodes ? { ...r, id: showId(r.id) ?? r.id } : { ...r, ...(subtitle ? { subtitle } : {}) }));
+}
 
 // ---------- Plex ----------
 
@@ -58,7 +81,7 @@ export function plexLibraryDetail(section: PlexSection | undefined, recent: Plex
     ...(total != null && kind === 'shows' ? { episodes: total } : {}),
     ...(total != null && kind === 'music' ? { tracks: total } : {}),
     folders: (section?.Location ?? []).map((l) => l.path ?? '').filter(Boolean),
-    recent: fromPlexRecent(recent).slice(0, RECENT),
+    recent: byShow(fromPlexRecent(recent), (id) => recent.find((it) => it.ratingKey === id)?.grandparentRatingKey),
   };
 }
 
@@ -144,7 +167,8 @@ export function jellyLibraryDetail(server: MediaKind, folder: VirtualFolder | un
     ...(total != null && kind === 'shows' ? { episodes: total } : {}),
     ...(total != null && kind === 'music' ? { tracks: total } : {}),
     folders: folder?.Locations ?? [],
-    recent: recent.map((it) => toRecent(server, it)).slice(0, RECENT),
+    // An episode's id is already its show's.
+    recent: byShow(recent.map((it) => toRecent(server, it))),
   };
 }
 
@@ -182,7 +206,7 @@ function jellyControl(kind: MediaKind): MediaControl {
       const newest = lib === 'shows' ? 'Episode' : lib === 'music' ? 'MusicAlbum' : lib === 'movies' ? 'Movie' : 'Movie,Episode,MusicAlbum,Video,Photo';
       const counted = lib === 'shows' ? 'Episode' : lib === 'music' ? 'Audio' : '';
       const [recent, all] = await Promise.all([
-        getJson<{ Items?: Item[] }>(`${url}/Items?ParentId=${p}&Recursive=true&SortBy=DateCreated&SortOrder=Descending&IncludeItemTypes=${newest}&Limit=${RECENT}&Fields=DateCreated,ProductionYear`, { headers }, 15_000),
+        getJson<{ Items?: Item[] }>(`${url}/Items?ParentId=${p}&Recursive=true&SortBy=DateCreated&SortOrder=Descending&IncludeItemTypes=${newest}&Limit=${NEWEST}&Fields=DateCreated,ProductionYear`, { headers }, 15_000),
         counted ? getJson<{ TotalRecordCount?: number }>(`${url}/Items?ParentId=${p}&Recursive=true&IncludeItemTypes=${counted}&Limit=0`, { headers }, 15_000).catch(() => undefined) : undefined,
       ]);
       return jellyLibraryDetail(kind, folder, recent.Items ?? [], all?.TotalRecordCount);
@@ -226,7 +250,7 @@ export function mediaControl(server: MediaServerId): MediaControl | undefined {
         // Plex's types: 4 is an episode, 10 a track. Size 0 asks for the count alone.
         const type = ({ show: 4, artist: 10 } as Record<string, number>)[section.type ?? ''];
         const [recent, all] = await Promise.all([
-          get<{ Metadata?: PlexItem[] }>(`/library/sections/${e}/recentlyAdded?X-Plex-Container-Start=0&X-Plex-Container-Size=${RECENT}`),
+          get<{ Metadata?: PlexItem[] }>(`/library/sections/${e}/recentlyAdded?X-Plex-Container-Start=0&X-Plex-Container-Size=${NEWEST}`),
           type ? get<{ totalSize?: number }>(`/library/sections/${e}/all?type=${type}&X-Plex-Container-Start=0&X-Plex-Container-Size=0`).catch(() => undefined) : undefined,
         ]);
         return plexLibraryDetail(section, recent?.Metadata ?? [], all?.totalSize);

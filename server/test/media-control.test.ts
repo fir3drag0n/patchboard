@@ -2,8 +2,8 @@ import { strict as assert } from 'node:assert';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { test } from 'node:test';
-import { fromPlexSections, fromTautulliLibraries, fromVirtualFolders, jellyLibraryDetail, plexLibraryDetail } from '../adapters/media-control.ts';
-import { toStream } from '../adapters/mediaserver.ts';
+import { byShow, fromPlexSections, fromTautulliLibraries, fromVirtualFolders, jellyLibraryDetail, plexLibraryDetail } from '../adapters/media-control.ts';
+import { toStream, webUrl } from '../adapters/mediaserver.ts';
 import { toTautulliStream } from '../adapters/tautulli.ts';
 
 test('a stream carries its session and device, so the Media page can stop it', () => {
@@ -95,4 +95,31 @@ test('an opened Jellyfin library reads the same way', () => {
   assert.deepEqual([d.tracks, d.episodes, d.folders], [900, undefined, ['/data/music']]);
   assert.equal(d.recent[0].title, 'Blue');
   assert.equal(d.recent[0].thumb, '/api/img/jellyfin?id=a1');
+});
+
+test('a season drop shares one poster, so the shelf shows more than one show', () => {
+  const ep = (id: string, title: string, subtitle: string, addedAt: number) => ({ id, type: 'episode', title, subtitle, addedAt });
+  const shelf = byShow(
+    [ep('e3', 'Big Brother', 'S28E40', 30), ep('e2', 'Big Brother', 'S28E39', 20), { id: 'm1', type: 'movie', title: 'Falling', subtitle: '2026', addedAt: 15 }, ep('e1', 'Big Brother', 'S28E38', 10), ep('s1', 'Silo', 'S02E10', 5)],
+    (id) => (id === 'e3' ? 'show-bb' : undefined),
+  );
+  assert.deepEqual(
+    shelf.map((r) => [r.id, r.title, r.episodes, r.subtitle]),
+    [
+      ['show-bb', 'Big Brother', 3, undefined],
+      ['m1', 'Falling', undefined, '2026'],
+      ['s1', 'Silo', undefined, 'S02E10'],
+    ],
+  );
+  // Plex links the grouped poster to the show, not one episode.
+  const d = plexLibraryDetail({ key: '2', title: 'TV', type: 'show' }, [
+    { ratingKey: '9', grandparentRatingKey: '4', type: 'episode', grandparentTitle: 'Silo', title: 'Descent', parentIndex: 2, index: 10, addedAt: 2 },
+    { ratingKey: '8', grandparentRatingKey: '4', type: 'episode', grandparentTitle: 'Silo', title: 'Into the Fire', parentIndex: 2, index: 9, addedAt: 1 },
+  ]);
+  assert.deepEqual([d.recent.length, d.recent[0].id, d.recent[0].episodes], [1, '4', 2]);
+});
+
+test('posters link through the https address from Connections, never a plain http one', () => {
+  assert.deepEqual(webUrl('https://jellyfin.example.com/'), { webUrl: 'https://jellyfin.example.com' });
+  assert.deepEqual(webUrl('http://jellyfin:8096'), {});
 });

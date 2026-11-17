@@ -4,11 +4,13 @@
 
 - **Open a library** on the Media page: its episodes or tracks, the folders
   it reads, and what came in last, with posters that open in Plex or
-  Jellyfin.
+  Jellyfin. A show's new episodes share one poster with how many came in.
 - **Save says whether it connects:** saving an app in Settings,
   Connections tests it and shows what it found or why it failed.
 - **Fixes:**
   - **Plex reads On** in Connections once it's saved.
+  - **Posters open from anywhere:** when your app's tile uses plain http and
+    Connections holds an https address, posters link through the https one.
   - **A stream's card no longer scrolls:** the hidden Stop hint and the
     phone tap areas stretched it sideways and down.
   - **Hold hints exist only while they show,** so none stretches the box

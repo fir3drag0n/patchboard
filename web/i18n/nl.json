@@ -1204,5 +1204,7 @@
  "{n} episodes": "{n} afleveringen",
  "{n} tracks": "{n} nummers",
  "Nothing added yet.": "Nog niets toegevoegd.",
- "Added lately": "Onlangs toegevoegd"
+ "Added lately": "Onlangs toegevoegd",
+ "{n} new episode": "{n} nieuwe aflevering",
+ "{n} new episodes": "{n} nieuwe afleveringen"
 }
