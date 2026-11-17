@@ -8,10 +8,15 @@
 - **Downloads reads like a torrent client:** small arrows mark speeds and
   totals down and up, figures line up in columns, the bar is a thin line,
   and a finished torrent's ratio turns green at 1.00.
+- **A turned-away webhook raises a warning:** when Diun posts without the
+  token sign-in needs, Home says so and points to the address to copy.
 - **Save says whether it connects:** saving an app in Settings,
   Connections tests it and shows what it found or why it failed.
 - **Fixes:**
   - **Plex reads On** in Connections once it's saved.
+  - **Jellyfin's newest arrivals survive a season drop:** Jellyfin limits
+    before it groups, so 28 new episodes of one show left 3 items in all.
+    Patchboard now reads the newest 120 and groups them itself.
   - **Posters open from anywhere:** when your app's tile uses plain http and
     Connections holds an https address, posters link through the https one.
   - **A stream's card no longer scrolls:** the hidden Stop hint and the
@@ -19,7 +24,9 @@
   - **Hold hints exist only while they show,** so none stretches the box
     it sits in.
 - **Fit, taps and hovers checked on every page:** `npm run test:fit` opens
-  everything on every page at four sizes in two looks.
+  everything on every page at four sizes in two looks. `--full` adds an
+  iPad on its side, a wall tablet and a 1080p kiosk, and `FIT_BASE` points
+  it at your own install, read-only.
 
 ## 1.15.0 (2026-11-16)
 

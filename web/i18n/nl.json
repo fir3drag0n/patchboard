@@ -1208,5 +1208,6 @@
  "Uploading at": "Uploadt met",
  "Seeding at": "Seedt met",
  "Downloaded": "Gedownload",
- "Uploaded": "Geüpload"
+ "Uploaded": "Geüpload",
+ "Patchboard turned away a webhook from {name}": "Patchboard heeft een webhook van {name} geweigerd"
 }

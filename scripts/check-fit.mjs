@@ -10,7 +10,11 @@
 //   - on touch, a control that answers less than 44px around its middle, or
 //     one another control's tap area covers;
 //   - on desktop, a hover that makes anything scroll.
-// `--full` adds a small phone and the light Paper theme. `--only=/path` checks one page.
+// `--full` adds a small phone, an iPad on its side, a wall tablet, a 1080p
+// kiosk and the light Paper theme. `--only=/path` checks one page.
+// FIT_BASE=https://your.patchboard FIT_PASSWORD=... checks a running install
+// instead, with its own look and data. The page may only read there: every
+// request that would change something is blocked.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -38,20 +42,28 @@ const SIZES = [
   { name: 'laptop', viewport: { width: 1280, height: 720 } },
   { name: 'tablet', viewport: { width: 820, height: 1180 }, ...touch },
   { name: 'iphone', viewport: { width: 402, height: 874 }, ...touch },
-  ...(full ? [{ name: 'small phone', viewport: { width: 360, height: 740 }, ...touch }] : []),
+  ...(full
+    ? [
+        { name: 'small phone', viewport: { width: 360, height: 740 }, ...touch },
+        { name: 'ipad landscape', viewport: { width: 1180, height: 820 }, ...touch },
+        { name: 'wall tablet', viewport: { width: 960, height: 600 }, ...touch },
+        { name: 'kiosk', viewport: { width: 1920, height: 1080 } },
+      ]
+    : []),
 ];
+const live = process.env.FIT_BASE?.replace(/\/+$/, '');
 const LOOKS = [
-  { name: 'default', look: null },
+  { name: live ? 'yours' : 'default', look: null },
   { name: 'wide', look: { font: 'mono', density: 'large' } },
-  ...(full ? [{ name: 'paper', look: { theme: 'paper', scheme: 'light' } }] : []),
+  ...(full && !live ? [{ name: 'paper', look: { theme: 'paper', scheme: 'light' } }] : []),
 ];
 // Openers to leave alone: they leave the page or change saved settings.
 const SKIP_OPEN = '[data-fit-skip], .lib-open-file, [aria-haspopup="dialog"][data-danger]';
 
 const dir = mkdtempSync(join(tmpdir(), 'pb-fit-check-'));
 const PORT = 3297;
-const base = `http://localhost:${PORT}`;
-const server = spawn(process.execPath, ['server/index.ts'], { env: { ...process.env, DEMO: '1', DATA_DIR: dir, PORT: String(PORT) }, stdio: 'ignore' });
+const base = live ?? `http://localhost:${PORT}`;
+const server = live ? null : spawn(process.execPath, ['server/index.ts'], { env: { ...process.env, DEMO: '1', DATA_DIR: dir, PORT: String(PORT) }, stdio: 'ignore' });
 
 // In the page: what doesn't fit right now, within `scope` (the page, or one opened panel).
 function inspect({ scope, touch }) {
@@ -179,15 +191,26 @@ try {
     try { if ((await fetch(`${base}/api/session`)).ok) { ready = true; break; } } catch {}
     await new Promise((r) => setTimeout(r, 100));
   }
-  assert(ready, 'demo server started');
+  assert(ready, live ? `${base} answers` : 'demo server started');
   for (const options of [{ channel: 'chrome' }, { executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium' }, {}]) {
     try { browser = await chromium.launch(options); break; } catch {}
   }
   assert(browser, 'Install Chrome/Chromium or set CHROMIUM_PATH');
 
+  // A running install: sign in once, and share that session with every size.
+  let session;
+  if (live) {
+    const ctx = await browser.newContext();
+    const res = await ctx.request.post(`${base}/api/login`, { data: { password: process.env.FIT_PASSWORD ?? '' }, headers: { 'x-patchboard': 'action' } });
+    assert(res.ok(), `sign-in at ${base} answered ${res.status()}`);
+    session = await ctx.storageState();
+    await ctx.close();
+  }
+
   for (const look of LOOKS) {
     for (const size of SIZES) {
-      const ctx = await browser.newContext({ viewport: size.viewport, isMobile: !!size.isMobile, hasTouch: !!size.hasTouch, reducedMotion: 'reduce' });
+      const ctx = await browser.newContext({ viewport: size.viewport, isMobile: !!size.isMobile, hasTouch: !!size.hasTouch, reducedMotion: 'reduce', storageState: session });
+      if (live) await ctx.route('**/*', (route) => (['GET', 'HEAD'].includes(route.request().method()) ? route.continue() : route.abort()));
       if (look.look) await ctx.addInitScript((l) => { try { localStorage.setItem('pb-appearance', JSON.stringify(l)); } catch {} }, look.look);
       const page = await ctx.newPage();
       const errors = [];
@@ -293,7 +316,7 @@ try {
   console.log(`Fit, taps and hovers pass on ${only ? only.split(',').length : PAGES.length} pages at ${SIZES.length} sizes in ${LOOKS.length} looks.`);
 } finally {
   await browser?.close();
-  server.kill();
+  server?.kill();
   await new Promise((r) => setTimeout(r, 300));
   try { rmSync(dir, { recursive: true, force: true }); } catch {}
 }

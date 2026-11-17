@@ -19,7 +19,7 @@ const http = createServer((req, res) => {
   const path = new URL(req.url!, 'http://x').pathname;
   if (path === '/Users') return json([{ Id: 'u1', Name: 'Nathan', Policy: { IsAdministrator: true } }]);
   if (path === '/Sessions') return json([]);
-  if (path === '/Items/Latest') return json([]);
+  if (path === '/Items') return json({ Items: [] });
   if (path === '/Shows/NextUp') return json({ Items: [] });
   if (path === '/Items/Counts') return json({});
   if (path.startsWith('/Users/u1/Items')) return json({ Items: [] });

@@ -42,7 +42,7 @@ import { config } from './config.ts';
 import { NAS_SOURCES } from '../shared/types.ts';
 import { kvGet, lastEventAt } from './db.ts';
 import { settling, type Track } from './transitions.ts';
-import { openToInternetAt } from './security.ts';
+import { hookTurnedAway, openToInternetAt } from './security.ts';
 
 type Sources = Partial<Record<SourceId, SourceState>>;
 
@@ -541,6 +541,20 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       level: 'critical',
       ...say('Patchboard is open to the internet with no sign-in'),
       detail: 'Someone reached it from a public address. Turn on a password in Settings, Connections, Sign-in and keys, or put it behind your proxy\'s sign-in.',
+      href: '/settings?tab=connections&part=access',
+      source: 'patchboard',
+    });
+  }
+
+  // Diun posting without the token: its update marks never arrive, and nothing else would say so.
+  const turned = hookTurnedAway();
+  if (turned && config.auth.mode !== 'none' && now - turned.at < 7 * 24 * 3_600_000) {
+    alerts.push({
+      id: 'hook-turned-away',
+      level: 'warn',
+      ...say('Patchboard turned away a webhook from {name}', { name: turned.hook === 'diun' ? 'Diun' : turned.hook }),
+      detail: turned.token === 'missing' ? 'It came without a token. Copy the address in Settings, Connections, Sign-in and keys into its webhook settings.' : 'Its token is wrong. Copy the address in Settings, Connections, Sign-in and keys into its webhook settings again.',
+      since: turned.at,
       href: '/settings?tab=connections&part=access',
       source: 'patchboard',
     });

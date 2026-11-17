@@ -54,3 +54,21 @@ test('Patchboard reads its own image reference and spots a newer digest', () => 
   assert.equal(isNewer(null, local), false, 'a private image never claims an update');
   assert.equal(isNewer('sha256:bbb', []), false, 'a locally built image has nothing to compare');
 });
+
+test('A webhook turned away for its token raises a warning until one gets in', async () => {
+  const { Hono } = await import('hono');
+  const { requireAuth, hookTurnedAway } = await import('../security.ts');
+  const { computeAlerts } = await import('../alerts.ts');
+  await withConfig({ AUTH: 'password', PATCHBOARD_PASSWORD_HASH: hashPassword('pw'), HOOK_TOKEN: 'right-token-123' }, async () => {
+    const app = new Hono().use('/api/*', requireAuth()).post('/api/hooks/diun', (c) => c.json({ ok: true }));
+    const call = (q = '') => app.request(`/api/hooks/diun${q}`, { method: 'POST' });
+    assert.equal((await call()).status, 401);
+    assert.deepEqual([hookTurnedAway()?.hook, hookTurnedAway()?.token], ['diun', 'missing']);
+    const alert = computeAlerts({}, { groups: [] } as never).find((a) => a.id === 'hook-turned-away');
+    assert.equal(alert?.title, 'Patchboard turned away a webhook from Diun');
+    assert.equal((await call('?token=wrong-token-123')).status, 401);
+    assert.equal(hookTurnedAway()?.token, 'wrong');
+    assert.equal((await call('?token=right-token-123')).status, 200);
+    assert.equal(hookTurnedAway(), undefined);
+  });
+});

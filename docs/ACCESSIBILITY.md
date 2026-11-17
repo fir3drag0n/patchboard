@@ -60,8 +60,12 @@ opens everything a button opens on each. It fails when:
   another control's tap area covers it;
 - on desktop, hovering a hold button or a chart makes anything scroll.
 
-`--full` adds a 360-pixel phone and the light Paper theme; `--only=/media`
-checks one page.
+`--full` adds a 360-pixel phone, an iPad on its side, a 960 by 600 wall
+tablet, a 1080p kiosk and the light Paper theme; `--only=/media` checks one
+page. To check your own install, with your look and your data, set
+`FIT_BASE` to its address and `FIT_PASSWORD` to its password. There the
+check only reads: the browser blocks every request that would change
+something.
 
 ## Actual browser zoom and enlarged text
 

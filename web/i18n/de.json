@@ -1208,5 +1208,6 @@
  "Uploading at": "Lädt hoch mit",
  "Seeding at": "Seedet mit",
  "Downloaded": "Heruntergeladen",
- "Uploaded": "Hochgeladen"
+ "Uploaded": "Hochgeladen",
+ "Patchboard turned away a webhook from {name}": "Patchboard hat einen Webhook von {name} abgewiesen"
 }

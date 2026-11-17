@@ -4,7 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { after, before, test } from 'node:test';
 
 // A fake Jellyfin. It answers only with the right token in the MediaBrowser
-// Authorization header, and only on the 10.9+ /Items/Latest route, so the
+// Authorization header, and only on the 10.9+ /Items?userId= route, so the
 // adapter must send the key as a header and fall back correctly on Emby.
 const KEY = 'jf-key';
 const UID = 'u1abc';
@@ -25,12 +25,16 @@ const server = createServer((req, res) => {
         { UserName: 'Sam', NowPlayingItem: { Id: 'e1', Name: 'Cold Open', Type: 'Episode', SeriesName: 'Severance', SeriesId: 's1', ParentIndexNumber: 2, IndexNumber: 5, RunTimeTicks: 36_000_000_000 }, PlayState: { PositionTicks: 9_000_000_000, IsPaused: true, PlayMethod: 'Transcode' } },
         { UserName: 'Idle phone' },
       ]);
-    case '/Items/Latest':
+    case '/Items':
       assert.equal(url.searchParams.get('userId'), UID);
-      return json([
-        { Id: 'm1', Name: 'Dune: Part Two', Type: 'Movie', ProductionYear: 2024, DateCreated: '2026-11-01T10:00:00Z' },
-        { Id: 's2', Name: 'Fallout', Type: 'Series', ChildCount: 8, DateCreated: '2026-11-03T10:00:00Z' },
-      ]);
+      // A season landing at once: eight episodes ahead of the film.
+      return json({
+        Items: [
+          ...Array.from({ length: 8 }, (_, i) => ({ Id: `f${i}`, Name: `Ep ${8 - i}`, Type: 'Episode', SeriesName: 'Fallout', SeriesId: 's2', ParentIndexNumber: 1, IndexNumber: 8 - i, DateCreated: '2026-11-03T10:00:00Z' })),
+          { Id: 'm1', Name: 'Dune: Part Two', Type: 'Movie', ProductionYear: 2024, DateCreated: '2026-11-01T10:00:00Z' },
+          { Id: 'e7', Name: 'Pilot', Type: 'Episode', SeriesName: 'The Pitt', SeriesId: 's7', ParentIndexNumber: 1, IndexNumber: 1, DateCreated: '2026-10-30T10:00:00Z' },
+        ],
+      });
     case '/Shows/NextUp':
       return json({ Items: [{ Id: 'e9', Name: 'Ep', Type: 'Episode', SeriesName: 'Andor', SeriesId: 's9', ParentIndexNumber: 2, IndexNumber: 7 }] });
     case '/Items/m1/Images/Primary':
@@ -58,7 +62,9 @@ test('Jellyfin: streams, newest additions first, Next up, for the first admin', 
   assert.deepEqual(d.streams, [
     { itemId: 'e1', user: 'Sam', title: 'Severance', subtitle: 'S02E05 Cold Open', progress: 25, positionSec: 900, durationSec: 3600, state: 'paused', transcode: true, thumb: '/api/img/jellyfin?id=s1' },
   ]);
-  assert.deepEqual(d.recent.map((r) => [r.title, r.subtitle]), [['Fallout', '8 new'], ['Dune: Part Two', '2024']]);
+  // Grouped after reading, so a whole season takes one place and the rest still show.
+  assert.deepEqual(d.recent.map((r) => [r.title, r.subtitle]), [['Fallout', '8 new'], ['Dune: Part Two', '2024'], ['The Pitt', 'S01E01 Pilot']]);
+  assert.equal(d.recent[0].thumb, '/api/img/jellyfin?id=s2');
   assert.equal(d.nextUp[0].title, 'Andor');
   assert.equal(d.nextUp[0].subtitle, 'S02E07 Ep');
   assert.equal(d.nextUp[0].thumb, '/api/img/jellyfin?id=s9');
@@ -66,7 +72,7 @@ test('Jellyfin: streams, newest additions first, Next up, for the first admin', 
 });
 
 test('Emby sends X-Emby-Token and uses the per-user Latest route', async () => {
-  // The fake only serves /Items/Latest, so Emby's per-user route 404s: the error must surface, not be swallowed.
+  // The fake only serves Jellyfin's /Items, so Emby's per-user route 404s: the error must surface, not be swallowed.
   await assert.rejects(adapter.mediaServerAdapter('emby').fetch(), /404/);
   assert.equal(lastAuth, KEY);
 });

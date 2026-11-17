@@ -63,6 +63,14 @@ export function noteVisitor(c: Context): void {
 /** When someone last reached Patchboard from the internet with sign-in off, or 0. */
 export const openToInternetAt = (): number => openSince;
 
+/** The last webhook turned away for its token, until one gets in. Kept across restarts: Diun calls once a day. */
+export interface HookTurnedAway {
+  hook: string;
+  at: number;
+  token: 'missing' | 'wrong';
+}
+export const hookTurnedAway = (): HookTurnedAway | undefined => kvGet<HookTurnedAway>('hook-turned-away') ?? undefined;
+
 /** The bucket an address counts in: one per IPv4 address, one per IPv6 network (/64). */
 export function attemptKey(ip: string): string {
   const v = ip.replace(/^::ffff:/, '');
@@ -263,7 +271,12 @@ export function requireAuth(): MiddlewareHandler {
     if (c.req.path.startsWith('/api/hooks/')) {
       const given = c.req.header('authorization')?.replace(/^Bearer\s+/i, '') ?? c.req.query('token') ?? '';
       const want = config.auth.hookToken ?? '';
-      if (want && given.length === want.length && timingSafeEqual(Buffer.from(given), Buffer.from(want))) return next();
+      const hook = c.req.path.slice('/api/hooks/'.length);
+      if (want && given.length === want.length && timingSafeEqual(Buffer.from(given), Buffer.from(want))) {
+        if (hookTurnedAway()) kvSet('hook-turned-away', null);
+        return next();
+      }
+      kvSet('hook-turned-away', { hook, at: Date.now(), token: given ? 'wrong' : 'missing' } satisfies HookTurnedAway);
       return c.json({ error: 'Webhooks need HOOK_TOKEN when sign-in is on' }, 401);
     }
     if (!currentUser(c)) return c.json({ error: 'Sign in required', auth: config.auth.mode }, 401);

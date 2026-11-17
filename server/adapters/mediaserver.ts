@@ -103,6 +103,31 @@ export function toRecent(kind: MediaKind, it: Item): RecentItem {
   };
 }
 
+/**
+ * Newest first, each show once: a show with several new episodes becomes the
+ * show itself with how many came ("28 new"), one with a single episode stays
+ * that episode. At most 30.
+ */
+export function groupLatest(items: Item[]): Item[] {
+  const out: Item[] = [];
+  const shows = new Map<string, { at: number; n: number }>();
+  for (const it of items) {
+    const show = it.Type === 'Episode' ? it.SeriesId : undefined;
+    const seen = show ? shows.get(show) : undefined;
+    if (seen) {
+      seen.n++;
+      continue;
+    }
+    if (show) shows.set(show, { at: out.length, n: 1 });
+    out.push(it);
+  }
+  for (const [show, { at, n }] of shows) {
+    const ep = out[at];
+    if (n > 1) out[at] = { Id: show, Name: ep.SeriesName ?? ep.Name, Type: 'Series', ChildCount: n, DateCreated: ep.DateCreated };
+  }
+  return out.slice(0, 30);
+}
+
 /** Items the chosen user finished lately, as plays. */
 export function toPlays(kind: MediaKind, items: Item[], user: string): Play[] {
   return items
@@ -145,17 +170,22 @@ export function mediaServerAdapter(kind: MediaKind): Adapter<MediaServerData> {
     return userId;
   }
 
-  /** Jellyfin 10.9 moved Latest to /Items/Latest; Emby and older Jellyfin keep the per-user route. */
+  /**
+   * The newest arrivals, a show's episodes as one. Not /Items/Latest: it
+   * limits before it groups, so one season landing at once fills the whole
+   * list. Jellyfin 10.9 takes the user as a parameter; Emby and older
+   * Jellyfin keep the per-user route.
+   */
   async function latest(uid: string): Promise<Item[]> {
-    const q = 'Limit=30&Fields=DateCreated,ProductionYear,ChildCount&GroupItems=true';
+    const q = 'SortBy=DateCreated&SortOrder=Descending&Recursive=true&IncludeItemTypes=Movie,Episode,MusicAlbum&IsVirtualItem=false&Limit=120&Fields=DateCreated,ProductionYear';
     if (kind === 'jellyfin') {
       try {
-        return await get<Item[]>(kind, `/Items/Latest?userId=${uid}&${q}`);
+        return groupLatest((await get<{ Items?: Item[] }>(kind, `/Items?userId=${uid}&${q}`)).Items ?? []);
       } catch (err) {
         if (!(err instanceof HttpError) || err.status !== 404) throw err;
       }
     }
-    return get<Item[]>(kind, `/Users/${uid}/Items/Latest?${q}`);
+    return groupLatest((await get<{ Items?: Item[] }>(kind, `/Users/${uid}/Items?${q}`)).Items ?? []);
   }
 
   const played = every(5 * 60_000, async () => {

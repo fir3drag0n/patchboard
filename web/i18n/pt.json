@@ -1208,5 +1208,6 @@
  "Uploading at": "Enviando a",
  "Seeding at": "Semeando a",
  "Downloaded": "Baixado",
- "Uploaded": "Enviado"
+ "Uploaded": "Enviado",
+ "Patchboard turned away a webhook from {name}": "O Patchboard recusou um webhook de {name}"
 }
