@@ -1088,7 +1088,6 @@
  "Nobody is watching.": "Niemand schaut gerade.",
  "Plex, Jellyfin and Emby are not set up.": "Plex, Jellyfin und Emby sind nicht eingerichtet.",
  "Scan": "Scannen",
- "Scan a Plex library from the Media page, and stop a stream without Tautulli. Stopping needs Plex Pass.": "Eine Plex-Bibliothek von der Medienseite aus scannen und einen Stream ohne Tautulli beenden. Beenden braucht Plex Pass.",
  "scanned {when}": "gescannt {when}",
  "Scanning": "Wird gescannt",
  "Scanning {name}.": "{name} wird gescannt.",
@@ -1194,5 +1193,6 @@
  "Seasons and episodes": "Staffeln und Folgen",
  "Specials": "Specials",
  "Untitled": "Ohne Titel",
- "Paste settings here": "Einstellungen hier einfügen"
+ "Paste settings here": "Einstellungen hier einfügen",
+ "Right now, Recently added and Watched straight from Plex, with no Tautulli needed. Scan a library and stop a stream from the Media page; stopping needs Plex Pass. With Tautulli set up too, Tautulli feeds the board.": "Gerade jetzt, Neu hinzugefügt und Gesehen direkt aus Plex, ohne Tautulli. Auf der Medienseite eine Bibliothek scannen und einen Stream beenden; Beenden braucht Plex Pass. Ist auch Tautulli eingerichtet, liefert Tautulli die Daten fürs Board."
 }

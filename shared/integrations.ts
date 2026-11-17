@@ -108,7 +108,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'plex',
     name: 'Plex',
-    adds: 'Scan a Plex library from the Media page, and stop a stream without Tautulli. Stopping needs Plex Pass.',
+    adds: 'Right now, Recently added and Watched straight from Plex, with no Tautulli needed. Scan a library and stop a stream from the Media page; stopping needs Plex Pass. With Tautulli set up too, Tautulli feeds the board.',
     env: ['PLEX_URL', 'PLEX_TOKEN'],
     where: 'Plex Web: open any title, the three dots, Get Info, View XML; the address ends in X-Plex-Token=. Copy what follows it.',
     source: false,

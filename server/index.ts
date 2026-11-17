@@ -63,6 +63,7 @@ import { type HaAction, haActionFor, haAllows, pinnedEntities } from '../shared/
 import { parseChores } from '../shared/fields.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
+import { plexAdapter, plexImage } from './adapters/plex.ts';
 import { mediaImage, mediaServerAdapter } from './adapters/mediaserver.ts';
 import { delugeClient, DOWNLOAD_CLIENTS, type DownloadControl, type DownloadManager, type ItemAction, type NewDownload, nzbgetClient, sabnzbdClient, transmissionClient } from './adapters/downloads.ts';
 import type { ArrApp, ArrOptions, ArrQueueItem, DownloadClientId, DownloadList, EntryAction, LibraryItem, WantedList } from '../shared/types.ts';
@@ -148,7 +149,8 @@ const FACTORIES: Record<string, () => Made | null> = {
   sonarr: () => (config.sonarr ? { adapter: sonarrAdapter(), arr: arrControl('sonarr') } : null),
   radarr: () => (config.radarr ? { adapter: radarrAdapter(), arr: arrControl('radarr') } : null),
   trakt: () => (config.trakt ? { adapter: traktAdapter() } : null),
-  tautulli: () => (config.tautulli ? { adapter: tautulliAdapter() } : null),
+  // Plex's place: Tautulli when it's set up, else Plex itself.
+  tautulli: () => (config.tautulli ? { adapter: tautulliAdapter() } : config.plex ? { adapter: plexAdapter() } : null),
   jellyfin: () => (config.jellyfin ? { adapter: mediaServerAdapter('jellyfin') } : null),
   emby: () => (config.emby ? { adapter: mediaServerAdapter('emby') } : null),
   homeassistant: () => (config.homeassistant ? { adapter: homeAssistantAdapter() } : null),
@@ -2503,6 +2505,21 @@ app.get('/api/img/tautulli', async (c) => {
   if (config.demo || !config.tautulli) return c.body(null, 404);
   try {
     const res = await tautulliImage(c.req.query('path') ?? '');
+    return new Response(res.body, {
+      headers: {
+        'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
+        'Cache-Control': 'public, max-age=86400',
+      },
+    });
+  } catch {
+    return c.body(null, 404);
+  }
+});
+
+app.get('/api/img/plex', async (c) => {
+  if (config.demo || !config.plex) return c.body(null, 404);
+  try {
+    const res = await plexImage(c.req.query('path') ?? '');
     return new Response(res.body, {
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',

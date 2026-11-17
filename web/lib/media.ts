@@ -1,4 +1,4 @@
-// Plex (through Tautulli), Jellyfin and Emby behind one hook, so the board's
+// Plex (straight, or through Tautulli), Jellyfin and Emby behind one hook, so the board's
 // media widgets work with whichever servers you run, or all three.
 
 import { dedupeRecent } from '../../shared/media.ts';

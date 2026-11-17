@@ -8,8 +8,7 @@ One page per app with everything it's doing, and its everyday actions, so
 you open the app itself only for its rare settings. Every action is
 logged in Activity; read-only and household devices only look.
 
-- [ ] Media, next: Plex without Tautulli (Right now and Recently added from
-  Plex itself), and Play, which opens a title in the app that plays it
+- [ ] Media, next: Play, which opens a title in the app that plays it
 
 ### Making it yours
 

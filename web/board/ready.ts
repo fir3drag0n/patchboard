@@ -68,7 +68,7 @@ export const NEEDS: Partial<Record<WidgetType, { label: string; setup: string }>
   wake: { label: 'Wake-on-LAN machines', setup: 'wake' },
   nextup: { label: 'Jellyfin or Emby', setup: 'jellyfin' },
   downloads: { label: 'a download client, Sonarr or Radarr', setup: 'qbit' },
-  watched: { label: 'Plex (Tautulli), Jellyfin or Emby', setup: 'tautulli' },
+  watched: { label: 'Plex, Jellyfin or Emby', setup: 'plex' },
   listening: { label: 'Audiobookshelf or Navidrome', setup: 'audiobookshelf' },
   managers: { label: 'Lidarr, Readarr, Prowlarr or Bazarr', setup: 'lidarr' },
   documents: { label: 'Paperless-ngx', setup: 'paperless' },

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Plex without Tautulli:** with Plex's address and token in Settings,
+  Connections, Right now, Recently added and Watched read straight from
+  Plex, posters included, and the token never leaves your server. Set up
+  Tautulli as well and it carries on feeding the board as before.
 - **Phones use the whole width:** a poster row's buttons, and anything
   opened from it, such as a show's seasons, run under the poster instead
   of leaving an empty strip beside them. Filter and link boxes take a line
