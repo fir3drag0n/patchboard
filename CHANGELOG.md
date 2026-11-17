@@ -9,6 +9,9 @@
   totals down and up, figures line up in columns, the bar is a thin line,
   and a finished torrent's ratio turns green at 1.00. On a phone, a torrent
   lists with Details alone, and its controls open with it.
+- **Suggest an idea or report a problem from Patchboard:** Help (the `?`)
+  and a phone's More open the matching GitHub form with the version, browser
+  or page filled in, and nothing private.
 - **A turned-away webhook raises a warning:** when Diun posts without the
   token sign-in needs, Home says so and points to the address to copy.
 - **Save says whether it connects:** saving an app in Settings,

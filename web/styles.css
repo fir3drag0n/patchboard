@@ -11069,6 +11069,12 @@ a.req-come:hover .req-title {
   margin: 4px 0 6px;
 }
 
+.help-note {
+  margin: 0 0 6px;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
 /* Help lives in the phone's More; the top bar's ? is for wide screens. */
 @media (max-width: 760px) {
   .topbar-help {

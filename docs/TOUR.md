@@ -299,7 +299,9 @@ details and logs, and typing "sonarr logs" lands on the logs.
 
 ![Jump to](screenshots/jump-to.webp)
 
-Press `?` for keyboard shortcuts. Each app group on Home is one Tab stop;
+Press `?` for keyboard shortcuts. Help also has Suggest an idea, Ask for an
+app and Report a problem, which open the matching GitHub form with your
+version filled in; on a phone they're in More. Each app group on Home is one Tab stop;
 arrow keys move between its apps. Help and the editors contain focus, close
 with Escape, and return focus to where you opened them. Closing an editor
 without saving leaves its settings intact.

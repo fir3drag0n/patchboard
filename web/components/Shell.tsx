@@ -8,6 +8,7 @@ import { useStore } from '../lib/store.tsx';
 import { Palette } from './Palette.tsx';
 import { SignIn } from '../views/SignIn.tsx';
 import { HELP } from '../lib/docs.ts';
+import { appUrl, ideaUrl, problemUrl } from '../lib/feedback.ts';
 import { needsYou } from '../lib/attention.ts';
 import { serviceFor } from '../lib/services.ts';
 import { useFollowOpens, useNightDim } from '../lib/household.ts';
@@ -437,14 +438,14 @@ export function Shell() {
       </button>
 
       <Palette open={palette} onClose={() => setPalette(false)} onKeys={() => (setPalette(false), setHelp(true))} />
-      {moreOpen && <MoreSheet items={more} badges={badges} onJump={() => (setMoreOpen(false), setPalette(true))} onClose={() => setMoreOpen(false)} />}
-      {help && <KeyboardHelp mac={mac} household={household} onClose={() => setHelp(false)} />}
+      {moreOpen && <MoreSheet items={more} badges={badges} feedback={household ? undefined : { version: snap?.self?.version, path: location.pathname }} onJump={() => (setMoreOpen(false), setPalette(true))} onClose={() => setMoreOpen(false)} />}
+      {help && <KeyboardHelp mac={mac} household={household} version={snap?.self?.version} path={location.pathname} onClose={() => setHelp(false)} />}
     </div>
   );
 }
 
 /** The phone's More tab: every page the tab bar has no room for, and Settings. */
-function MoreSheet({ items, badges, onJump, onClose }: { items: { to: string; label: string }[]; badges: Record<string, number>; onJump: () => void; onClose: () => void }) {
+function MoreSheet({ items, badges, feedback, onJump, onClose }: { items: { to: string; label: string }[]; badges: Record<string, number>; feedback?: { version?: string; path: string }; onJump: () => void; onClose: () => void }) {
   const modal = useModal<HTMLDivElement>(onClose);
   return (
     <div className="palette-backdrop more-backdrop" onClick={onClose}>
@@ -462,6 +463,16 @@ function MoreSheet({ items, badges, onJump, onClose }: { items: { to: string; la
           <a className="more-link" href={HELP.tour} target="_blank" rel="noreferrer" onClick={onClose}>
             <span>Help</span>
           </a>
+          {feedback && (
+            <>
+              <a className="more-link" href={ideaUrl(feedback.version, feedback.path)} target="_blank" rel="noreferrer" onClick={onClose}>
+                <span>Suggest an idea</span>
+              </a>
+              <a className="more-link" href={problemUrl(feedback.version)} target="_blank" rel="noreferrer" onClick={onClose}>
+                <span>Report a problem</span>
+              </a>
+            </>
+          )}
         </nav>
         <button type="button" className="button more-close" onClick={onClose}>
           Close
@@ -471,7 +482,7 @@ function MoreSheet({ items, badges, onJump, onClose }: { items: { to: string; la
   );
 }
 
-function KeyboardHelp({ mac, household, onClose }: { mac: boolean; household: boolean; onClose: () => void }) {
+function KeyboardHelp({ mac, household, version, path, onClose }: { mac: boolean; household: boolean; version?: string; path: string; onClose: () => void }) {
   const modal = useModal<HTMLDivElement>(onClose);
   return (
     <div className="palette-backdrop" onClick={onClose}>
@@ -482,6 +493,17 @@ function KeyboardHelp({ mac, household, onClose }: { mac: boolean; household: bo
           <a href={HELP.integrations} target="_blank" rel="noreferrer">Setting up integrations</a>
           <a href={HELP.configuration} target="_blank" rel="noreferrer">Configuration</a>
         </p>
+        {!household && (
+          <>
+            <h3 className="jw-sub">Ideas and problems</h3>
+            <p className="help-links">
+              <a href={ideaUrl(version, path)} target="_blank" rel="noreferrer">Suggest an idea</a>
+              <a href={appUrl()} target="_blank" rel="noreferrer">Ask for an app</a>
+              <a href={problemUrl(version)} target="_blank" rel="noreferrer">Report a problem</a>
+            </p>
+            <p className="help-note">Each opens on GitHub with your version filled in and nothing private. You send it from your own GitHub account.</p>
+          </>
+        )}
         <h3 className="jw-sub">Keyboard</h3>
         <dl>
           <div><dt><kbd>{mac ? '⌘' : 'Ctrl'} K</kbd> <kbd>/</kbd></dt><dd>Jump to anything</dd></div>
