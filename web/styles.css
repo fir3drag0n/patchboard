@@ -9432,8 +9432,14 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
   font-size: 13px;
 }
 
-.signin-hook code {
-  overflow-wrap: anywhere;
+.signin-hook {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.signin-hook .settings-note {
+  margin: 0;
 }
 
 /* Import from Homepage */

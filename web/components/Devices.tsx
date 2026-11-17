@@ -11,6 +11,7 @@ import type { DeviceLook, DeviceView } from '../../shared/types.ts';
 import { type BoardLook, NUMBERS, type Widget, type WidgetType, WIDGET_INFO } from '../../shared/board.ts';
 import { DIM_HOURS, dimLabel, MAX_PAGES, ROTATE_SECONDS } from '../../shared/wall.ts';
 import { THEMES } from '../lib/appearance.ts';
+import { copyText } from '../lib/copy.ts';
 import { agoLong } from '../lib/format.ts';
 import { LANGUAGES, msg, t as tr, tn, tx } from '../lib/i18n.ts';
 import { CURRENCIES, REGIONS } from '../lib/region.ts';
@@ -314,12 +315,8 @@ function DeviceEditor({
     if (res.ok && body.panel) onLink({ id: d.id, url: link?.url ?? '', panel: `${location.origin}${body.panel}` });
   };
   const copy = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-    } catch {
-      // Browsers allow the clipboard only on https or localhost; the field selects itself to copy by hand.
-    }
+    // Refused: the field selects itself to copy by hand.
+    if (await copyText(text)) setCopied(true);
   };
 
   return (

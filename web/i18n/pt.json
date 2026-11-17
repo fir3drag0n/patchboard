@@ -500,7 +500,6 @@
  "Disk {name} on {host} is running at {c}°C ({f}°F)": "O disco {name} em {host} está a {c}°C ({f}°F)",
  "Dismiss": "Dispensar",
  "dismissed an image update mark for": "descartou o aviso de nova imagem para",
- "Diun's webhook, with its token:": "O webhook do Diun, com o token:",
  "Docker host {name} is down": "O host Docker {name} está fora do ar",
  "Documents waiting in your inbox, on the Paperless tile and the Documents widget.": "Documentos esperando na sua caixa de entrada, no bloco do Paperless e no widget Documentos.",
  "Download services.yaml": "Baixar services.yaml",
@@ -1214,5 +1213,8 @@
  "Reload to try again. If it keeps happening, the message below says what broke.": "Recarregue para tentar de novo. Se continuar acontecendo, a mensagem abaixo diz o que quebrou.",
  "This page didn’t load.": "Esta página não carregou.",
  "Patchboard was updated, or the connection dropped while it loaded. Reload to open it.": "O Patchboard foi atualizado, ou a conexão caiu enquanto carregava. Recarregue para abri-la.",
- "No episodes yet": "Ainda sem episódios"
+ "No episodes yet": "Ainda sem episódios",
+ "Diun's webhook, with its token. Put it in Diun's DIUN_NOTIF_WEBHOOK_ENDPOINT:": "O webhook do Diun, com o token. Coloque-o em DIUN_NOTIF_WEBHOOK_ENDPOINT do Diun:",
+ "Diun's webhook, with its token": "O webhook do Diun, com o token",
+ "Selected: copy it": "Selecionado: copie"
 }

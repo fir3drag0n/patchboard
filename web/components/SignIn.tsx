@@ -1,10 +1,11 @@
 // Settings, Connections, Sign-in: off or one password, set here. A reverse
 // proxy or OIDC is set in the environment and shows here as locked.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../lib/store.tsx';
 import { Section } from './ui.tsx';
 import { msg, t as tr } from '../lib/i18n.ts';
+import { copyText } from '../lib/copy.ts';
 
 interface AuthSettings {
   mode: 'none' | 'password' | 'forward' | 'oidc';
@@ -30,7 +31,8 @@ export function SignIn() {
   const [again, setAgain] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'' | 'yes' | 'no'>('');
+  const hookField = useRef<HTMLInputElement>(null);
   const [hosts, setHosts] = useState<string | null>(null);
   const [hostsMsg, setHostsMsg] = useState<{ text: string; bad?: boolean } | null>(null);
 
@@ -166,16 +168,24 @@ export function SignIn() {
       <p className="settings-note">{tr('IP addresses and home names like nas.local always work.')}{s.hostsLocked && ' Set in the environment, so it changes there.'}</p>
 
       {hook && (
-        <p className="settings-note signin-hook">
-          {tr('Diun\'s webhook, with its token:')}{' '}<code className="mono">{hook}</code>{' '}
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => void navigator.clipboard?.writeText(hook).then(() => (setCopied(true), setTimeout(() => setCopied(false), 1500)))}
-          >
-            {copied ? tr('Copied') : tr('Copy')}
-          </button>
-        </p>
+        <div className="signin-hook">
+          <p className="settings-note">{tr('Diun\'s webhook, with its token. Put it in Diun\'s DIUN_NOTIF_WEBHOOK_ENDPOINT:')}</p>
+          <div className="device-copy">
+            <input ref={hookField} className="field mono" readOnly value={hook} aria-label={tr('Diun\'s webhook, with its token')} onFocus={(e) => e.currentTarget.select()} />
+            <button
+              type="button"
+              className="button button-quiet"
+              onClick={async () => {
+                const ok = await copyText(hook);
+                if (!ok) hookField.current?.select();
+                setCopied(ok ? 'yes' : 'no');
+                setTimeout(() => setCopied(''), 2500);
+              }}
+            >
+              {copied === 'yes' ? tr('Copied') : copied === 'no' ? tr('Selected: copy it') : tr('Copy')}
+            </button>
+          </div>
+        </div>
       )}
     </Section>
   );

@@ -9,6 +9,7 @@ import { useStore } from '../lib/store.tsx';
 import { HoldButton } from './Hold.tsx';
 import { Section } from './ui.tsx';
 import { t as tr, tx } from '../lib/i18n.ts';
+import { copyText } from '../lib/copy.ts';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 
@@ -20,13 +21,11 @@ function Copyable({ text, label }: { text: string; label: string }) {
       <button
         type="button"
         className="button button-quiet"
-        onClick={() =>
-          void navigator.clipboard?.writeText(text).then(
-            () => setCopied(true),
-            // Browsers allow the clipboard only on https or localhost; the field selects itself to copy by hand.
-            () => {},
-          )
-        }
+        onClick={async (e) => {
+          if (await copyText(text)) return setCopied(true);
+          // Refused: select the field so it copies by hand.
+          (e.currentTarget.previousElementSibling as HTMLInputElement | null)?.select();
+        }}
       >
         {copied ? tr('Copied') : tr('Copy')}
       </button>
