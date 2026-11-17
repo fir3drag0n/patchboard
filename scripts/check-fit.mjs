@@ -96,7 +96,8 @@ function inspect({ scope, touch }) {
     if (el.matches('textarea, pre, code, [role=log]')) continue;
     const r = el.getBoundingClientRect();
     // Density zooms the page: boxes measure zoomed, scroll sizes don't.
-    const z = el.offsetHeight ? r.height / el.offsetHeight : 1;
+    // Chrome says the zoom outright; dividing two sizes would carry their rounding.
+    const z = el.currentCSSZoom || 1;
     let right = 0;
     let bottom = 0;
     for (const d of el.querySelectorAll('*')) {

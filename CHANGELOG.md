@@ -49,7 +49,8 @@
 - **Fit, taps and hovers checked on every page:** `npm run test:fit` opens
   everything on every page at four sizes in two looks. `--full` adds an
   iPad on its side, a wall tablet, a 1080p kiosk and Compact density, and
-  `FIT_BASE` points it at your own install, read-only.
+  `FIT_BASE` points it at your own install, read-only. It reads each page's
+  zoom from Chrome, so density never makes a false alarm.
 
 ## 1.15.0 (2026-11-16)
 
