@@ -394,6 +394,16 @@ a.ident:hover,
   font-variant-numeric: tabular-nums;
 }
 
+.nav-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: super;
+}
+
 .topbar-end {
   margin-left: auto;
   display: flex;
@@ -2032,6 +2042,13 @@ input[type='checkbox'] {
     position: absolute;
     top: 9px;
     right: 14%;
+  }
+
+  .nav-more .nav-dot {
+    position: absolute;
+    top: 10px;
+    right: 30%;
+    margin: 0;
   }
 
   .fab {
@@ -9849,7 +9866,11 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
 .playback-timing { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; color: var(--ink-2); font: 400 12px/1.4 var(--f-mono); }
 .playback-timing strong { font-weight: 500; color: var(--head); }
 .playback-remaining { margin: 6px 0 0; font-size: 12px; color: var(--ink-3); }
-.playback-open { display: inline-block; margin-top: 12px; font-size: 13px; }
+.playback-open { display: inline-block; font-size: 13px; }
+/* Open, the app, and Stop share one line at the foot of a stream's details. */
+.playback-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
+.playback-stop { margin-left: auto; font-size: 13px; }
+.playback-said { margin: 0; font-size: 13px; color: var(--ink-2); }
 .tracearr-panel .section-head h2::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; background: var(--media-tracearr); vertical-align: middle; }
 @media (max-width: 760px) {
   .playback-trigger { min-height: 44px; align-content: center; }
@@ -10454,6 +10475,9 @@ a.play:hover .play-title {
 }
 
 .nav-over-link {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
   padding: 9px 12px;
   border-radius: calc(var(--radius) - 2px);
   color: var(--ink-2);

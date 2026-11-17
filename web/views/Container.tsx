@@ -9,7 +9,8 @@ import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useMediaServers } from '../lib/media.ts';
+import { streamProps, useMediaServers } from '../lib/media.ts';
+import { StreamRow } from '../components/StreamRow.tsx';
 import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import type {
@@ -621,7 +622,16 @@ function AppPanel({ name }: { name: string }) {
     return (
       <Section title={`In ${media.label}`}>
         <dl className="ledger">
-          <Row k="Streams">{d.streams.length ? d.streams.map((s) => `${s.user}: ${s.title}`).join(', ') : 'Nobody watching'}</Row>
+          <Row k="Streams">
+            {d.streams.length
+              ? <span>{d.streams.map((s, i) => (
+                  <span key={`${s.user}:${s.title}:${i}`}>
+                    {i > 0 && ', '}
+                    {s.user}: <StreamRow compact stream={s} {...streamProps(media, s)} />
+                  </span>
+                ))}</span>
+              : 'Nobody watching'}
+          </Row>
           <Row k="Transcoding">{d.streams.filter((s) => s.transcode).length || 'None'}</Row>
           {d.library && (
             <Row k="Library">
@@ -724,7 +734,16 @@ function AppPanel({ name }: { name: string }) {
     return (
       <Section title={`In ${listening.label}`}>
         <dl className="ledger">
-          <Row k="Listening">{listening.d.streams.length ? listening.d.streams.map((s) => `${s.user}: ${s.title}`).join(', ') : 'Nobody right now'}</Row>
+          <Row k="Listening">
+            {listening.d.streams.length
+              ? <span>{listening.d.streams.map((s, i) => (
+                  <span key={`${s.user}:${s.title}:${i}`}>
+                    {i > 0 && ', '}
+                    {s.user}: <StreamRow compact stream={s} service={name as 'navidrome' | 'audiobookshelf'} label={listening.label} />
+                  </span>
+                ))}</span>
+              : 'Nobody right now'}
+          </Row>
         </dl>
       </Section>
     );

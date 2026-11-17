@@ -244,6 +244,16 @@ export function Shell() {
   const feeds = snap?.sources.miniflux;
   const unreadFeeds = feeds?.ok ? ((feeds.data as { unread: number } | null)?.unread ?? 0) : 0;
   const reading = !!snap?.sources.miniflux || !!snap?.demo;
+  // Counts beside a page's name, as Reading shows unread: downloads not
+  // finished yet, and requests waiting for you. A source that stopped
+  // answering counts nothing.
+  const liveData = <T,>(id: string) => (snap?.sources[id as 'qbit']?.ok ? (snap.sources[id as 'qbit']!.data as T | null) : null);
+  const unfinished = ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget'].reduce((n, id) => {
+    const d = liveData<{ downloading?: number; stalled?: number }>(id);
+    return n + (d ? (d.downloading ?? 0) + (d.stalled ?? 0) : 0);
+  }, 0);
+  const badges: Record<string, number> = { '/reading': unreadFeeds, '/downloads': unfinished, '/requests': liveData<{ pending?: number }>('overseerr')?.pending ?? 0 };
+  const badge = (to: string) => (badges[to] > 0 ? <span className="nav-badge">{count(badges[to])}</span> : null);
   const phoneTabs = household ? ['/', '/upcoming', reading ? '/reading' : '/weather'] : ['/', '/server', '/stacks', reading ? '/reading' : '/upcoming'];
   // Downloads only once a download client is set up.
   const hasDownloads = ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget'].some((id) => snap?.sources[id as 'qbit']);
@@ -289,6 +299,8 @@ export function Shell() {
   }, [navWords]);
   const overItems = nav.filter((n) => over.includes(n.to));
   const inOver = overItems.some((m) => location.pathname === m.to || location.pathname.startsWith(`${m.to}/`));
+  // More carries a dot when a page inside it has a count, so nothing waits unseen.
+  const dot = (items: { to: string }[]) => (items.some((m) => badges[m.to] > 0) ? <span className="nav-dot" role="img" aria-label={t('something new inside')} /> : null);
   useEffect(() => {
     if (!overOpen) return;
     const away = (e: PointerEvent) => !(e.target as Element).closest?.('.nav-over') && setOverOpen(false);
@@ -325,7 +337,7 @@ export function Shell() {
                 </svg>
               )}
               <span>{t(n.label)}</span>
-              {n.to === '/reading' && unreadFeeds > 0 && <span className="nav-badge">{count(unreadFeeds)}</span>}
+              {badge(n.to)}
             </NavLink>
           ))}
           <button type="button" className={`nav-link nav-more ${inMore ? 'active' : ''}`} aria-haspopup="dialog" onClick={() => setMoreOpen(true)}>
@@ -333,12 +345,14 @@ export function Shell() {
               <path d={ICONS.more} />
             </svg>
             <span>{t('More')}</span>
+            {dot(more)}
           </button>
         </nav>
         {overItems.length > 0 && (
           <div className="nav-over" style={slack ? { transform: `translateX(-${slack}px)` } : undefined}>
             <button type="button" className={`nav-link ${inOver ? 'active' : ''}`} aria-expanded={overOpen} aria-controls="nav-over-list" onClick={() => setOverOpen((o) => !o)}>
               {t('More')}
+              {dot(overItems)}
               <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m6 9 6 6 6-6" />
               </svg>
@@ -348,6 +362,7 @@ export function Shell() {
                 {overItems.map((m) => (
                   <NavLink key={m.to} to={m.to} className="nav-over-link">
                     {t(m.label)}
+                    {badge(m.to)}
                   </NavLink>
                 ))}
               </div>
@@ -422,14 +437,14 @@ export function Shell() {
       </button>
 
       <Palette open={palette} onClose={() => setPalette(false)} onKeys={() => (setPalette(false), setHelp(true))} />
-      {moreOpen && <MoreSheet items={more} unread={unreadFeeds} onJump={() => (setMoreOpen(false), setPalette(true))} onClose={() => setMoreOpen(false)} />}
+      {moreOpen && <MoreSheet items={more} badges={badges} onJump={() => (setMoreOpen(false), setPalette(true))} onClose={() => setMoreOpen(false)} />}
       {help && <KeyboardHelp mac={mac} household={household} onClose={() => setHelp(false)} />}
     </div>
   );
 }
 
 /** The phone's More tab: every page the tab bar has no room for, and Settings. */
-function MoreSheet({ items, unread, onJump, onClose }: { items: { to: string; label: string }[]; unread: number; onJump: () => void; onClose: () => void }) {
+function MoreSheet({ items, badges, onJump, onClose }: { items: { to: string; label: string }[]; badges: Record<string, number>; onJump: () => void; onClose: () => void }) {
   const modal = useModal<HTMLDivElement>(onClose);
   return (
     <div className="palette-backdrop more-backdrop" onClick={onClose}>
@@ -438,7 +453,7 @@ function MoreSheet({ items, unread, onJump, onClose }: { items: { to: string; la
           {items.map((m) => (
             <NavLink key={m.to} to={m.to} className="more-link" onClick={onClose}>
               <span>{t(m.label)}</span>
-              {m.to === '/reading' && unread > 0 && <span className="nav-badge">{count(unread)}</span>}
+              {badges[m.to] > 0 && <span className="nav-badge">{count(badges[m.to])}</span>}
             </NavLink>
           ))}
           <button type="button" className="more-link" onClick={onJump}>

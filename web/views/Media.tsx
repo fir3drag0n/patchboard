@@ -10,7 +10,8 @@ import { Empty, Meter, PosterRow as Row } from '../components/ui.tsx';
 import { agoLong, duration } from '../lib/format.ts';
 import { msg, t as tr } from '../lib/i18n.ts';
 import { ACTION, call, useList } from '../lib/live-list.ts';
-import { type MediaServer, useMediaServers } from '../lib/media.ts';
+import { type MediaServer, streamProps, useMediaServers } from '../lib/media.ts';
+import { StreamRow } from '../components/StreamRow.tsx';
 import { useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 
@@ -115,7 +116,7 @@ function Watching({ streams, many, ro, onSaid, onErr }: { streams: { s: Stream; 
           }
         >
           <span className="lib-title">
-            {s.title}
+            <StreamRow compact stream={s} {...streamProps(server, s)} />
             {s.subtitle && <span className="lib-year"> {s.subtitle}</span>}
           </span>
           <div className="dlp-meta">

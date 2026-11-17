@@ -2,7 +2,8 @@
 // media widgets work with whichever servers you run, or all three.
 
 import { dedupeRecent } from '../../shared/media.ts';
-import type { MediaServerData, RecentItem, SourceId, TautulliData } from '../../shared/types.ts';
+import type { MediaServerData, RecentItem, SourceId, Stream, TautulliData } from '../../shared/types.ts';
+import type { MediaService } from './themes.ts';
 import { findContainer } from './services.ts';
 import { useSource, useStore } from './store.tsx';
 
@@ -51,6 +52,31 @@ export function itemHref(server: MediaServer, id: string): string | undefined {
   if (!path) return server.href;
   const base = server.id === 'tautulli' && !/plex\.tv|\/web(\/index\.html)?$/.test(server.href) ? `${server.href}/web/index.html` : server.href;
   return `${base}${path}${encodeURIComponent(id)}`;
+}
+
+/**
+ * The title in the Plex app on a phone or tablet. Plex doesn't document its
+ * links; this is the form its apps have answered to. Only for Plex, and only
+ * once Plex's server id is known.
+ */
+export function plexAppHref(server: MediaServer, id: string): string | undefined {
+  if (server.id !== 'tautulli') return undefined;
+  const machine = /\/server\/([^/]+)\//.exec(server.data.itemPath ?? '')?.[1];
+  return machine ? `plex://preplay/?metadataKey=${encodeURIComponent(`/library/metadata/${id}`)}&server=${machine}` : undefined;
+}
+
+const CONTROL: Record<string, 'plex' | 'jellyfin' | 'emby'> = { tautulli: 'plex', jellyfin: 'jellyfin', emby: 'emby' };
+
+/** What a stream's row and its details need: its look, where it opens, and how to stop it. */
+export function streamProps(server: MediaServer, s: Stream): { service: MediaService; label: string; href?: string; stop?: string; appHref?: string } {
+  const control = CONTROL[server.id];
+  return {
+    service: control,
+    label: server.label,
+    href: s.itemId ? itemHref(server, s.itemId) : server.href,
+    ...(control && s.session ? { stop: `/api/media/${control}/stop/${encodeURIComponent(s.session)}` } : {}),
+    ...(s.itemId && plexAppHref(server, s.itemId) ? { appHref: plexAppHref(server, s.itemId) } : {}),
+  };
 }
 
 export interface MergedItem extends RecentItem {

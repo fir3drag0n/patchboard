@@ -8,7 +8,6 @@ One page per app with everything it's doing, and its everyday actions, so
 you open the app itself only for its rare settings. Every action is
 logged in Activity; read-only and household devices only look.
 
-- [ ] Media, next: Play, which opens a title in the app that plays it
 
 ### Making it yours
 

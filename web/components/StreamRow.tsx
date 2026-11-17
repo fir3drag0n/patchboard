@@ -6,6 +6,9 @@ import { createPortal } from 'react-dom';
 import type { Stream } from '../../shared/types.ts';
 import type { MediaService } from '../lib/themes.ts';
 import { Episode, Meter, Poster } from './ui.tsx';
+import { HoldButton } from './Hold.tsx';
+import { useStore } from '../lib/store.tsx';
+import { t as tr } from '../lib/i18n.ts';
 import { eta } from '../lib/format.ts';
 
 // Closing a preview must not open the row its disappearing card uncovers.
@@ -46,8 +49,41 @@ export function useLivePosition(s: Stream): Stream {
 }
 
 /** `compact`: only the title, inline, for Right now folded by Fit; it opens the same details. */
-export function StreamRow({ stream: reported, service, label, href, compact = false }: { stream: Stream; service: MediaService; label: string; href?: string; compact?: boolean }) {
+/** Stop, inside a stream's details: a hold, and then a word on how it went. */
+function StopStream({ url, s, onDone }: { url: string; s: Stream; onDone: () => void }) {
+  const [said, setSaid] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (said) return <p className="playback-said" role="status">{said}</p>;
+  return (
+    <HoldButton
+      className="text-button playback-stop"
+      danger
+      disabled={busy}
+      label={tr('Stop {title} for {user}', { title: s.title, user: s.user })}
+      hint={tr('Hold to stop it. They see a note that you did.')}
+      onConfirm={async () => {
+        setBusy(true);
+        const res = await fetch(url, { method: 'POST', headers: { 'X-Patchboard': 'action' } }).catch(() => null);
+        const body = res ? ((await res.json().catch(() => ({}))) as { error?: string }) : { error: tr('The server did not answer.') };
+        setBusy(false);
+        setSaid(res?.ok ? tr('Stopped {title} for {user}.', { title: s.title, user: s.user }) : (body.error ?? tr('That did not work.')));
+        if (res?.ok) setTimeout(onDone, 1500);
+      }}
+    >
+      {tr('Stop')}
+    </HoldButton>
+  );
+}
+
+/**
+ * `stop`: where to post to stop it, for whoever runs the server. `appHref`:
+ * the title in the server's own app, offered on a phone or tablet.
+ */
+export function StreamRow({ stream: reported, service, label, href, stop, appHref, compact = false }: { stream: Stream; service: MediaService; label: string; href?: string; stop?: string; appHref?: string; compact?: boolean }) {
   const s = useLivePosition(reported);
+  const { snap } = useStore();
+  const canStop = !!stop && !snap?.readOnly && !snap?.household;
+  const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
   const Wrap = compact ? 'span' : 'div';
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
@@ -243,7 +279,13 @@ export function StreamRow({ stream: reported, service, label, href, compact = fa
           </>}
           {progress === null && <p className="settings-note">This service does not report playback position.{s.durationSec != null && ` Length ${elapsed(s.durationSec)}.`}</p>}
           {s.positionSec != null && s.durationSec != null && <p className="playback-remaining">{elapsed(Math.max(0, s.durationSec - s.positionSec))} remaining{s.state === 'paused' ? ', paused' : ''}</p>}
-          {href && <a className="section-action playback-open" href={href} target="_blank" rel="noreferrer">Open {label}</a>}
+          {(href || (appHref && touch) || canStop) && (
+            <div className="playback-actions">
+              {appHref && touch && <a className="section-action playback-open" href={appHref}>{tr('Open in the {app} app', { app: label })}</a>}
+              {href && <a className="section-action playback-open" href={href} target="_blank" rel="noreferrer">Open {label}</a>}
+              {canStop && <StopStream url={stop!} s={s} onDone={() => close()} />}
+            </div>
+          )}
         </div>, document.body,
       )}
     </Wrap>

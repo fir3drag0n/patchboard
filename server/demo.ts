@@ -4,6 +4,7 @@
 
 import { pinnedAnywhere } from './adapters/homeassistant.ts';
 import { poster } from './demo-media.ts';
+import { plexItemPath } from './adapters/tautulli.ts';
 import { episodeKey } from './adapters/arr.ts';
 import type {
   DownloadEntry,
@@ -395,8 +396,8 @@ const demoLibScan = new Map<string, number>();
 
 const demoPlex = (): TautulliData => ({
   streams: [
-    { user: 'Sam', title: 'Severance', subtitle: 'S02E05', ...demoPlaying(48, 3000), state: 'playing' as const, transcode: false, thumb: poster('Severance'), session: 'plex-1', device: 'Living room TV' },
-    { user: 'Kit', title: 'Poor Things', ...demoTiming(81, 8460), state: 'paused' as const, transcode: true, thumb: poster('Poor Things'), session: 'plex-2', device: 'iPad' },
+    { itemId: '4105', user: 'Sam', title: 'Severance', subtitle: 'S02E05', ...demoPlaying(48, 3000), state: 'playing' as const, transcode: false, thumb: poster('Severance'), session: 'plex-1', device: 'Living room TV' },
+    { itemId: '5310', user: 'Kit', title: 'Poor Things', ...demoTiming(81, 8460), state: 'paused' as const, transcode: true, thumb: poster('Poor Things'), session: 'plex-2', device: 'iPad' },
   ].filter((s) => !demoStreamStopped.has(s.session)),
   recent: [
     { id: 'p1', type: 'episode', title: 'The Bear', thumb: poster('The Bear'), subtitle: 'S04E03', addedAt: Date.now() - 3 * H },
@@ -417,6 +418,8 @@ const demoPlex = (): TautulliData => ({
     { user: 'Kit', title: 'Shōgun', subtitle: 'S01E07 A Stick of Time', at: Date.now() - 2 * D, thumb: poster('Shōgun') },
   ],
   library: { movies: 1204, shows: 212, episodes: 9387, songs: 18420 },
+  // A made-up server id, so a title opens in Plex's web app and, on a phone, its app.
+  itemPath: plexItemPath('demo-plex-server'),
 });
 
 const DEMO_LIBRARIES: Record<'plex' | 'jellyfin', [string, string, 'movies' | 'shows' | 'music', number][]> = {

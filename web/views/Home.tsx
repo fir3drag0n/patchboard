@@ -11,7 +11,7 @@ import { useWidget } from '../board/widget-context.ts';
 import { Link, NavLink, useLocation, useParams } from 'react-router-dom';
 import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
 import { sameRelease } from '../../shared/media.ts';
-import { itemHref, type MergedItem, mergeRecent, useMediaServers } from '../lib/media.ts';
+import { itemHref, type MergedItem, mergeRecent, useMediaServers, streamProps } from '../lib/media.ts';
 import type {
   Alert,
   ArrData,
@@ -575,13 +575,13 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
               {m.data.streams.map((s, i) => (
                 <Fragment key={`${s.user}:${s.title}:${i}`}>
                   {i > 0 && ', '}
-                  <StreamRow compact stream={s} service={m.id === 'tautulli' ? 'plex' : m.id === 'emby' ? 'emby' : 'jellyfin'} label={m.label} href={s.itemId ? itemHref(m, s.itemId) : m.href} />
+                  <StreamRow compact stream={s} {...streamProps(m, s)} />
                 </Fragment>
               ))}
             </p>
           )}
           {m.data.streams.slice(0, limit).map((s, i) => (
-            <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={m.id === 'tautulli' ? 'plex' : m.id === 'emby' ? 'emby' : 'jellyfin'} label={m.label} href={s.itemId ? itemHref(m, s.itemId) : m.href} />
+            <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} {...streamProps(m, s)} />
           ))}
           {/* Fit or a small limit cut the list: say so, and lead to the rest. */}
           {!compact && m.data.streams.length > limit && (

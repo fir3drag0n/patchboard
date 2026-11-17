@@ -1194,5 +1194,9 @@
  "Specials": "Especiales",
  "Untitled": "Sin título",
  "Paste settings here": "Pega los ajustes aquí",
- "Right now, Recently added and Watched straight from Plex, with no Tautulli needed. Scan a library and stop a stream from the Media page; stopping needs Plex Pass. With Tautulli set up too, Tautulli feeds the board.": "Ahora mismo, Añadido recientemente y Visto directamente desde Plex, sin necesidad de Tautulli. Escanea una biblioteca y detén una reproducción desde la página Medios; detener requiere Plex Pass. Si también configuras Tautulli, Tautulli alimenta el tablero."
+ "Right now, Recently added and Watched straight from Plex, with no Tautulli needed. Scan a library and stop a stream from the Media page; stopping needs Plex Pass. With Tautulli set up too, Tautulli feeds the board.": "Ahora mismo, Añadido recientemente y Visto directamente desde Plex, sin necesidad de Tautulli. Escanea una biblioteca y detén una reproducción desde la página Medios; detener requiere Plex Pass. Si también configuras Tautulli, Tautulli alimenta el tablero.",
+ "Open in the {app} app": "Abrir en la app de {app}",
+ "something new inside": "hay algo nuevo dentro",
+ "That did not work.": "No funcionó.",
+ "The server did not answer.": "El servidor no respondió."
 }

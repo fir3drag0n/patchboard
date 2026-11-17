@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **A stream's details wherever it plays:** the card that opens from a
+  stream on Home now opens from the Media page and from Plex's, Jellyfin's,
+  Emby's, Navidrome's and Audiobookshelf's own pages too. It has Stop, for
+  whoever runs the server, and on a phone or tablet, Open in the Plex app.
+- **Counts in the menu:** Downloads shows how many downloads aren't
+  finished and Requests how many wait for you, as Reading shows unread.
+  When a page with a count sits under More, More carries a dot.
 - **Plex without Tautulli:** with Plex's address and token in Settings,
   Connections, Right now, Recently added and Watched read straight from
   Plex, posters included, and the token never leaves your server. Set up
