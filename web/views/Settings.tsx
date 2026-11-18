@@ -67,6 +67,23 @@ const TABS: [Tab, string, string][] = [
   ['activity', msg('Activity'), msg('Who changed what, newest first.')],
 ];
 
+
+/**
+ * The sentence a search found, when it isn't the one a description starts
+ * with: a long description shows two lines, and the match may be in its
+ * fifth sentence. Search reads the English; this shows the same sentence in
+ * the reader's language when both split the same way.
+ */
+function foundIn(english: string, said: string, q: string): string | null {
+  if (!q) return null;
+  const split = (s: string) => s.match(/[^.!?]+[.!?]+(?=\s|$)/g)?.map((x) => x.trim()) ?? [s];
+  const en = split(english);
+  const k = en.findIndex((s) => s.toLowerCase().includes(q));
+  if (k <= 0) return null;
+  const local = split(said);
+  return local.length === en.length ? local[k] : en[k];
+}
+
 export function Settings() {
   const a = useAppearance();
   const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'devices', 'alerts', 'connections', 'activity'], 'look', true, ['part', 'device']);
@@ -1004,7 +1021,7 @@ function Integrations() {
       >
         <span className="integration-name">{i.name}</span>
         <span className="integration-adds">
-          {tr(i.adds)}
+          {foundIn(i.adds, tr(i.adds), find.trim().toLowerCase()) ?? tr(i.adds)}
           {st.why ? <small>{st.why}</small> : !su && !st.on && i.where && <small>{i.where}</small>}
         </span>
         <span className="integration-end">
