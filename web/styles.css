@@ -1452,6 +1452,16 @@ a.jack:focus-visible {
   backdrop-filter: blur(4px);
 }
 
+/* Edit header leaves the header in plain sight, below it, so each change shows as you make it. */
+.palette-backdrop:has(> .header-panel) {
+  background: none;
+  backdrop-filter: none;
+}
+
+.palette.header-panel {
+  margin-top: calc(min(260px, 32vh) / var(--zoom));
+}
+
 .palette {
   width: min(640px, calc(calc(100vw / var(--zoom)) - 32px));
   margin: calc(13vh / var(--zoom)) auto 0;
@@ -4733,6 +4743,48 @@ a.vitals {
 .drawer-head h2 {
   font: var(--display-weight) 20px/1.1 var(--f-display);
   color: var(--head);
+}
+
+/* Add a widget: the list, and beside it the widget it points at, live. */
+.drawer-wide {
+  width: min(1040px, calc(calc(100vw / var(--zoom)) - 32px));
+}
+
+.drawer-split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 20px;
+}
+
+.drawer-split > .drawer-list {
+  min-height: 0;
+}
+
+.drawer-peek {
+  min-height: 0;
+  overflow: hidden;
+  margin-top: 6px;
+  padding-left: 20px;
+  border-left: 1px solid var(--line-soft);
+  /* A picture of the widget: its foot fades rather than cuts. */
+  mask-image: linear-gradient(to bottom, #000 82%, transparent);
+}
+
+.drawer-peek-body {
+  container-type: inline-size;
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  .drawer-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .drawer-peek {
+    display: none;
+  }
 }
 
 .drawer-list {

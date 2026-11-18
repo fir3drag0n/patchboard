@@ -7,8 +7,9 @@ they match the current code.
 
 The default header puts status beside full server graphs, then the time and
 date above the weather in a centered card. On a desktop, the quiet status
-stays on one line. Edit header, at the foot of Home, opens Settings, Home:
-four checkboxes, with sizing and forecasts in Sizes and forecast
+stays on one line. Edit header, at the foot of Home, opens its controls
+over the board, below the header so each change shows at once: four
+checkboxes, with sizing and forecasts in Sizes and forecast
 details. Header preferences apply to this device. Arrange board controls the
 shared widget layout and leaves saved boards as they are.
 

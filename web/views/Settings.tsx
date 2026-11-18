@@ -20,6 +20,7 @@ import { SignIn } from '../components/SignIn.tsx';
 import { BrandName } from '../components/BrandName.tsx';
 import { AppIconSection } from '../components/AppIcon.tsx';
 import { ApiKeys } from '../components/ApiKeys.tsx';
+import { HeaderSettings } from '../components/HeaderSettings.tsx';
 import { type SetupIntegration, THRESHOLDS, type ThresholdState } from '../../shared/setup.ts';
 import {
   ACCENTS,
@@ -301,22 +302,7 @@ export function Settings() {
       {tab === 'home' && (
       <>
       <Section title="Home header" id="home-header" className="span-all">
-        <div className="header-switches">
-          <label className="check"><input type="checkbox" checked={a.homeStatusSize !== 'hidden'} onChange={(e) => setAppearance({ homeStatusSize: e.target.checked ? 'medium' : 'hidden' })} />{tr('Show status')}</label>
-          <label className="check"><input type="checkbox" checked={a.homeServer !== 'hidden'} onChange={(e) => setAppearance({ homeServer: e.target.checked ? 'card' : 'hidden' })} />{tr('Show server details')}</label>
-          <label className="check"><input type="checkbox" checked={a.homeClockSize !== 'hidden'} onChange={(e) => setAppearance({ homeClockSize: e.target.checked ? 'small' : 'hidden' })} />{tr('Show time and date')}</label>
-          <label className="check"><input type="checkbox" checked={a.homeWeather !== 'hidden'} onChange={(e) => setAppearance({ homeWeather: e.target.checked ? 'current' : 'hidden' })} />{tr('Show weather')}</label>
-        </div>
-        <p className="settings-note">{tr('With status off, Needs attention moves onto the board.')}</p>
-        <details className="header-options-details">
-          <summary>{tr('Sizes and forecast details')}</summary>
-          <div className="header-options">
-            <div><span>{tr('Status size')}</span>{seg('homeStatusSize', [['small', msg('Small')], ['medium', msg('Medium')], ['large', msg('Large')]], a.homeStatusSize === 'hidden')}</div>
-            <div><span>{tr('Clock size')}</span>{seg('homeClockSize', [['small', msg('Small')], ['medium', msg('Medium')], ['large', msg('Large')]], a.homeClockSize === 'hidden')}</div>
-            <div><span>{tr('Weather view')}</span>{seg('homeWeather', [['current', msg('Current')], ['summary', msg('Forecast')], ['hourly', msg('Hourly chart')]], a.homeWeather === 'hidden')}</div>
-          </div>
-        </details>
-        <button type="button" className="button button-quiet" onClick={() => setAppearance({ homeStatusSize: 'medium', homeServer: 'card', homeWeather: 'current', homeClockSize: 'small' })}>{tr('Restore default header')}</button>
+        <HeaderSettings />
       </Section>
 
       <Section title="Default app appearance">

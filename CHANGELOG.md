@@ -22,6 +22,10 @@
 - **Set up first stays on the board:** a widget waiting on a connection
   opens that app's sheet over the board you're arranging; save the
   connection and the widget is on the board.
+- **Edit header stays on Home:** its controls open over the board, and
+  the header changes behind them as you choose.
+- **Add a widget shows it first:** the widget you point at in the list
+  shows beside it, live, with your own numbers, before you add it.
 - **A connected app's tile number needs no key:** in Edit apps, a live
   number for Sonarr, Jellyfin, Home Assistant and the rest uses the address
   and key already saved in Settings, Connections. "Use another address"

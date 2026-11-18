@@ -37,6 +37,7 @@ import { HoldButton } from '../components/Hold.tsx';
 import { BoardColors } from '../components/BoardColors.tsx';
 import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
 import { appLike, ServiceSheet } from '../components/ServiceSheet.tsx';
+import { HeaderPanel } from '../components/HeaderSettings.tsx';
 import { INTEGRATIONS } from '../../shared/integrations.ts';
 import { WidgetCtx } from './widget-context.ts';
 import { DownloadsWidget } from './Downloads.tsx';
@@ -389,6 +390,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   }, [leaving, draft]);
   const [adding, setAdding] = useState(false);
   const [creating, setCreating] = useState(false);
+  // The header's controls, over the board instead of a trip to Settings.
+  const [headerOpen, setHeaderOpen] = useState(false);
   /** The JSON widget being edited: an existing id, or 'new' while adding one. */
   const [jsonEdit, setJsonEdit] = useState<string | null>(null);
   /** The widget whose settings drawer is open. */
@@ -708,7 +711,11 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
 
       <div className="board-foot" inert={editing || undefined}>
           <VersionLine />
-          {!snap?.readOnly && <Link className="text-button board-header-settings" to="/settings?tab=home#home-header">{t('Edit header')}</Link>}
+          {!snap?.readOnly && (
+            <button type="button" className="text-button board-header-settings" onClick={() => setHeaderOpen(true)}>
+              {t('Edit header')}
+            </button>
+          )}
           {!snap?.readOnly && <><button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
             {t('Arrange board')}
           </button>
@@ -717,6 +724,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
           </button></>}
         </div>
 
+      {headerOpen && <HeaderPanel onClose={() => setHeaderOpen(false)} />}
       {creating && <NewBoard onClose={() => setCreating(false)} />}
 
       {adding && draft && (
@@ -1355,6 +1363,9 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
   const [find, setFind] = useState('');
   // A widget waiting on a connection: its service's sheet, over the board.
   const [setting, setSetting] = useState<WidgetType | null>(null);
+  // The widget the list points at, shown live with this server's data.
+  const [peek, setPeek] = useState<WidgetType | null>(null);
+  const now = useNow(15_000);
   const present = new Set(board.widgets.map((w) => w.type));
   // Search by name or by what it shows: "plex", "disk", "camera".
   const matches = (t: WidgetType) => {
@@ -1377,7 +1388,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
   return (
     <>
     <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette drawer" ref={modal} role="dialog" aria-label="Add a widget" onClick={(e) => e.stopPropagation()}>
+      <div className={`palette drawer ${picking ? '' : 'drawer-wide'}`} ref={modal} role="dialog" aria-label="Add a widget" onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>{picking ? 'Which container?' : 'Add a widget'}</h2>
           <button type="button" className="text-button" onClick={picking ? () => setPicking(false) : onClose}>
@@ -1401,6 +1412,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
           />
         )}
         {!picking ? (
+          <div className="drawer-split">
           <ul className="drawer-list">
             {[...KINDS.map(([k]) => k), 'Other'].map((kind) => {
               const list = types.filter((t) => kindOf(t) === kind);
@@ -1414,6 +1426,8 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
                     <li key={t}>
                       <button
                         type="button"
+                        onMouseEnter={() => setPeek(t)}
+                        onFocus={() => setPeek(t)}
                         onClick={() => (t === 'container' ? setPicking(true) : onAdd({ id: WIDGET_INFO[t].multiple ? id(t) : t, type: t, size: WIDGET_INFO[t].size }))}
                       >
                         <strong>{WIDGET_INFO[t].name}</strong>
@@ -1450,6 +1464,22 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
               );
             })}
           </ul>
+          {/* What the pointed-at widget looks like here, now: a picture, not a control. */}
+          {(() => {
+            const t = peek && types.includes(peek) ? peek : types.find((x) => x !== 'container');
+            if (!t) return null;
+            const w: Widget = { id: 'peek', type: t, size: WIDGET_INFO[t].size };
+            return (
+              <aside className="drawer-peek" aria-hidden inert>
+                <div className="drawer-peek-body cell-body">
+                  <WidgetCtx.Provider value={settingsOf(w)}>
+                    <WidgetBody w={w} board="peek" now={now} saved={false} />
+                  </WidgetCtx.Provider>
+                </div>
+              </aside>
+            );
+          })()}
+          </div>
         ) : (
           <>
             <input className="field palette-input" placeholder="Filter containers" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
