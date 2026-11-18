@@ -19,6 +19,9 @@
 - **Settings, Connections is shorter:** Integrations keeps only the ways
   alerts reach you and what the server sets itself; every app and its
   connection is in Apps.
+- **Set up first stays on the board:** a widget waiting on a connection
+  opens that app's sheet over the board you're arranging; save the
+  connection and the widget is on the board.
 - **A connected app's tile number needs no key:** in Edit apps, a live
   number for Sonarr, Jellyfin, Home Assistant and the rest uses the address
   and key already saved in Settings, Connections. "Use another address"

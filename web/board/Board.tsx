@@ -36,6 +36,8 @@ import { HA_WIDGETS } from '../../shared/ha.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { BoardColors } from '../components/BoardColors.tsx';
 import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
+import { appLike, ServiceSheet } from '../components/ServiceSheet.tsx';
+import { INTEGRATIONS } from '../../shared/integrations.ts';
 import { WidgetCtx } from './widget-context.ts';
 import { DownloadsWidget } from './Downloads.tsx';
 import { ListeningWidget, WatchedWidget } from './Media.tsx';
@@ -877,7 +879,7 @@ function Cell(props: {
             </button>
             {props.onConfigure && (
               <button type="button" className="cell-btn cell-settings" onClick={props.onConfigure} aria-label={`Edit ${info.name}`} title="Edit: name, width, items, look">
-                Settings
+                Edit
               </button>
             )}
             {(info.removable || props.removable) && (
@@ -1351,6 +1353,8 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
   const [picking, setPicking] = useState(false);
   const [q, setQ] = useState('');
   const [find, setFind] = useState('');
+  // A widget waiting on a connection: its service's sheet, over the board.
+  const [setting, setSetting] = useState<WidgetType | null>(null);
   const present = new Set(board.widgets.map((w) => w.type));
   // Search by name or by what it shows: "plex", "disk", "camera".
   const matches = (t: WidgetType) => {
@@ -1371,6 +1375,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
   };
 
   return (
+    <>
     <div className="palette-backdrop" onClick={onClose}>
       <div className="palette drawer" ref={modal} role="dialog" aria-label="Add a widget" onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
@@ -1421,14 +1426,29 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
             })}
             {types.length === 0 && waiting.length === 0 && <li className="settings-note">{find.trim() ? `No widget matches "${find.trim()}".` : 'Every widget is on the board.'}</li>}
             {waiting.length > 0 && <li className="drawer-sub drawer-kind" role="presentation">Set up first</li>}
-            {waiting.map((t) => (
-              <li key={t} className="is-waiting">
-                <Link to={setupHref(t)} onClick={onClose}>
+            {waiting.map((t) => {
+              const setup = INTEGRATIONS.find((i) => i.id === NEEDS[t]?.setup);
+              const body = (
+                <>
                   <strong>{WIDGET_INFO[t].name}</strong>
                   <span>Needs {NEEDS[t]?.label}. Set it up</span>
-                </Link>
-              </li>
-            ))}
+                </>
+              );
+              return (
+                <li key={t} className="is-waiting">
+                  {/* Set up in place, so the board being arranged stays as it is. */}
+                  {setup && appLike(setup) ? (
+                    <button type="button" onClick={() => setSetting(t)}>
+                      {body}
+                    </button>
+                  ) : (
+                    <Link to={setupHref(t)} onClick={onClose}>
+                      {body}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <>
@@ -1447,6 +1467,20 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
         )}
       </div>
     </div>
+      {setting && NEEDS[setting] && (
+        <ServiceSheet
+          id={NEEDS[setting]!.setup}
+          connect
+          feeds={false}
+          onSaved={() => {
+            const t = setting;
+            setSetting(null);
+            onAdd({ id: WIDGET_INFO[t].multiple ? id(t) : t, type: t, size: WIDGET_INFO[t].size });
+          }}
+          onClose={() => setSetting(null)}
+        />
+      )}
+    </>
   );
 }
 

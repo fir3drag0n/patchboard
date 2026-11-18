@@ -60,7 +60,7 @@ export function AlsoConnected({ snap, onOpen }: { snap: Snapshot; onOpen: (id: s
 }
 
 /** One service's sheet: what it adds, its connection, and where it shows up. */
-export function ServiceSheet({ id, connect, onClose }: { id: string; connect: boolean; onClose: () => void }) {
+export function ServiceSheet({ id, connect, feeds = true, onSaved, onClose }: { id: string; connect: boolean; /** Where it shows up; off over a board being arranged, whose own add does that. */ feeds?: boolean; onSaved?: () => void; onClose: () => void }) {
   const modal = useModal<HTMLDivElement>(onClose);
   const integration = INTEGRATIONS.find((i) => i.id === id);
   if (!integration) return null;
@@ -75,8 +75,8 @@ export function ServiceSheet({ id, connect, onClose }: { id: string; connect: bo
         </header>
         <p className="settings-note">{t(integration.adds)}</p>
         <div className="ws-form">
-          <AppConnection integration={integration} startOpen={connect} about={false} onChange={() => {}} />
-          <ShowsUpIn integration={integration} />
+          <AppConnection integration={integration} startOpen={connect} about={false} onChange={() => onSaved?.()} />
+          {feeds && <ShowsUpIn integration={integration} />}
         </div>
       </div>
     </div>
