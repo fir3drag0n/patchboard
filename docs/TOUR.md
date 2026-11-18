@@ -381,8 +381,9 @@ old one.
 
 ![Settings, Devices: a kitchen tablet's pages, screen and look](screenshots/settings-devices.webp)
 
-**Connections** shows which integrations run. **Set up** takes an address and
-a key, tests the connection, and saves. The server encrypts keys and never
+**Connections** holds sign-in, your app catalog, backups, and the ways
+alerts reach you. Apps themselves connect from their own sheet in Apps:
+the address and key, a test, and Save. The server encrypts keys and never
 shows them again; anything set in the environment file shows as locked.
 
 **Settings, Alerts** sets when storage counts as full and a drive as hot,

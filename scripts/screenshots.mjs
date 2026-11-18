@@ -375,13 +375,21 @@ try {
   await shoot(page, 'settings-alerts');
   await go('/settings?tab=connections');
   await shoot(page, 'integrations', { fullPage: true });
-  const emby = page.locator('.integration', { hasText: 'Emby' }).first();
-  await emby.getByRole('button', { name: 'Set up Emby' }).click();
+  // Connecting an app happens in its sheet, from Apps: Add an app, Emby, Connect.
+  await go('/apps');
+  await page.getByRole('button', { name: 'Add an app', exact: true }).click();
+  const pick = page.getByRole('dialog', { name: 'Add an app' });
+  await pick.getByRole('searchbox').fill('emby');
+  await pick.locator('.add-app-row', { hasText: 'Emby' }).first().click();
+  const emby = page.locator('.widget-settings[role=dialog]');
+  await emby.waitFor();
+  await emby.getByRole('button', { name: 'Connect', exact: true }).click();
   await emby.getByLabel('Address').fill('http://192.168.1.10:8096');
   await emby.getByLabel('API key').fill('a-key-you-paste');
   await emby.getByRole('button', { name: 'Test connection' }).click();
   await settle(page, 800);
   await shootEl(emby, 'integration-setup');
+  await page.keyboard.press('Escape');
 
   // Coming from Homepage: its services.yaml pasted in, previewed.
   await go('/settings?tab=connections&import=homepage');

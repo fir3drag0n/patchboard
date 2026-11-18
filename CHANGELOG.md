@@ -1,74 +1,51 @@
 # Changelog
 
-## Unreleased
+## 1.17.0 (2026-11-18)
 
-- **Every tile opens its own sheet:** the pencil on an app's tile in Apps
-  opens its icon, connection, number and where it shows up, and Done saves
-  it. Add an app sits on Apps too. Edit apps is for moving and grouping, and
-  a broken connection's link opens the sheet with the connection first.
-- **Widgets that several apps can feed ask which you run:** Next up asks
-  Jellyfin or Emby, Storage asks Unraid, Synology or QNAP, with the one
-  running here first.
-- **Find a widget by what it shows:** "bambu" or "printer" finds the 3D
-  printer in Add an app and in Jump to, along with the app that feeds it,
-  and Jump to connects any app by name. With Home Assistant on and no
-  printer, its sheet says to add the Bambu Lab integration from HACS.
-- **Polish:** Add widget is one name on the button and its panel, and a
-  link to fix a connection no longer flashes Settings on its way.
-- **A connected app's tile number says so:** the first choice reads
-  "Sonarr's own number" instead of None, and Status only for apps without
-  a connection.
-- **An app's editor holds its connection:** open Sonarr in Edit apps and
-  connect it there, see whether it's reachable, and see everything it shows
-  up in, This week, Downloads and the Library page, with Add to Home for a
-  widget that isn't on the board yet.
-- **Add an app lists everything Patchboard knows:** what runs here and
-  isn't listed yet, then every app it can connect, by kind, with a search.
-  Picking Emby opens Emby, ready to connect; anything else goes in by its
-  link.
-- **A broken connection opens its app:** "Can't reach" and a widget's
-  Check the connection open that app's editor with its connection form
-  already open, when the app is on Apps.
-- **Every connection has a home in Apps:** Weather, a calendar, Trakt and
-  anything else connected without a tile list under Also connected, and
-  open the same sheet. A link to set one up opens it there too.
-- **Settings, Connections is shorter:** Integrations keeps only the ways
-  alerts reach you and what the server sets itself; every app and its
-  connection is in Apps.
-- **Set up first stays on the board:** a widget waiting on a connection
-  opens that app's sheet over the board you're arranging; save the
-  connection and the widget is on the board.
-- **Edit header stays on Home:** its controls open over the board, and
-  the header changes behind them as you choose.
-- **Add a widget shows it first:** the widget you point at in the list
-  shows beside it, live, with your own numbers, before you add it.
-- **A connected app's tile number needs no key:** in Edit apps, a live
-  number for Sonarr, Jellyfin, Home Assistant and the rest uses the address
-  and key already saved in Settings, Connections. "Use another address"
-  still takes your own.
-- **"Can't reach" opens that integration:** the alert links straight to
-  its settings instead of the top of Connections.
-- **One name for each thing:** a widget's gear and a connection's button
-  say Edit, Arrange board's extra tools sit under More, pasted keys are Saved
-  secrets, and Bookmarks and Elsewhere are both Links.
-- **Fixes:** Add widget is back within reach while arranging on a phone or
-  a short screen: More opened its tools off the side of the bar. Connections' Integrations, Sign-in and keys, App catalog and
-  Backup are full-size taps on a phone, and Edit apps' sections are
-  headings a screen reader can step through.
+- **Every app in one place:**
+  - **Press the pencil on a tile** in Apps and its sheet opens: icon,
+    link, connection, the number on its tile, and where it shows up, with
+    Add to Home for a widget you don't have yet. Done saves it.
+  - **Add an app** lists what runs on your server and isn't on Apps yet,
+    then every app Patchboard can connect, with a search. Pick Emby and you
+    connect it in the same sheet.
+  - **Weather, calendars, Trakt** and anything else you connected without
+    a tile sit under Also connected and open the same sheet.
+  - **A tile's number uses its app's connection,** so you type Sonarr's key
+    once. The first choice reads "Sonarr's own number".
+  - **Settings, Connections is shorter:** its Integrations list keeps the
+    ways alerts reach you and what the server sets itself. Edit apps moves
+    and groups apps.
+- **The 2 AM fix takes one click:** "Can't reach" and a widget's Check the
+  connection open that app's sheet with its connection form open.
+- **Arranging the board:**
+  - **Add widget shows the widget live,** with your own numbers, before
+    you add it.
+  - **A widget waiting on an app** opens that app's sheet over the board.
+    Connect it and the widget lands where you're arranging. Next up asks
+    whether you run Jellyfin or Emby; Storage asks Unraid, Synology or QNAP.
+  - **Edit header opens over the board,** below the header, so you see
+    each change as you make it.
 - **A 3D printer widget** for Bambu Lab printers, through Home Assistant's
-  Bambu Lab integration: the print and its picture, progress and layer,
-  time left and when it's done, nozzle and bed heat, the filament loaded,
-  and any error in the printer's own words. As one number, it shows the
-  progress on a wall screen.
-- **Finding an integration shows why it matched:** a search in Settings,
-  Connections shows the sentence it found, so "Bambu" leads to Home
-  Assistant and says how.
-- **Audiobookshelf shows the book's cover** in Listening and its preview,
-  in place of the title's initials.
-- **Enlarged text keeps the top bar in order:** with a browser's text-only
-  zoom (Firefox's Zoom Text Only) or a long name, the bar steps down to its
-  compact form instead of drawing More over Home, and a widget's link drops
-  below its title instead of running into the next widget.
+  Bambu Lab integration: the print and its picture, progress, layer, time
+  left and finish time, nozzle and bed heat, the spool in use, and any
+  error in the printer's own words. As one number it shows the progress on
+  a wall screen. Search "bambu" in Add widget, Add an app or Jump to; with
+  no printer yet, Home Assistant's sheet links the integration.
+- **Jump to finds more:** "connect emby" opens Emby's connection, and a
+  widget's name or what it shows finds the widget.
+- **One name for each thing:** Edit on a widget and a connection, More for
+  Arrange board's extra tools, Saved secrets for pasted keys, and Links for
+  what were Bookmarks and Elsewhere.
+- **Audiobookshelf shows each book's cover** in Listening.
+- **Fixes:**
+  - **Add widget is back on a phone:** More opened Arrange board's tools
+    off the side of the bar.
+  - **Enlarged text keeps the top bar in order:** with Firefox's Zoom Text
+    Only, More no longer covers Home, and a widget's link drops below its
+    title.
+  - **Bigger taps on a phone** for Connections' parts, and Edit apps'
+    sections read as headings to a screen reader.
 
 ## 1.16.0 (2026-11-17)
 
