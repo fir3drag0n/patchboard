@@ -50,12 +50,13 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
 ## Three ways to add numbers
 
 1. **Built-in integrations** feed whole parts of Patchboard: Needs attention,
-   the calendar, Right now, the Server page. You turn them on in Settings,
-   Connections, which also shows which ones run, or from the app itself:
-   its editor in Edit apps connects it and lists everything it shows up in.
+   the calendar, Right now, the Server page. You turn them on in Apps: open
+   the app, or Add an app and pick it. Its sheet connects it and lists
+   everything it shows up in. Services with no page of their own, like
+   Weather or a calendar, list under Also connected.
 2. **A live number on an app's tile.** In Edit apps, open the app's ⋯ menu,
    choose Icon and live number, and pick a preset or Any JSON API. An app
-   already set up in Settings, Connections uses that address and key, so
+   already connected uses that address and key, so
    there's nothing to type; any other asks for its key once. Press Test. The
    key stays on the server.
 3. **An API numbers widget** on Home shows up to four values from any JSON
@@ -66,8 +67,9 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
 
 ## Built-in integrations
 
-Set one up in **Settings, Connections**: press **Set up**, fill in the
-address and key, **Test connection**, then **Save**. Patchboard connects at
+Set one up in **Apps**: open the app (or **Add an app** and pick it), press
+**Connect**, fill in the address and key, **Test connection**, then
+**Save**. Patchboard connects at
 once, with no restart. Keys you type there are encrypted on the server and
 never shown again.
 
@@ -87,7 +89,7 @@ into Patchboard later, see [Moving off files](CONFIGURATION.md#moving-off-files)
 | **Weather** | Now, the next 24 hours, the week, sunrise and sunset; US weather alerts. Free, no key. | `WEATHER_LAT`, `WEATHER_LON`; optional `WEATHER_LABEL` | Find your town, or type its latitude and longitude. Open-Meteo provides the forecast and the National Weather Service the alerts. |
 | **Sonarr** | Episodes on the calendar, the queue, stuck imports and health warnings. Try another release for a stuck download, Search for an episode that aired without arriving, or search for everything missing. The Library page lists every show, what’s missing and the whole queue, and adds new ones. | `SONARR_URL`, `SONARR_KEY` | Sonarr: Settings, General, API Key. |
 | **Radarr** | Films on the calendar (cinema, digital, physical), the queue, stuck imports and health warnings. Try another release for a stuck download, Search for a film that is out without arriving, or search for everything missing. The Library page lists every film, what’s missing and the whole queue, and adds new ones. | `RADARR_URL`, `RADARR_KEY` | Radarr: Settings, General, API Key. |
-| **Trakt** | Your Trakt calendar for shows and films Sonarr and Radarr don’t track, merged without doubles. | `TRAKT_CLIENT_ID` | Create an app at app.trakt.tv/settings/apps and copy its Client ID. Then connect from Settings, Connections with the code it shows. |
+| **Trakt** | Your Trakt calendar for shows and films Sonarr and Radarr don’t track, merged without doubles. | `TRAKT_CLIENT_ID` | Create an app at app.trakt.tv/settings/apps and copy its Client ID. Then connect Trakt in Apps with the code it shows. |
 | **Tautulli (Plex)** | Who is watching Plex right now, recently added posters, what was watched lately and by whom, and how big the library is. | `TAUTULLI_URL`, `TAUTULLI_KEY` | Tautulli: Settings, Web Interface, API Key. |
 | **Plex** | Right now, Recently added and Watched straight from Plex, with no Tautulli needed. Scan a library and stop a stream from the Media page; stopping needs Plex Pass. With Tautulli set up too, Tautulli feeds the board. | `PLEX_URL`, `PLEX_TOKEN` | Plex Web: open any title, the three dots, Get Info, View XML; the address ends in X-Plex-Token=. Copy what follows it. |
 | **Jellyfin** | Who is watching, the moment it changes, recently added, Next up, what you watched lately and how big the library is, with posters that open the item in Jellyfin. | `JELLYFIN_URL`, `JELLYFIN_KEY`; optional `JELLYFIN_USER` | Jellyfin: Dashboard, API Keys, +. JELLYFIN_USER picks whose Next up to show; blank uses the first admin. |

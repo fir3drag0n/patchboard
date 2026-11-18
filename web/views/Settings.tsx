@@ -1018,7 +1018,9 @@ function Integrations() {
     return { on: true, text: s.updatedAt ? tr('On, updated {when}', { when: agoLong(s.updatedAt) }) : tr('On'), tone: 'ok' };
   };
   const setupOf = (id: string) => setup?.integrations.find((x) => x.id === id);
-  const rows = INTEGRATIONS.map((i) => ({ i, st: status(i) }));
+  // Apps hold every app and its connection; what's left here is how alerts
+  // reach you and what only the server's environment can set.
+  const rows = INTEGRATIONS.filter((i) => !appLike(i)).map((i) => ({ i, st: status(i) }));
   const on = rows.filter((r) => r.st.on);
   const off = rows.filter((r) => !r.st.on);
   const row = ({ i, st }: { i: Integration; st: ReturnType<typeof status> }) => {
@@ -1107,6 +1109,11 @@ function Integrations() {
   };
   return (
     <Section title="Integrations" count={tr('{on} of {all} on', { on: on.length, all: rows.length })} className="span-all" id="integrations">
+      <p className="settings-note integrations-moved">
+        {tx('Apps and their connections are in {apps}: open one to connect it, or Add an app. Here: notifications, and what the server sets itself.', {
+          apps: <Link to="/apps">{tr('Apps')}</Link>,
+        })}
+      </p>
       <p className="settings-note">
         {tr('Keys stay encrypted on this server and never reach a browser. A variable in your environment wins over this page and shows here as locked.')}
       </p>

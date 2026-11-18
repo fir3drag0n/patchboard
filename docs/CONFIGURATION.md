@@ -4,7 +4,7 @@ You configure almost everything in the UI:
 
 | Where | What | Applies to |
 |---|---|---|
-| Settings, Connections | Integrations: addresses and keys, encrypted on the server | Every device |
+| Apps, each app's sheet | Connections: addresses and keys, encrypted on the server | Every device |
 | Apps, Edit apps, Arrange board, and Customize on other pages | Apps, groups, icons, live numbers, the boards on Home, what each page shows | Every device |
 | Settings, Alerts | When storage, drives and links count as trouble | Every device |
 | Settings, Connections, Sign-in and keys | A password and other names you open Patchboard by | Every device |
@@ -97,7 +97,7 @@ services.yaml.
 | `HOOK_TOKEN` | generated | What webhooks send when sign-in is on. Settings, Connections, Sign-in and keys shows Diun's address with it. |
 | `READ_ONLY` | `0` | `1` refuses every change and hides the controls for them. For one family phone or tablet, make it a household device instead ([SECURITY.md](../SECURITY.md)). |
 | `DOCKER_HOST` | empty | `tcp://host:port` of a Docker socket proxy, used instead of the socket. |
-| `DOCKER_HOSTS` | empty | Other machines running Docker, each a socket proxy: `pi=tcp://192.168.1.20:2375, nuc=tcp://192.168.1.21:2375`. Their containers are named like `pihole@pi`. Settings, Connections sets them too. |
+| `DOCKER_HOSTS` | empty | Other machines running Docker, each a socket proxy: `pi=tcp://192.168.1.20:2375, nuc=tcp://192.168.1.21:2375`. Their containers are named like `pihole@pi`. Apps, Add an app, Other Docker hosts sets them too. |
 
 ## Alerts
 
@@ -163,7 +163,7 @@ services:
       test: ["CMD", "wget", "-qO-", "http://192.168.1.10:3200/healthz"]
 ```
 
-Then add your machines in Settings, Connections, Wake-on-LAN.
+Then add your machines in Apps: Add an app, Wake-on-LAN.
 
 ## HTTPS for the phone app
 

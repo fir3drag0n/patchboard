@@ -46,8 +46,8 @@ there. Coming from Homepage? Settings imports its `services.yaml`.
 
 ![First run: one sheet with the name, icon, town, language and units, and the apps Patchboard found](docs/screenshots/first-run.webp)
 
-Then connect what you run from Settings, Connections: press **Set up**,
-paste the address and key, test, save. It connects at once, and the server
+Then connect what you run from Apps: open an app, or **Add an app** and
+pick it, then paste the address and key, test, save. It connects at once, and the server
 stores the key encrypted. There are 71 integrations, among them Sonarr,
 Radarr, Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission,
 Deluge, SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole,
