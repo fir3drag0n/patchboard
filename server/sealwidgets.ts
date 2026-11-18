@@ -13,7 +13,8 @@ const SECRET_HEADER = /^(authorization|proxy-authorization|cookie|api-?key|x-api
 /** Query parameters whose value is a credential, as in redact.ts. */
 const SECRET_PARAM = /^(api[_-]?key|apikey|key|access[_-]?token|auth[_-]?token|token|passkey|password|passwd|pwd|secret|client[_-]?secret|x-plex-token|x-api-key)$/i;
 const SCHEME = /^(bearer|basic|token|apikey)\s+/i;
-const REF_ONLY = new RegExp(`^(?:${SECRET_REF.source}|\\$\\{env:[A-Z0-9_]+\\})$`);
+// A reference is already safe: a key saved in the UI, a WIDGET_* variable, or an integration's own value.
+const REF_ONLY = new RegExp(`^(?:${SECRET_REF.source}|\\$\\{env:[A-Z0-9_]+\\}|\\$\\{setup:[A-Z0-9_]{1,40}\\})$`);
 
 function keyName(board: string, widget: string, part: string): string {
   return `W_${board}_${widget}_${part}`

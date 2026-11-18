@@ -5705,6 +5705,17 @@ body.is-sorting * {
   margin: 0;
 }
 
+/* A connected app's number uses its integration: one line says so. */
+.live-conn {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.live-conn-use {
+  justify-self: start;
+}
+
 .live-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);

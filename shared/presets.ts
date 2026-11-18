@@ -228,10 +228,13 @@ export function presetFor(app: { name: string; container?: string; icon?: string
   return PRESETS.find((p) => p.match.some((m) => hay.includes(m)));
 }
 
-/** URL and headers for a preset, with the key as a server-side secret reference. */
-export function presetRequest(p: Preset, base: string, secret: string): { url: string; headers: Record<string, string>; login?: { kind: 'pihole6'; secret: string } } {
+/**
+ * URL and headers for a preset, with the key as a server-side reference: a
+ * key saved for this tile, or (keyRef) the one its integration already has.
+ */
+export function presetRequest(p: Preset, base: string, secret: string, keyRef?: string): { url: string; headers: Record<string, string>; login?: { kind: 'pihole6'; secret: string } } {
   const url = base.replace(/\/+$/, '') + p.path;
-  const ref = `\${secret:${secret}}`;
+  const ref = keyRef ?? `\${secret:${secret}}`;
   if (!p.auth) return { url, headers: {} };
   if (p.auth.kind === 'pihole6') return { url, headers: {}, login: { kind: 'pihole6', secret } };
   if (p.auth.kind === 'query') return { url: `${url}${url.includes('?') ? '&' : '?'}${p.auth.param}=${ref}`, headers: {} };

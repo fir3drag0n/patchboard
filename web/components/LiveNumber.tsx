@@ -1,12 +1,17 @@
 // The "Live number" part of an app's edit form: pick the app's preset (or any
-// JSON API), paste its key once, choose the value, test it. The key goes to
-// the server's key store and is referenced as ${secret:APP_NAME}; the browser
-// never gets it back.
+// JSON API), choose the value, test it. When the app's integration is set up
+// in Settings, Connections, the number uses that address and key, referenced
+// as ${setup:SONARR_URL} and ${setup:SONARR_KEY}, so nothing is typed twice.
+// Otherwise the key is pasted once, goes to the server's key store and is
+// referenced as ${secret:APP_NAME}. Either way the browser never gets it back.
 
-import { useEffect, useState } from 'react';
-import { FORMATS, type FieldFormat, type JsonWidgetConfig } from '../../shared/jsonwidget.ts';
+import { useEffect, useRef, useState } from 'react';
+import { FORMATS, type FieldFormat, type JsonWidgetConfig, SETUP_BASE } from '../../shared/jsonwidget.ts';
 import { PRESETS, presetFor, presetRequest, secretName } from '../../shared/presets.ts';
+import type { SetupIntegration } from '../../shared/setup.ts';
+import type { Service } from '../../shared/types.ts';
 import { formatValue } from '../board/JsonWidget.tsx';
+import { integrationOf } from '../lib/connect.ts';
 
 export interface LiveDraft {
   mode: string;
@@ -18,7 +23,14 @@ export interface LiveDraft {
   path: string;
   format: FieldFormat;
   label: string;
+  /** The app's integration, when its address and key are saved: their variable names. */
+  conn?: { name: string; preset: string; url: string; key?: string };
+  /** False when this tile should use its own address and key instead. */
+  useConn?: boolean;
 }
+
+/** A preset sends its key as one plain value the integration's key can fill. */
+const takesSetupKey = (p: (typeof PRESETS)[number]) => !p.auth || p.auth.kind === 'header' || p.auth.kind === 'query';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 
@@ -30,8 +42,11 @@ export function liveDraft(app: { name: string; href?: string; container?: string
   const p = PRESETS.find((x) => x.id === cfg.title);
   const f = cfg.fields[0];
   if (p) {
+    const valueIdx = Math.max(0, p.values.findIndex((v) => v.path === f?.path));
+    // Saved to use the integration's own address and key.
+    if (SETUP_BASE.test(cfg.url)) return { ...empty, mode: p.id, valueIdx, useConn: true };
     const at = cfg.url.indexOf(p.path.split('?')[0]);
-    return { ...empty, mode: p.id, base: at > 0 ? cfg.url.slice(0, at) : base, valueIdx: Math.max(0, p.values.findIndex((v) => v.path === f?.path)) };
+    return { ...empty, mode: p.id, base: at > 0 ? cfg.url.slice(0, at) : base, valueIdx, useConn: false };
   }
   const sec = `\${secret:${secretName(app.name)}}`;
   const [h, v] = Object.entries(cfg.headers)[0] ?? [];
@@ -44,6 +59,11 @@ export function liveDraft(app: { name: string; href?: string; container?: string
     format: f?.format ?? 'number',
     label: f?.label ?? '',
   };
+}
+
+/** The number goes through the app's integration: it's set up, this is its preset, and the tile hasn't opted out. */
+export function usesConn(d: LiveDraft, p: (typeof PRESETS)[number]): boolean {
+  return !!d.conn && d.conn.preset === p.id && d.useConn !== false && takesSetupKey(p) && (!p.auth || !!d.conn.key);
 }
 
 /** The setup to save, or null for none. Throws a plain-words message when incomplete. */
@@ -61,9 +81,14 @@ export function liveConfig(appName: string, d: LiveDraft): JsonWidgetConfig | nu
   }
   const p = PRESETS.find((x) => x.id === d.mode);
   if (!p) return null;
-  if (!/^https?:\/\//.test(d.base)) throw new Error(`Give ${p.name}'s address, like http://192.168.1.10:8096`);
   const v = p.values[d.valueIdx] ?? p.values[0];
-  return { title: p.id, ...presetRequest(p, d.base.trim(), secret), interval: 60, fields: [{ label: v.label, path: v.path, format: v.format, scale: v.scale }] };
+  const fields = [{ label: v.label, path: v.path, format: v.format, scale: v.scale }];
+  if (usesConn(d, p)) {
+    const c = d.conn!;
+    return { title: p.id, ...presetRequest(p, `\${setup:${c.url}}`, secret, c.key ? `\${setup:${c.key}}` : undefined), interval: 60, fields };
+  }
+  if (!/^https?:\/\//.test(d.base)) throw new Error(`Give ${p.name}'s address, like http://192.168.1.10:8096`);
+  return { title: p.id, ...presetRequest(p, d.base.trim(), secret), interval: 60, fields };
 }
 
 /** Save a typed key. Resolves to an error message, or null. */
@@ -79,7 +104,12 @@ export function LiveNumberFields({ app, d, onChange }: { app: { name: string; hr
   const [busy, setBusy] = useState(false);
   const suggested = presetFor(app);
   const preset = PRESETS.find((x) => x.id === d.mode);
-  const needsKey = d.mode === 'custom' ? /\{key\}/.test(d.url + d.header) : !!preset?.auth;
+  const linked = !!preset && usesConn(d, preset);
+  // Its integration's connection would fit this preset, whether or not the tile uses it.
+  const canLink = !!preset && !!d.conn && d.conn.preset === preset.id && takesSetupKey(preset);
+  const needsKey = d.mode === 'custom' ? /\{key\}/.test(d.url + d.header) : !!preset?.auth && !linked;
+  const latest = useRef(d);
+  latest.current = d;
 
   useEffect(() => {
     void (async () => {
@@ -90,6 +120,26 @@ export function LiveNumberFields({ app, d, onChange }: { app: { name: string; hr
         /* unknown; the field won't say "saved" */
       }
     })();
+  }, [app.name]);
+
+  // The app's integration, when Settings, Connections has its address and
+  // key: the number can use them instead of asking again. Only names come
+  // back from the server, never the values.
+  useEffect(() => {
+    const integration = integrationOf(app as Service);
+    if (!integration || !suggested || !takesSetupKey(suggested)) return;
+    void (async () => {
+      try {
+        const { integrations } = (await (await fetch('/api/setup/integrations')).json()) as { integrations: SetupIntegration[] };
+        const fields = integrations.find((i) => i.id === integration.id)?.fields ?? [];
+        const url = fields.find((f) => f.name.endsWith('_URL') && f.set)?.name;
+        const key = fields.find((f) => f.kind === 'secret' && f.required && f.set)?.name;
+        if (url && (key || !suggested.auth)) onChange({ ...latest.current, conn: { name: integration.name, preset: suggested.id, url, ...(key ? { key } : {}) } });
+      } catch {
+        /* unknown; the tile asks for its own address and key */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app.name]);
 
   const run = async () => {
@@ -138,10 +188,26 @@ export function LiveNumberFields({ app, d, onChange }: { app: { name: string; hr
 
       {preset && (
         <>
-          <label>
-            <span>{preset.name} address</span>
-            <input className="field mono" value={d.base} placeholder="http://192.168.1.10:8096" onChange={(e) => onChange({ ...d, base: e.target.value })} />
-          </label>
+          {linked ? (
+            <p className="live-conn">
+              Uses {d.conn!.name}'s address and key from Connections.{' '}
+              <button type="button" className="text-button" onClick={() => (setTest(null), onChange({ ...d, useConn: false }))}>
+                Use another address
+              </button>
+            </p>
+          ) : (
+            <>
+              <label>
+                <span>{preset.name} address</span>
+                <input className="field mono" value={d.base} placeholder="http://192.168.1.10:8096" onChange={(e) => onChange({ ...d, base: e.target.value })} />
+              </label>
+              {canLink && (
+                <button type="button" className="text-button live-conn-use" onClick={() => (setTest(null), onChange({ ...d, useConn: true }))}>
+                  Use {d.conn!.name}'s connection instead
+                </button>
+              )}
+            </>
+          )}
           <label>
             <span>Show</span>
             <select className="field" value={d.valueIdx} onChange={(e) => onChange({ ...d, valueIdx: Number(e.target.value) })}>

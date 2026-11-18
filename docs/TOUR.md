@@ -350,7 +350,8 @@ Plex, shows Connect on its tile until you set it up.
 
 ![Edit apps](screenshots/edit-apps.webp)
 
-**A live number on any app.** Pick the app, paste its key, press Test.
+**A live number on any app.** Pick the app and press Test. One you've
+connected uses that connection; any other asks for its key once.
 
 ![Live number](screenshots/live-number.webp)
 

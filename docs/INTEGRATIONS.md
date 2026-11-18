@@ -53,8 +53,10 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
    the calendar, Right now, the Server page. You turn them on in Settings,
    Connections, which also shows which ones run.
 2. **A live number on an app's tile.** In Edit apps, open the app's ⋯ menu,
-   choose Icon and live number, pick a preset or Any JSON API, paste the key,
-   and press Test. The key stays on the server.
+   choose Icon and live number, and pick a preset or Any JSON API. An app
+   already set up in Settings, Connections uses that address and key, so
+   there's nothing to type; any other asks for its key once. Press Test. The
+   key stays on the server.
 3. **An API numbers widget** on Home shows up to four values from any JSON
    API, with warning and alarm thresholds. Paste a key into a header or the
    URL as it is: saving the board moves it to Settings, Keys and leaves a

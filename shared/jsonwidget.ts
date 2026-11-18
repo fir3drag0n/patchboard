@@ -39,8 +39,16 @@ export interface JsonWidgetConfig {
 export const FORMATS: FieldFormat[] = ['number', 'percent', 'bytes', 'duration', 'relative', 'text'];
 export const ENV_REF = /\$\{env:([A-Z0-9_]+)\}/g;
 export const SECRET_REF = /\$\{secret(64)?:([A-Z0-9_]{1,40})\}/g;
+/**
+ * A value saved for an integration in Settings, Connections: ${setup:SONARR_URL}
+ * may start the address, ${setup:SONARR_KEY} fills a key. The server fills in
+ * a key only for a request to that integration's own address.
+ */
+export const SETUP_REF = /\$\{setup:([A-Z0-9_]{1,40})\}/g;
+/** An address that starts with an integration's saved one. */
+export const SETUP_BASE = /^\$\{setup:([A-Z0-9_]{1,40}_URL)\}/;
 const ANY_REF = /\$\{([a-z0-9]+):/g;
-const badRef = (s: string) => [...s.matchAll(ANY_REF)].map((m) => m[1]).find((k) => !['env', 'secret', 'secret64'].includes(k));
+const badRef = (s: string) => [...s.matchAll(ANY_REF)].map((m) => m[1]).find((k) => !['env', 'secret', 'secret64', 'setup'].includes(k));
 
 const str = (v: unknown, max: number) => (typeof v === 'string' && v.length <= max ? v : undefined);
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : undefined);
@@ -50,7 +58,9 @@ export function validateJsonConfig(input: unknown): { config: JsonWidgetConfig }
   const c = input as Partial<JsonWidgetConfig> | null;
   if (!c || typeof c !== 'object') return { error: 'Expected an object' };
   const url = str(c.url, 500);
-  if (!url || !/^https?:\/\/[^\s]+$/i.test(url)) return { error: 'URL must start with http:// or https://' };
+  if (!url || !/^https?:\/\/[^\s]+$/i.test(url.replace(SETUP_BASE, 'http://saved'))) return { error: 'URL must start with http:// or https://' };
+  // An integration's saved address may only start the URL.
+  for (const m of url.replace(SETUP_BASE, '').matchAll(SETUP_REF)) if (m[1].endsWith('_URL')) return { error: `\${setup:${m[1]}} can only start the address` };
   for (const m of url.matchAll(ENV_REF)) if (!m[1].startsWith('WIDGET_')) return { error: `Only WIDGET_* variables can be used, not ${m[1]}` };
   if (badRef(url)) return { error: `Unknown reference \${${badRef(url)}:...}` };
   const headers: Record<string, string> = {};

@@ -152,7 +152,9 @@ container creation, which comes close to full access.
   integration.
 - **Requests fill in keys late.** Requests refer to keys as
   `${secret:NAME}` or `${env:WIDGET_NAME}`, and the server fills them in only
-  when it makes the call. A key typed straight into an API numbers widget's
+  when it makes the call. A connected app's tile number refers to its
+  integration's own values as `${setup:SONARR_URL}` and `${setup:SONARR_KEY}`:
+  the address may only start a URL, and the key goes only to that address. A key typed straight into an API numbers widget's
   header or URL moves to the encrypted key store when the board is saved,
   leaving a reference behind, so a board, a browser and a setup file never
   hold it. Error messages never include URLs, because some APIs put keys in

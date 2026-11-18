@@ -8,20 +8,53 @@
 // - Cloud metadata and link-local addresses are refused.
 // - 8 s timeout, 512 KB response cap, JSON only.
 // - ${env:NAME} references resolve only for WIDGET_* variables, ${secret:NAME}
-//   to keys saved in the UI; resolved values never leave the server.
+//   to keys saved in the UI, ${setup:NAME} to an integration's own values,
+//   sent only to that integration's address; resolved values never leave the server.
 
 import { isIP } from 'node:net';
 import { lookup } from 'node:dns/promises';
-import { ENV_REF, type JsonWidgetConfig, readPath, SECRET_REF } from '../shared/jsonwidget.ts';
+import { INTEGRATIONS } from '../shared/integrations.ts';
+import { ENV_REF, type JsonWidgetConfig, readPath, SECRET_REF, SETUP_BASE, SETUP_REF } from '../shared/jsonwidget.ts';
+import { settingValue } from './config.ts';
 import { checkOrigin, getSecret } from './secrets.ts';
 import { piholeSid } from './sessions.ts';
 
 const MAX_BYTES = 512 * 1024;
 const TIMEOUT = 8000;
 
-/** Fill in ${env:WIDGET_X} and ${secret:NAME}, each only for the server it belongs to. */
+/** An integration's value as Patchboard uses it, and the address it may go to. */
+export function setupValue(name: string): { value: string; origin: string } | undefined {
+  const vars = (i: (typeof INTEGRATIONS)[number]) => [...i.env, ...(i.optional ?? [])];
+  const owner = INTEGRATIONS.find((i) => vars(i).includes(name));
+  const urlVar = owner && vars(owner).find((v) => v.endsWith('_URL'));
+  const value = settingValue(name);
+  const base = urlVar ? settingValue(urlVar) : undefined;
+  if (!value || !base) return undefined;
+  try {
+    return { value, origin: new URL(base).origin };
+  } catch {
+    return undefined;
+  }
+}
+
+/** The address with an integration's saved one filled in where it starts. */
+function withSetupBase(url: string): string {
+  const m = SETUP_BASE.exec(url);
+  if (!m) return url;
+  const s = setupValue(m[1]);
+  if (!s) throw new Error(`Nothing is saved for ${m[1]} in Settings, Connections`);
+  return s.value.replace(/\/+$/, '') + url.slice(m[0].length);
+}
+
+/** Fill in ${env:WIDGET_X}, ${secret:NAME} and ${setup:NAME}, each only for the server it belongs to. */
 function resolveEnv(s: string, origin: string): string {
   return s
+    .replace(SETUP_REF, (_m, name: string) => {
+      const v = setupValue(name);
+      if (!v) throw new Error(`Nothing is saved for ${name} in Settings, Connections`);
+      if (v.origin !== origin) throw new Error(`${name} goes only to its own integration's address`);
+      return v.value;
+    })
     .replace(ENV_REF, (_m, name: string) => {
       if (!name.startsWith('WIDGET_')) return '';
       if (process.env[name]) checkOrigin(`env:${name}`, origin);
@@ -67,10 +100,11 @@ export async function fetchJsonWidget(cfg: JsonWidgetConfig, withSample = false)
   try {
     // Where the request goes, decided before any key is filled in: a key
     // may ride in the path or the query, never in the host.
-    const target = new URL(cfg.url.replace(ENV_REF, 'x').replace(SECRET_REF, 'x'));
-    const bare = new URL(cfg.url.replace(ENV_REF, '').replace(SECRET_REF, ''));
+    const raw = withSetupBase(cfg.url);
+    const target = new URL(raw.replace(ENV_REF, 'x').replace(SECRET_REF, 'x').replace(SETUP_REF, 'x'));
+    const bare = new URL(raw.replace(ENV_REF, '').replace(SECRET_REF, '').replace(SETUP_REF, ''));
     if (target.host !== bare.host) throw new Error("A key can't be part of the address's host");
-    const url = new URL(resolveEnv(cfg.url, target.origin));
+    const url = new URL(resolveEnv(raw, target.origin));
     if (url.origin !== target.origin) throw new Error("A key can't change where the request goes");
     if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('Only http and https');
     const host = url.hostname.replace(/^\[|\]$/g, '');

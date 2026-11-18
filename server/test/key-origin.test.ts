@@ -56,3 +56,37 @@ test('a saved key goes only to the server it was first used with', async () => {
     other.close();
   }
 });
+
+test("an app's tile number can use its integration's saved address and key, and only there", async () => {
+  const { setSavedSettings } = await import('../config.ts');
+  const sonarr = await echo();
+  const other = await echo();
+  try {
+    setSavedSettings({ SONARR_URL: sonarr.url, SONARR_KEY: 'sonarr-key' });
+    const tile = (url: string) => {
+      const v = validateJsonConfig({ url, headers: { 'X-Key': '${setup:SONARR_KEY}' }, fields: [{ label: 'ok', path: 'ok' }] });
+      assert.ok('config' in v, JSON.stringify(v));
+      return v.config;
+    };
+    const ok = await fetchJsonWidget(tile('${setup:SONARR_URL}/api/v3/queue'), true);
+    assert.equal(ok.error, undefined);
+    assert.equal(sonarr.seen[0], '/api/v3/queue sonarr-key', "Sonarr's own address gets Sonarr's key");
+
+    const stolen = await fetchJsonWidget(tile(`${other.url}/`), true);
+    assert.match(stolen.error ?? '', /only to its own integration/);
+    assert.equal(other.seen.length, 0, 'another server is never asked');
+
+    // The saved address may only start the URL, never sit inside another one.
+    const inside = validateJsonConfig({ url: `${other.url}/?u=\${setup:SONARR_URL}`, headers: {}, fields: [{ label: 'ok', path: 'ok' }] });
+    assert.ok('error' in inside);
+    // A variable no integration owns resolves to nothing, and says so.
+    const odd = validateJsonConfig({ url: `${sonarr.url}/`, headers: { 'X-Key': '${setup:PATCHBOARD_PASSWORD}' }, fields: [{ label: 'ok', path: 'ok' }] });
+    assert.ok('config' in odd);
+    const unknown = await fetchJsonWidget(odd.config, true);
+    assert.match(unknown.error ?? '', /Nothing is saved/);
+  } finally {
+    setSavedSettings({});
+    sonarr.close();
+    other.close();
+  }
+});

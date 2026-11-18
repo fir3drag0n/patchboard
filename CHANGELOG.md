@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **A connected app's tile number needs no key:** in Edit apps, a live
+  number for Sonarr, Jellyfin, Home Assistant and the rest uses the address
+  and key already saved in Settings, Connections. "Use another address"
+  still takes your own.
+- **"Can't reach" opens that integration:** the alert links straight to
+  its settings instead of the top of Connections.
 - **A 3D printer widget** for Bambu Lab printers, through Home Assistant's
   Bambu Lab integration: the print and its picture, progress and layer,
   time left and when it's done, nozzle and bed heat, the filament loaded,

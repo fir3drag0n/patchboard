@@ -30,6 +30,9 @@ function lookup(overlay: Record<string, string> = {}): Lookup {
 /** The environment's value, for copying it into Patchboard's own store. Server side only. */
 export const envValue = (key: string): string | undefined => fromEnv(key);
 
+/** An integration variable as Patchboard uses it: the environment's, else the one saved in Settings. Server side only. */
+export const settingValue = (key: string): string | undefined => lookup()(key);
+
 /** Sign-in comes from the environment, so Settings shows it and can't change it. */
 export const authLocked = (): boolean => fromEnv('AUTH') !== undefined || fromEnv('PATCHBOARD_PASSWORD') !== undefined;
 
