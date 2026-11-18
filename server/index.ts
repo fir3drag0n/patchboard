@@ -25,7 +25,7 @@ import { fastmailAdapter } from './adapters/fastmail.ts';
 import { frigateAdapter, frigateImage, frigateLive, LIVE_MAX } from './adapters/frigate.ts';
 import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/miniflux.ts';
 import { qbitClient } from './adapters/qbit.ts';
-import { haCall, haEntity, haEntityList, haHistory, haTodoChange, haTodoItems, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
+import { haCall, haEntity, haEntityList, haHistory, haPrinterCover, haTodoChange, haTodoItems, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
 import { boardList, exportExtras, getBoard, importExtras, putBoard, removeBoard, saveExtras, saveHome, sealSavedBoards } from './boards.ts';
 import { tessieAdapter } from './adapters/tessie.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
@@ -77,7 +77,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction, DEMO_PRINT_SVG } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
@@ -2559,6 +2559,23 @@ app.get('/api/img/plex', async (c) => {
     return new Response(res.body, {
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
+        'Cache-Control': 'private, max-age=86400',
+      },
+    });
+  } catch {
+    return c.body(null, 404);
+  }
+});
+
+// A 3D printer's preview of the print on it, from Home Assistant.
+app.get('/api/img/ha-printer', async (c) => {
+  if (config.demo) return c.body(DEMO_PRINT_SVG, 200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'private, max-age=86400' });
+  if (!config.homeassistant) return c.body(null, 404);
+  try {
+    const res = await haPrinterCover(c.req.query('id') ?? '');
+    return new Response(res.body, {
+      headers: {
+        'Content-Type': res.headers.get('content-type') ?? 'image/png',
         'Cache-Control': 'private, max-age=86400',
       },
     });

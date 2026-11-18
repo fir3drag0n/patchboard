@@ -7304,6 +7304,112 @@ button.ha-act:hover {
   overflow-wrap: anywhere;
 }
 
+/* ---------- 3D printer ---------- */
+
+.printer-one {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-top: 12px;
+}
+
+.printer-one + .printer-one {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.printer-cover {
+  flex: none;
+  width: 76px;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 6px;
+  background: var(--card-hi);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.printer-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.printer-name {
+  font: 500 13px/1.3 var(--f-body);
+  color: var(--ink-3);
+  margin-bottom: 2px;
+}
+
+.printer-task {
+  margin: 0;
+  font: 500 15px/1.3 var(--f-body);
+  color: var(--head);
+  overflow-wrap: anywhere;
+}
+
+.printer-state,
+.printer-time,
+.printer-heat {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.printer-time,
+.printer-heat {
+  font-variant-numeric: tabular-nums;
+}
+
+.printer-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.printer-progress .meter {
+  flex: 1;
+}
+
+.printer-pct {
+  font: 400 14px/1 var(--f-mono);
+  color: var(--head);
+  font-variant-numeric: tabular-nums;
+}
+
+.printer-error {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--warn);
+}
+
+.printer-error a {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.printer-trays {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.printer-trays i {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+.printer-trays .is-active i {
+  outline: 2px solid var(--head);
+  outline-offset: 2px;
+}
+
 /* ---------- Car ---------- */
 
 .car-one + .car-one {

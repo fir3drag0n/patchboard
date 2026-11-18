@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **A 3D printer widget** for Bambu Lab printers, through Home Assistant's
+  Bambu Lab integration: the print and its picture, progress and layer,
+  time left and when it's done, nozzle and bed heat, the filament loaded,
+  and any error in the printer's own words. As one number, it shows the
+  progress on a wall screen.
 - **Audiobookshelf shows the book's cover** in Listening and its preview,
   in place of the title's initials.
 - **Enlarged text keeps the top bar in order:** with a browser's text-only

@@ -6,7 +6,7 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Integrations
 
-- [ ] Bambu Lab printers: the print, its progress and time left
+- [ ] Bambu Lab printers without Home Assistant, straight from the printer (newer firmware needs its Developer Mode)
 - [ ] TP-Link Omada
 - [ ] Backrest
 - [ ] Kavita, Komga

@@ -10,6 +10,7 @@ import { config } from '../config.ts';
 
 import { getJson, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
+import { knownCover, printersFromStates, type RawState, rememberCovers } from './printers.ts';
 
 interface State {
   entity_id: string;
@@ -72,9 +73,17 @@ export function homeAssistantAdapter(): Adapter<HomeAssistantData> {
     async fetch() {
       const pinned = pinnedAnywhere();
       const all = await states();
-      return { total: all.length, entities: all.filter((s) => pinned.has(s.entity_id)).map(toEntity) };
+      const printers = printersFromStates(all as unknown as RawState[]);
+      rememberCovers(printers);
+      return { total: all.length, entities: all.filter((s) => pinned.has(s.entity_id)).map(toEntity), ...(printers.length ? { printers } : {}) };
     },
   };
+}
+
+/** A printer's cover picture, through Home Assistant's image proxy. Only covers the last read named. */
+export async function haPrinterCover(id: string): Promise<Response> {
+  if (!knownCover(id)) throw new Error('Not a printer cover');
+  return request(`${config.homeassistant!.url}/api/image_proxy/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${config.homeassistant!.token}` } });
 }
 
 /** Everything, for the widget's entity picker. Names and states only. */

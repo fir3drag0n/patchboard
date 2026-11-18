@@ -157,6 +157,18 @@ export function readingOf(w: Widget, ctx: ReadingContext): Reading | null | unde
       if (which === 'range') return { value: unit === 'c' ? `${Math.round(car.rangeMi * 1.609)} km` : `${car.rangeMi} mi`, sub: f.t('{name} range', { name: car.name }) };
       return { value: `${car.battery}%`, sub: car.charging === 'Charging' ? f.t('{name}, charging', { name: car.name }) : car.name, tone: car.battery <= 20 ? 'warn' : undefined };
     }
+    case 'printer': {
+      const ha = data<HomeAssistantData>('homeassistant');
+      if (!ha) return ha;
+      const p = ha.printers?.[0];
+      if (!p) return null;
+      const trouble = p.error || p.status === 'failed' ? 'warn' : undefined;
+      if (['running', 'pause', 'prepare', 'slicing', 'init'].includes(p.status) && p.progress != null) {
+        return { value: `${Math.round(p.progress)}%`, sub: p.task ?? p.name, tone: trouble ?? (p.status === 'pause' ? 'warn' : undefined) };
+      }
+      const words: Record<string, string> = { finish: f.t('Print finished'), failed: f.t('Print failed'), offline: f.t('Offline') };
+      return { value: words[p.status] ?? f.t('Idle'), sub: p.status === 'idle' ? p.name : (p.task ?? p.name), tone: trouble };
+    }
     case 'dns': {
       const d = data<DnsData>('pihole') ?? data<DnsData>('adguard');
       if (!d) return d;

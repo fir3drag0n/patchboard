@@ -29,6 +29,7 @@ import {
 } from '../../shared/board.ts';
 import { NumberView } from './OneNumber.tsx';
 import { CarWidget } from './CarWidget.tsx';
+import { PrinterWidget } from './PrinterWidget.tsx';
 import { DocumentsWidget, GitWidget, ManagersWidget, MinersWidget, MonitoringWidget, NextcloudWidget } from './AppWidgets.tsx';
 import { ChoresWidget, ListWidget, PeopleWidget, RoomsWidget, ShadesWidget, ThermostatWidget } from './HaWidgets.tsx';
 import { HA_WIDGETS } from '../../shared/ha.ts';
@@ -1003,6 +1004,8 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
       return <HomeAssistantWidget entities={w.config?.entities} />;
     case 'car':
       return <CarWidget />;
+    case 'printer':
+      return <PrinterWidget now={now} />;
     case 'wake':
       return <WakeWidget />;
     case 'uptime':
@@ -1338,7 +1341,7 @@ const KINDS: [string, WidgetType[]][] = [
   ['Media', ['now', 'upcoming', 'recent', 'nextup', 'watched', 'listening', 'requests', 'downloads', 'managers', 'books', 'photos']],
   ['Server', ['vitals', 'storage', 'drives', 'container', 'changes', 'uptime', 'monitoring', 'proxmox', 'dockerhosts', 'hosts', 'power', 'sync', 'releases', 'json']],
   ['Files and work', ['documents', 'nextcloud', 'git']],
-  ['House and network', ['homeassistant', 'halist', 'climate', 'shades', 'people', 'rooms', 'cameras', 'car', 'wake', 'network', 'dns', 'speed', 'miners']],
+  ['House and network', ['homeassistant', 'halist', 'climate', 'shades', 'people', 'rooms', 'cameras', 'car', 'printer', 'wake', 'network', 'dns', 'speed', 'miners']],
 ];
 const kindOf = (t: WidgetType) => KINDS.find(([, list]) => list.includes(t))?.[0] ?? 'Other';
 

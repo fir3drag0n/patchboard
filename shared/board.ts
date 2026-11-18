@@ -21,6 +21,7 @@ export type WidgetType =
   | 'nextup'
   | 'homeassistant'
   | 'car'
+  | 'printer'
   | 'wake'
   | 'uptime'
   | 'dns'
@@ -204,6 +205,7 @@ export const NUMBERS: Partial<Record<WidgetType, [string, string][]>> = {
   ],
   markets: [['first', 'The first price on the list']],
   countdown: [['next', 'Days to the next date']],
+  printer: [['progress', 'Print progress']],
   car: [
     ['battery', 'Battery'],
     ['range', 'Range'],
@@ -359,6 +361,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   nextup: { name: 'Next up', about: 'The next episode of each show you are watching on Jellyfin or Emby.', size: 'w', sizes: ['l', 'w', 'xl'], removable: true, multiple: false, options: { limit: [8, 2, 24] } },
   homeassistant: { name: 'Home Assistant', about: 'Lights, switches, sensors and scenes you pick. Tap to toggle a light or run a scene.', size: 'm', sizes: ANY, removable: true, multiple: true, options: {} },
   car: { name: 'Car', about: 'Your Tesla through Tessie: battery, range, charging, climate and locks.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  printer: { name: '3D printer', about: "Your Bambu Lab printer through Home Assistant: the print, how far along, when it's done, the filament loaded, and any error in the printer's words.", size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
   uptime: { name: 'Uptime', about: 'Uptime Kuma, Gatus and Healthchecks.io: problems first, with recent checks and uptime.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 40] } },
   dns: { name: 'Ad blocking', about: 'Pi-hole or AdGuard Home: what it blocked today, and Pause for 5, 30 or 60 minutes.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   speed: { name: 'Internet', about: 'Speedtest Tracker: the latest download, upload and ping, and the last day as a line.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },

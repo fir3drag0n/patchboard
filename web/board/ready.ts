@@ -3,13 +3,15 @@
 // starting layout drops the ones that would land empty.
 
 import { type Board, WIDGET_INFO, type WidgetType } from '../../shared/board.ts';
-import { NAS_SOURCES, type Snapshot } from '../../shared/types.ts';
+import { type HomeAssistantData, NAS_SOURCES, type Snapshot } from '../../shared/types.ts';
 
 export function widgetReady(snap: Snapshot | null | undefined): Partial<Record<WidgetType, boolean>> {
   const has = (id: string) => !!snap?.sources[id as keyof Snapshot['sources']];
   return {
     homeassistant: has('homeassistant'),
     car: has('tessie'),
+    // Only once Home Assistant has a printer to show.
+    printer: !!(snap?.sources.homeassistant?.data as HomeAssistantData | undefined)?.printers?.length,
     uptime: has('uptimekuma') || has('gatus') || has('healthchecks'),
     dns: has('pihole') || has('adguard'),
     speed: has('speedtest'),
@@ -49,6 +51,7 @@ export function widgetReady(snap: Snapshot | null | undefined): Partial<Record<W
 export const NEEDS: Partial<Record<WidgetType, { label: string; setup: string }>> = {
   homeassistant: { label: 'Home Assistant', setup: 'homeassistant' },
   car: { label: 'Tessie', setup: 'tessie' },
+  printer: { label: 'Home Assistant with the Bambu Lab integration', setup: 'homeassistant' },
   uptime: { label: 'Uptime Kuma, Gatus or Healthchecks.io', setup: 'uptimekuma' },
   dns: { label: 'Pi-hole or AdGuard Home', setup: 'pihole' },
   speed: { label: 'Speedtest Tracker', setup: 'speedtest' },

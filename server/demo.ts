@@ -66,6 +66,7 @@ import type {
   TruenasData,
   WeatherData,
   QueueItem,
+  Printer,
 } from '../shared/types.ts';
 import type { Adapter } from './adapters/adapter.ts';
 import type { DownloadManager } from './adapters/downloads.ts';
@@ -814,8 +815,43 @@ export function demoTodoChange(id: string, change: { add?: string; done?: string
 /** The demo pins the board's Home Assistant entities, like the real adapter. */
 function demoHa(pinned: () => Set<string>): HomeAssistantData {
   const want = pinned();
-  return { total: 412, entities: [...haState.values()].filter((e) => want.has(e.id)) };
+  return { total: 412, entities: [...haState.values()].filter((e) => want.has(e.id)), printers: [demoPrinter()] };
 }
+
+/** A P1S partway through a three-hour print, one more layer every few minutes. */
+function demoPrinter(): Printer {
+  const total = 180;
+  const done = 110 + ((Date.now() / 60_000) % 60);
+  const progress = Math.round((done / total) * 100);
+  return {
+    id: 'p1s_demo',
+    name: 'Bambu Lab P1S',
+    online: true,
+    status: 'running',
+    stage: 'printing',
+    task: 'Cable clips',
+    progress,
+    minutesLeft: Math.round(total - done),
+    layer: Math.round((progress / 100) * 240),
+    layers: 240,
+    nozzle: { now: 428, target: 428, unit: '°F' },
+    bed: { now: 131, target: 131, unit: '°F' },
+    error: false,
+    cover: '/api/img/ha-printer?id=demo',
+    trays: [
+      { name: 'Bambu PLA Basic', color: '#161616', active: false },
+      { name: 'Bambu PLA Basic', color: '#00ae42', active: true },
+      { name: 'Bambu PLA Basic', color: '#f5f5f0', active: false },
+      { name: 'Bambu PLA Matte', color: '#ff6a13', active: false },
+    ],
+    since: Date.now() - Math.round(done) * 60_000,
+  };
+}
+
+/** The demo print's preview: a row of cable clips on a build plate. */
+export const DEMO_PRINT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><rect width="300" height="300" fill="#2a2d31"/><path d="M40 210 150 260 260 210 150 160Z" fill="#3c4046"/>${[0, 1, 2]
+  .map((i) => `<g transform="translate(${95 + i * 55} ${150 + i * 18})"><path d="M-22 10v-24a22 22 0 0 1 44 0v24h-11v-24a11 11 0 0 0-22 0v24Z" fill="#00ae42"/><path d="M-22 10h11v8h-11zM11 10h11v8h-11z" fill="#008a35"/></g>`)
+  .join('')}</svg>`;
 
 function demoCar(): CarData {
   return {

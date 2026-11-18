@@ -763,6 +763,52 @@ export interface HomeAssistantData {
   entities: HaEntity[];
   /** How many entities Home Assistant has in all. */
   total: number;
+  /** 3D printers Home Assistant knows, through the Bambu Lab integration. */
+  printers?: Printer[];
+}
+
+/** A 3D printer and the print on it. Temperatures keep Home Assistant's unit. */
+export interface Printer {
+  /** Home Assistant's name for it, the shared start of its entity ids. */
+  id: string;
+  name: string;
+  online: boolean;
+  /** idle, prepare, running, pause, finish, failed, offline or unknown. */
+  status: string;
+  /** What it's doing within a print, as Bambu names it: heatbed_preheating, printing… */
+  stage?: string;
+  /** The print's name, tidied from its file names. */
+  task?: string;
+  /** 0 to 100. */
+  progress?: number;
+  minutesLeft?: number;
+  layer?: number;
+  layers?: number;
+  nozzle?: PrinterTemp;
+  bed?: PrinterTemp;
+  /** The printer reports an error. */
+  error: boolean;
+  /** Its error messages, when Home Assistant has the words. */
+  errors?: string[];
+  /** The print's preview picture, through Patchboard. */
+  cover?: string;
+  /** Filament loaded in the AMS, in slot order. */
+  trays?: PrinterTray[];
+  /** When the status last changed, ms. */
+  since: number;
+}
+
+export interface PrinterTemp {
+  now: number;
+  target: number;
+  unit: string;
+}
+
+export interface PrinterTray {
+  name: string;
+  /** #rrggbb, when known. */
+  color?: string;
+  active: boolean;
 }
 
 export interface Car {
