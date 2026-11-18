@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Audiobookshelf shows the book's cover** in Listening and its preview,
+  in place of the title's initials.
+
 ## 1.16.0 (2026-11-17)
 
 - **Open a library** on the Media page: its episodes or tracks, the folders

@@ -8,7 +8,7 @@ test('Audiobookshelf: recent sessions with names and progress; stale ones drop',
     {
       usersOnline: [{ id: 'u1', username: 'sam' }],
       openSessions: [
-        { userId: 'u1', displayTitle: 'Dune', displayAuthor: 'Frank Herbert', currentTime: 3600, duration: 14400, updatedAt: now - 60_000 },
+        { userId: 'u1', libraryItemId: 'li_abc-123', displayTitle: 'Dune', displayAuthor: 'Frank Herbert', currentTime: 3600, duration: 14400, updatedAt: now - 60_000 },
         { userId: 'u1', displayTitle: 'Old', updatedAt: now - 3_600_000 },
       ],
     },
@@ -17,6 +17,8 @@ test('Audiobookshelf: recent sessions with names and progress; stale ones drop',
   assert.deepEqual(s.map((x) => [x.user, x.title, x.subtitle, x.progress]), [['sam', 'Dune', 'Frank Herbert', 25]]);
   assert.equal(s[0].positionSec, 3600);
   assert.equal(s[0].durationSec, 14400);
+  assert.equal(s[0].thumb, '/api/img/audiobookshelf?id=li_abc-123');
+  assert.equal(fromAudiobookshelf({ openSessions: [{ libraryItemId: '../etc' }] })[0].thumb, undefined);
 });
 
 test('listening timing stays optional, and Subsonic duration does not invent a playback position', () => {

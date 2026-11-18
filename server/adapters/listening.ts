@@ -5,11 +5,11 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { AlbumPlay, BookProgress, ListeningData, Stream } from '../../shared/types.ts';
 import { every } from './every.ts';
 import { config } from '../config.ts';
-import { getJson } from '../http.ts';
+import { getJson, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
 import { keepSocket, wsUrl } from './live.ts';
 
-type AbsSession = { id?: string; userId?: string; displayTitle?: string; displayAuthor?: string; currentTime?: number; duration?: number; updatedAt?: number; user?: { username?: string } };
+type AbsSession = { id?: string; userId?: string; libraryItemId?: string; displayTitle?: string; displayAuthor?: string; currentTime?: number; duration?: number; updatedAt?: number; user?: { username?: string } };
 
 /** Sessions touched in the last ten minutes count as listening. */
 export function fromAudiobookshelf(r: { usersOnline?: { id?: string; username?: string }[]; openSessions?: AbsSession[] }, now = Date.now()): Stream[] {
@@ -24,9 +24,20 @@ export function fromAudiobookshelf(r: { usersOnline?: { id?: string; username?: 
         ? Math.min(100, (s.currentTime! / s.duration!) * 100) : -1,
       ...(Number.isFinite(s.currentTime) && s.currentTime! >= 0 ? { positionSec: s.currentTime! } : {}),
       ...(Number.isFinite(s.duration) && s.duration! > 0 ? { durationSec: s.duration! } : {}),
+      ...(s.libraryItemId && ABS_ID.test(s.libraryItemId) ? { thumb: `/api/img/audiobookshelf?id=${encodeURIComponent(s.libraryItemId)}` } : {}),
       state: 'playing' as const,
       transcode: false,
     }));
+}
+
+/** Library item ids: UUIDs now, li_… in older libraries. */
+const ABS_ID = /^[\w-]{1,64}$/;
+
+/** A book's cover, fetched with the API key so the browser never holds it. */
+export async function audiobookshelfCover(id: string): Promise<Response> {
+  if (!ABS_ID.test(id)) throw new Error('Bad item id');
+  const { url, key } = config.audiobookshelf!;
+  return request(`${url}/api/items/${id}/cover?width=400&format=jpeg`, { headers: { Authorization: `Bearer ${key}` } });
 }
 
 type SubEntry = { username?: string; title?: string; artist?: string; album?: string; minutesAgo?: number; duration?: number };

@@ -47,7 +47,7 @@ import { portainerAdapter } from './adapters/portainer.ts';
 import { netdataAdapter, prometheusAdapter } from './adapters/monitoring.ts';
 import { tailscaleAdapter, unifiAdapter } from './adapters/network.ts';
 import { bazarrAdapter, giteaAdapter, nextcloudAdapter, paperlessAdapter, starrAdapter } from './adapters/apps.ts';
-import { audiobookshelfAdapter, navidromeAdapter } from './adapters/listening.ts';
+import { audiobookshelfAdapter, audiobookshelfCover, navidromeAdapter } from './adapters/listening.ts';
 import { calendarAdapter } from './adapters/calendar.ts';
 import { booksAdapter } from './adapters/books.ts';
 import { send } from './notify.ts';
@@ -2556,6 +2556,21 @@ app.get('/api/img/plex', async (c) => {
   if (config.demo || !config.plex) return c.body(null, 404);
   try {
     const res = await plexImage(c.req.query('path') ?? '');
+    return new Response(res.body, {
+      headers: {
+        'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
+        'Cache-Control': 'private, max-age=86400',
+      },
+    });
+  } catch {
+    return c.body(null, 404);
+  }
+});
+
+app.get('/api/img/audiobookshelf', async (c) => {
+  if (config.demo || !config.audiobookshelf) return c.body(null, 404);
+  try {
+    const res = await audiobookshelfCover(c.req.query('id') ?? '');
     return new Response(res.body, {
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
