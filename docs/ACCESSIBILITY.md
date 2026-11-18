@@ -5,7 +5,8 @@ rendered layout. They don't prove WCAG conformance or replace testing with a
 screen reader.
 
 Run `npm run test:a11y` and `npm run test:zoom` with Chrome or Chromium
-installed. Set `CHROMIUM_PATH` if needed. CI runs the same checks after
+installed. Set `CHROMIUM_PATH` if needed. `npm run test:textzoom` needs
+Playwright's Firefox: `npx playwright-core install firefox`. CI runs the same checks after
 building, against a temporary demo database; it never uses your saved boards or integration settings.
 
 ## Built in
@@ -78,9 +79,26 @@ it was.
 
 It then sets Chromium's minimum font to 24px and checks those views again.
 Home weather lines, Reading metadata and calendar times must not overlap.
-This is a real browser font setting, separate from Firefox's text-only zoom.
 The script deletes the temporary profile and leaves the shared browser
 alone.
+
+## Firefox text-only zoom
+
+`npm run test:textzoom` turns on Firefox's Zoom Text Only and sets it to
+200%, the size WCAG asks for. Page zoom narrows the layout until a phone's
+takes over; text zoom keeps the desktop layout and doubles the words in it,
+so the desktop layout itself has to make room. At 1280 pixels wide, across
+16 views, the check fails when:
+
+- the page scrolls sideways;
+- the top bar runs past the window, or two things in it overlap;
+- a widget's count or link runs out of its heading.
+
+The top bar measures itself: when its contents outgrow it, it steps down
+to the compact forms a narrower window gets, whatever the window's width.
+
+Past 200%, at 300%, the bar holds but board columns don't: their widths
+stay put while the words triple, and long words break across lines.
 
 ## Manual release checks still required
 
@@ -91,15 +109,15 @@ browser, OS, assistive technology and result:
    landmarks and headings, then follow Home links, read server measurements,
    open playback previews, and edit and cancel a board. Check announced names,
    values, expanded states, dialog boundaries and focus return.
-2. Repeat 200% and 400% zoom in supported browsers, and test Firefox's
-   text-only zoom. Check every view and editor for clipped controls,
-   unreadable truncation, lost content and horizontal document scrolling.
-   Poster rows should keep their items and stay reachable by keyboard.
+2. Repeat 200% and 400% zoom in supported browsers. Check every view and
+   editor for clipped controls, unreadable truncation, lost content and
+   horizontal document scrolling. Poster rows should keep their items and
+   stay reachable by keyboard.
 3. On Windows, turn on a real contrast theme. Check keyboard focus, selected
    tabs, disabled actions, warnings, graphs and dialogs. Chromium's emulation
    covers system-color rendering but not every OS/browser combination.
 
-Chromium zoom and minimum-font checks pass in the cloud environment.
-A spoken screen-reader walkthrough, Firefox text-only zoom and native Windows
-contrast-theme checks still need their own platforms. Keep the
+Chromium zoom, minimum-font and Firefox text-only zoom checks run in CI.
+A spoken screen-reader walkthrough and native Windows contrast-theme checks
+still need their own platforms. Keep the
 accessibility roadmap item open until these manual checks are recorded.

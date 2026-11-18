@@ -872,8 +872,9 @@ a.jack:focus-visible {
 
 .section-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 12px;
+  gap: 4px 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--line);
 }
@@ -3785,6 +3786,37 @@ a.vitals {
 
   .topbar-end {
     gap: 6px;
+  }
+}
+
+/* The same two steps when the bar's own contents run out of room, as with
+   enlarged text, which leaves the window's width alone (see Shell). */
+@media (min-width: 761px) {
+  .topbar[data-tight] .jump,
+  .topbar[data-tight] .live {
+    display: none;
+  }
+
+  .topbar[data-tight] .topbar-search {
+    display: grid;
+  }
+
+  .topbar[data-tight] {
+    --bar-gap: 20px;
+    padding: 0 20px;
+  }
+
+  .topbar[data-tight] .topbar-end {
+    gap: 6px;
+  }
+
+  .topbar[data-tight='2'] .demo-pill,
+  .topbar[data-tight='2'] .topbar-label {
+    display: none;
+  }
+
+  .topbar[data-tight='2'] {
+    --bar-gap: 12px;
   }
 }
 
@@ -10465,9 +10497,10 @@ a.play:hover .play-title {
 /* A wide screen: pages wrap onto a second line out of sight, and the
    shell lists those under More. */
 @media (min-width: 761px) {
+  /* Never narrower than its widest page, or enlarged text slides More over it. */
   .nav {
     flex: 0 1 auto;
-    min-width: 0;
+    min-width: min-content;
     flex-wrap: wrap;
     align-content: flex-start;
     height: 100%;

@@ -23,10 +23,11 @@ jobs:
       - run: npm run docs:check
       - run: npm run i18n:check
       - run: npm run build
-      - run: npx playwright-core install --with-deps chromium
+      - run: npx playwright-core install --with-deps chromium firefox
       - run: node scripts/check-home.mjs
       - run: node scripts/check-accessibility.mjs
       - run: node scripts/check-zoom.mjs
+      - run: node scripts/check-text-zoom.mjs
       - run: node scripts/check-fit.mjs
 
   # Code that changes without a CHANGELOG entry fails: the docs move with it.

@@ -4,6 +4,10 @@
 
 - **Audiobookshelf shows the book's cover** in Listening and its preview,
   in place of the title's initials.
+- **Enlarged text keeps the top bar in order:** with a browser's text-only
+  zoom (Firefox's Zoom Text Only) or a long name, the bar steps down to its
+  compact form instead of drawing More over Home, and a widget's link drops
+  below its title instead of running into the next widget.
 
 ## 1.16.0 (2026-11-17)
 

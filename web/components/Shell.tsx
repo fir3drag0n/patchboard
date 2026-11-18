@@ -298,6 +298,24 @@ export function Shell() {
     void document.fonts?.ready.then(measure);
     return () => ro.disconnect();
   }, [navWords]);
+
+  // The bar's tighter steps follow what it holds, not just the window's
+  // width: enlarged text, a long name or a longer language step it down too.
+  const barRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+    const wide = window.matchMedia('(min-width: 761px)');
+    const fit = () => {
+      delete bar.dataset.tight;
+      if (wide.matches) for (const step of ['1', '2']) if (bar.scrollWidth > bar.clientWidth + 1) bar.dataset.tight = step;
+    };
+    const ro = new ResizeObserver(fit);
+    for (const el of [bar, ...bar.children]) ro.observe(el);
+    fit();
+    void document.fonts?.ready.then(fit);
+    return () => ro.disconnect();
+  }, [navWords]);
   const overItems = nav.filter((n) => over.includes(n.to));
   const inOver = overItems.some((m) => location.pathname === m.to || location.pathname.startsWith(`${m.to}/`));
   // More carries a dot when a page inside it has a count, so nothing waits unseen.
@@ -319,7 +337,7 @@ export function Shell() {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <PullRefresh />
       <WallPages />
-      <header className="topbar">
+      <header className="topbar" ref={barRef}>
         <NavLink to="/" className="wordmark" aria-label={`${name}, home`}>
           <span title={name}>{name}</span>
         </NavLink>
