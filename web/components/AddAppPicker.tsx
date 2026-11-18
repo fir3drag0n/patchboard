@@ -9,7 +9,7 @@ import { sourceOf } from '../../shared/feeds.ts';
 import { CATEGORIES, INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { UI_SETUP } from '../../shared/setup.ts';
 import type { Service } from '../../shared/types.ts';
-import { integrationOf, isConnected } from '../lib/connect.ts';
+import { iconFor, integrationOf, isConnected } from '../lib/connect.ts';
 import { t } from '../lib/i18n.ts';
 import { useModal } from '../lib/modal.ts';
 import { useStore } from '../lib/store.tsx';
@@ -17,7 +17,6 @@ import { Icon } from './ui.tsx';
 
 /** Ways to be told about trouble, not apps: they belong with Alerts. */
 const NOT_APPS = new Set(CATEGORIES.find(([name]) => name === 'Notifications')?.[1] ?? []);
-const iconName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 export interface Running {
   name: string;
@@ -79,7 +78,7 @@ export function AddAppPicker({ listed, running, onPick, onClose }: { listed: Ser
                 {list.map((i) => (
                   <li key={i.id}>
                     <button type="button" className="add-app-row" onClick={() => onPick({ name: i.name, source: 'ui' })}>
-                      <Icon name={i.name} icon={iconName(i.name)} size={24} />
+                      <Icon name={i.name} icon={iconFor(i)} size={24} />
                       <span className="add-app-name">{i.name}</span>
                       {snap && isConnected(snap, i) && <span className="add-app-note">{t('Connected')}</span>}
                     </button>

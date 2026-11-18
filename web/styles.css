@@ -5705,6 +5705,17 @@ body.is-sorting * {
   margin: 0;
 }
 
+/* A tile that opens a sheet instead of a page. */
+button.tile-main {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 /* Add an app: one list, what runs here first, then every app by kind. */
 .add-app-list {
   flex: 1;

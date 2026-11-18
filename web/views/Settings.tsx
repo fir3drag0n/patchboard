@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { sourceOf } from '../../shared/feeds.ts';
 import { integrationOf } from '../lib/connect.ts';
+import { appLike } from '../components/ServiceSheet.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 import { land, useLanding } from '../lib/landing.ts';
 import type { CatalogAudit, SelfCheck } from '../../shared/types.ts';
@@ -986,7 +987,13 @@ function Integrations() {
       const i = integrationOf(s);
       return !!i && sourceOf(i.id) === sourceOf(wanted);
     });
-    if (app) navigate(`/apps?edit=${encodeURIComponent(app.name)}&connect=1`, { replace: true });
+    if (app) {
+      void navigate(`/apps?edit=${encodeURIComponent(app.name)}&connect=1`, { replace: true });
+      return;
+    }
+    // No tile: the service's own sheet in Apps, unless it's a way to be notified.
+    const i = INTEGRATIONS.find((x) => x.id === wanted);
+    if (i && appLike(i)) void navigate(`/apps?service=${encodeURIComponent(wanted)}&connect=1`, { replace: true });
   }, [wanted, !!snap]);
   useEffect(() => {
     fetch('/api/setup/integrations')

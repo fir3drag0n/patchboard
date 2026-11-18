@@ -13,6 +13,9 @@
 - **A broken connection opens its app:** "Can't reach" and a widget's
   Check the connection open that app's editor with its connection form
   already open, when the app is on Apps.
+- **Every connection has a home in Apps:** Weather, a calendar, Trakt and
+  anything else connected without a tile list under Also connected, and
+  open the same sheet. A link to set one up opens it there too.
 - **A connected app's tile number needs no key:** in Edit apps, a live
   number for Sonarr, Jellyfin, Home Assistant and the rest uses the address
   and key already saved in Settings, Connections. "Use another address"

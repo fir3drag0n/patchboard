@@ -39,9 +39,12 @@ function chosen(integration: Integration, setup: Setup | null): Integration {
   return (alt && INTEGRATIONS.find((i) => i.id === alt)) || integration;
 }
 
+/** An app tile, or a service with no tile of its own (Weather, a calendar). */
+type Subject = { app: Service; integration?: undefined } | { app?: undefined; integration: Integration };
+
 /** The integration behind this app, with its setup, once Settings can set it up. */
-function useAppIntegration(app: Service): { integration?: Integration; setup: Setup | null; setSetup: (s: Setup) => void } {
-  const own = integrationOf(app);
+function useAppIntegration(subject: Subject): { integration?: Integration; setup: Setup | null; setSetup: (s: Setup) => void } {
+  const own = subject.integration ?? integrationOf(subject.app!);
   const [setup, setSetup] = useState<Setup | null>(null);
   const integration = own && chosen(own, setup);
   useEffect(() => {
@@ -59,9 +62,9 @@ function useAppIntegration(app: Service): { integration?: Integration; setup: Se
 }
 
 /** Connected, can't be reached, or not set up, with the form one press away. */
-export function AppConnection({ app, startOpen = false, onChange }: { app: Service; startOpen?: boolean; onChange: () => void }) {
+export function AppConnection({ startOpen = false, about = true, onChange, ...subject }: Subject & { startOpen?: boolean; /** Say what it adds while it isn't set up; a sheet that says so already passes false. */ about?: boolean; onChange: () => void }) {
   const { snap } = useStore();
-  const { integration, setup, setSetup } = useAppIntegration(app);
+  const { integration, setup, setSetup } = useAppIntegration(subject as Subject);
   const [open, setOpen] = useState(startOpen);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   const su = integration && setup?.integrations.find((x) => x.id === integration.id);
@@ -78,7 +81,7 @@ export function AppConnection({ app, startOpen = false, onChange }: { app: Servi
           {on ? t('Edit') : t('Connect')}
         </button>
       </p>
-      {!on && !open && <p className="settings-note">{t(integration.adds)}</p>}
+      {about && !on && !open && <p className="settings-note">{t(integration.adds)}</p>}
       {open && (
         <div className="integration-form">
           <IntegrationForm
@@ -98,9 +101,9 @@ export function AppConnection({ app, startOpen = false, onChange }: { app: Servi
 }
 
 /** Where this app's data shows: widgets (on Home, or one press to add) and the pages it brings. */
-export function ShowsUpIn({ app }: { app: Service }) {
+export function ShowsUpIn(subject: Subject) {
   const { snap } = useStore();
-  const integration = integrationOf(app);
+  const integration = subject.integration ?? integrationOf(subject.app!);
   const [home, setHome] = useState<Board | null>(null);
   const [adding, setAdding] = useState<WidgetType | null>(null);
   const [err, setErr] = useState('');

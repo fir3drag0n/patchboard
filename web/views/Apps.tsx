@@ -6,6 +6,7 @@ import { t } from '../lib/i18n.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { AlsoConnected, ServiceSheet } from '../components/ServiceSheet.tsx';
 import type { CatalogAudit, Service } from '../../shared/types.ts';
 import { type Draft, draftFrom, draftProblem, EditApps, layoutOf } from '../components/AppEditor.tsx';
 import { AppTiles, TILE_SORTS, type TileSort } from '../components/AppTiles.tsx';
@@ -31,6 +32,8 @@ export function Apps() {
   const [saving, setSaving] = useState(false);
   const audit = useJson<CatalogAudit>('/api/catalog/audit', 5 * 60_000);
   /** The app form to open as editing starts (from a container page). */
+  // A service with no tile, open in its own sheet: from Also connected, or ?service=<id>.
+  const [service, setService] = useState<{ id: string; connect: boolean } | null>(null);
   const [openForm, setOpenForm] = useState<{ app: Service; group: string; isNew: boolean; connect?: boolean } | null>(null);
   const startEditing = async () => {
     if (!snap) return;
@@ -54,6 +57,14 @@ export function Apps() {
   };
   // Home's Apps widget links here with ?arrange=1; a container page with
   // ?edit=<app> (its icon and live number) or ?adopt=<container>.
+  useEffect(() => {
+    const id = params.get('service');
+    if (!id) return;
+    setService({ id, connect: params.get('connect') === '1' });
+    const next = new URLSearchParams(params);
+    for (const k of ['service', 'connect']) next.delete(k);
+    setParams(next, { replace: true });
+  }, [params]);
   useEffect(() => {
     if (!snap || snap.readOnly) return;
     const edit = params.get('edit');
@@ -194,6 +205,9 @@ export function Apps() {
           </ul>
         </Section>
       )}
+
+      {!draft && <AlsoConnected snap={snap} onOpen={(id) => setService({ id, connect: false })} />}
+      {service && <ServiceSheet id={service.id} connect={service.connect} onClose={() => setService(null)} />}
 
       {!draft && dock.length > 0 && (
         <Section title="Links">

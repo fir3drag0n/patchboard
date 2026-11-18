@@ -40,3 +40,9 @@ export function integrationOf(s: Service): Integration | undefined {
 export function isConnected(snap: Snapshot, i: Integration): boolean {
   return !!snap.sources[i.id as keyof Snapshot['sources']] || !!snap.features?.includes(i.id);
 }
+
+/** Integration ids whose icon goes by another name in the icon sets. */
+const ICON_NAMES: Record<string, string> = { qbit: 'qbittorrent', dockerhosts: 'docker', overseerr: 'overseerr', gitea: 'gitea', unifi: 'unifi', nut: 'nut', hardcover: 'hardcover', speedtest: 'speedtest-tracker', uptimekuma: 'uptime-kuma', adguard: 'adguard-home', homeassistant: 'home-assistant', synology: 'synology', truenas: 'truenas' };
+
+/** The icon to draw for an integration: its id, as the icon sets name most apps. */
+export const iconFor = (i: Integration): string => ICON_NAMES[i.id] ?? i.id;
