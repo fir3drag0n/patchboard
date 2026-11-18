@@ -77,6 +77,41 @@ export function layoutOf(d: Draft, prevRenamed?: Record<string, string>): AppOrd
 }
 
 /** Problems that would stop a save, in plain words. */
+/**
+ * One app's edit applied to a layout: its icon and live number, and for an
+ * app made in the UI, its name, link, container and group. Edit apps applies
+ * it to the layout being arranged; an app's own sheet applies it to the saved
+ * one and saves at once.
+ */
+export function applyAppEdit(draft: Draft, form: { app: Service; group: string; isNew: boolean }, app: Service, group: string, stat: JsonWidgetConfig | null): Draft {
+  const groups = draft.groups;
+  const stats = { ...draft.stats };
+  delete stats[form.app.name];
+  if (stat) stats[app.name] = stat;
+  if (app.source !== 'ui') {
+    // Catalog apps: only the icon changes, kept as an override.
+    const icons = { ...draft.icons };
+    if (!app.icon) delete icons[app.name];
+    else if (app.icon !== form.app.icon) icons[app.name] = app.icon;
+    return { ...draft, icons, stats, groups: groups.map((g) => ({ ...g, services: g.services.map((s) => (s.name === app.name ? { ...s, icon: app.icon } : s)) })) };
+  }
+  let gs = groups.map((g) => ({ ...g, services: g.services.filter((s) => s.name !== form.app.name || form.isNew) }));
+  let gi = gs.findIndex((g) => g.name === group);
+  if (gi < 0) {
+    gs = [...gs, { key: key(), name: group, services: [] }];
+    gi = gs.length - 1;
+  }
+  const old = !form.isNew ? groups.find((g) => g.name === form.group)?.services.findIndex((s) => s.name === form.app.name) : -1;
+  gs = gs.map((g, j) => {
+    if (j !== gi) return g;
+    const next = [...g.services];
+    if (old != null && old >= 0 && g.name === form.group) next.splice(old, 0, app);
+    else next.push(app);
+    return { ...g, services: next };
+  });
+  return { ...draft, groups: gs, stats };
+}
+
 export function draftProblem(d: Draft): string | null {
   // "Tools" and "tools" are the same group to a reader, so they count as one name.
   const names = d.groups.map((g) => g.name.trim().toLowerCase());
@@ -346,7 +381,7 @@ export function EditApps({
       </div>
 
       {adoptable.length > 0 && (
-        <EditSection title="Running, not listed yet" note="Containers on this server that no app points at. Add one to put it on the board.">
+        <EditSection title="Running here, not listed yet" note="Containers on this server that no app points at. Add one to put it on the board.">
           {adoptable.map((d) => (
             <li className="tile tile-arrange" data-tone="none" key={d.container}>
               <span className="tile-main">
@@ -452,6 +487,10 @@ export function EditApps({
             setForm({ app, group: picking, isNew: true });
             setPicking(null);
           }}
+          onOpen={(app) => {
+            setForm({ app, group: groups.find((g) => g.services.some((s) => s.name === app.name))?.name ?? picking, isNew: false });
+            setPicking(null);
+          }}
           onClose={() => setPicking(null)}
         />
       )}
@@ -467,32 +506,7 @@ export function EditApps({
           taken={(n) => n.trim().toLowerCase() !== form.app.name.toLowerCase() && [...allNames].some((x) => x.toLowerCase() === n.trim().toLowerCase())}
           onClose={() => setForm(null)}
           onSave={(app, group, stat) => {
-            const stats = { ...draft.stats };
-            delete stats[form.app.name];
-            if (stat) stats[app.name] = stat;
-            if (app.source !== 'ui') {
-              // Catalog apps: only the icon changes, kept as an override.
-              const icons = { ...draft.icons };
-              if (!app.icon) delete icons[app.name];
-              else if (app.icon !== form.app.icon) icons[app.name] = app.icon;
-              set({ icons, stats, groups: groups.map((g) => ({ ...g, services: g.services.map((s) => (s.name === app.name ? { ...s, icon: app.icon } : s)) })) });
-            } else {
-              let gs = groups.map((g) => ({ ...g, services: g.services.filter((s) => s.name !== form.app.name || form.isNew) }));
-              let gi = gs.findIndex((g) => g.name === group);
-              if (gi < 0) {
-                gs = [...gs, { key: key(), name: group, services: [] }];
-                gi = gs.length - 1;
-              }
-              const old = !form.isNew ? groups.find((g) => g.name === form.group)?.services.findIndex((s) => s.name === form.app.name) : -1;
-              gs = gs.map((g, j) => {
-                if (j !== gi) return g;
-                const next = [...g.services];
-                if (old != null && old >= 0 && g.name === form.group) next.splice(old, 0, app);
-                else next.push(app);
-                return { ...g, services: next };
-              });
-              set({ groups: gs, stats });
-            }
+            onChange(applyAppEdit(draft, form, app, group, stat));
             setForm(null);
           }}
         />
@@ -560,11 +574,13 @@ async function shrinkIcon(f: File): Promise<Blob> {
 }
 
 /** Add or edit one app. Catalog apps can only change their icon here. */
-function AppForm({
+export function AppForm({
   app,
   group,
   isNew,
   openConnection = false,
+  saveLabel,
+  error,
   groups,
   containers,
   stat,
@@ -575,8 +591,12 @@ function AppForm({
   app: Service;
   group: string;
   isNew: boolean;
-  /** Arriving from a broken connection: its form starts open. */
+  /** Arriving from a broken connection: its form starts open, at the top. */
   openConnection?: boolean;
+  /** The main button's word: Apply inside Edit apps, Done where the sheet saves itself. */
+  saveLabel?: string;
+  /** A save that failed after Done, said where you'll see it. */
+  error?: string;
   groups: string[];
   containers: string[];
   stat?: JsonWidgetConfig;
@@ -652,6 +672,8 @@ function AppForm({
         </header>
         {!ours && <p className="settings-note">This app comes from {app.source === 'labels' ? 'a Docker label' : 'services.yaml'}. Change its name and link there, and its icon and live number here.</p>}
         <div className="ws-form">
+          {/* Here to fix it: the connection leads. */}
+          {openConnection && <AppConnection app={{ ...v, name: v.name || app.name }} startOpen onChange={() => setConnTick((n) => n + 1)} />}
           {ours && (
             <>
               <label>
@@ -712,15 +734,15 @@ function AppForm({
               A name from <a href="https://dashboardicons.com" target="_blank" rel="noreferrer">dashboard icons</a> or <a href="https://selfh.st/icons/" target="_blank" rel="noreferrer">selfh.st</a> (like <code>jellyfin</code>), any image URL, or your own file.
             </span>
           </div>
-          <AppConnection app={{ ...v, name: v.name || app.name }} startOpen={openConnection} onChange={() => setConnTick((n) => n + 1)} />
+          {!openConnection && <AppConnection app={{ ...v, name: v.name || app.name }} onChange={() => setConnTick((n) => n + 1)} />}
           <LiveNumberFields key={connTick} app={{ ...v, name: v.name || app.name }} d={live} onChange={setLive} />
           <ShowsUpIn app={{ ...v, name: v.name || app.name }} />
         </div>
         <div className="jw-actions">
           <button type="button" className="button board-save" onClick={() => void done()}>
-            {isNew ? 'Add' : 'Apply'}
+            {saveLabel ?? (isNew ? 'Add' : 'Apply')}
           </button>
-          {err && <span className="crit-text" role="alert">{err}</span>}
+          {(err || error) && <span className="crit-text" role="alert">{err || error}</span>}
         </div>
       </div>
     </div>

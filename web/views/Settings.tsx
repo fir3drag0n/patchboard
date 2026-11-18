@@ -974,7 +974,7 @@ function Integrations() {
       return !!i && sourceOf(i.id) === sourceOf(wanted);
     });
     if (app) {
-      void navigate(`/apps?edit=${encodeURIComponent(app.name)}&connect=1`, { replace: true });
+      void navigate(`/apps?app=${encodeURIComponent(app.name)}&connect=1`, { replace: true });
       return;
     }
     // No tile: the service's own sheet in Apps, unless it's a way to be notified.

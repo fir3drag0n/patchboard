@@ -4053,6 +4053,39 @@ a.vitals {
   color: var(--head);
 }
 
+/* Apps page: each tile opens its own sheet. Quiet until you reach for it. */
+.tile-edit {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-1) ease;
+}
+
+.tile:hover .tile-edit,
+.tile-edit:focus-visible {
+  opacity: 1;
+}
+
+.tile-edit:hover {
+  color: var(--head);
+}
+
+/* No hover on a touch screen: the pencil stays in view. */
+@media (pointer: coarse) {
+  .tile-edit {
+    opacity: 1;
+    width: 44px;
+  }
+}
+
 .tile-main:focus-visible {
   outline-offset: -2px;
 }

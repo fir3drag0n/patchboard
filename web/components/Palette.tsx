@@ -4,6 +4,11 @@
 // last. Each app is one row: Enter opens it, the right arrow reaches its
 // details and logs.
 
+import { INTEGRATIONS } from '../../shared/integrations.ts';
+import { WIDGET_INFO, type WidgetType } from '../../shared/board.ts';
+import { isConnected } from '../lib/connect.ts';
+import { NEEDS } from '../board/ready.ts';
+import { appLike } from './ServiceSheet.tsx';
 import { HELP } from '../lib/docs.ts';
 import { useModal } from '../lib/modal.ts';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
@@ -139,6 +144,17 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
     if (household) {
       const adminViews = new Set(['v-stacks', 'v-logs', 'v-apps', 'v-settings', 'v-downloads', 'v-library', 'v-requests', 'v-media', 'v-blocking']);
       out.splice(0, out.length, ...out.filter((it) => !adminViews.has(it.id) && !it.id.startsWith('set-')));
+    }
+    // Connections and widgets by name: "connect emby", "bambu", "3d printer".
+    if (!household && !snap.readOnly) {
+      for (const i of INTEGRATIONS.filter(appLike)) {
+        const on = isConnected(snap, i);
+        out.push({ id: `int-${i.id}`, label: on ? `${i.name} connection` : `Connect ${i.name}`, hint: on ? 'Connection' : 'Set up', terms: i.adds, run: go(`/settings?tab=connections&setup=${i.id}`) });
+      }
+      for (const w of Object.keys(WIDGET_INFO) as WidgetType[]) {
+        if (w === 'attention') continue;
+        out.push({ id: `w-${w}`, label: `Add widget: ${WIDGET_INFO[w].name}`, hint: 'Widget', terms: `${WIDGET_INFO[w].about} ${NEEDS[w]?.label ?? ''}`, run: go(`/?arrange=1&add=${w}`) });
+      }
     }
     const ctrs = containerMap(snap);
     const pages = (name: string, withDetails: boolean) => [

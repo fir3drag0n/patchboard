@@ -10,10 +10,10 @@ import { HOME_ID, type Board, WIDGET_INFO, type WidgetType } from '../../shared/
 import { feedsOf, sourceOf } from '../../shared/feeds.ts';
 import { INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import type { SetupIntegration } from '../../shared/setup.ts';
-import type { Service, Snapshot } from '../../shared/types.ts';
+import type { HomeAssistantData, Service, Snapshot } from '../../shared/types.ts';
 import { integrationOf, isConnected } from '../lib/connect.ts';
-import { t } from '../lib/i18n.ts';
-import { useStore } from '../lib/store.tsx';
+import { t, tx } from '../lib/i18n.ts';
+import { useSource, useStore } from '../lib/store.tsx';
 import { IntegrationForm } from './IntegrationSetup.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
@@ -100,9 +100,27 @@ export function AppConnection({ startOpen = false, about = true, onChange, ...su
   );
 }
 
+/** Home Assistant is on but has no printer: say what brings one, instead of offering an empty widget. */
+export function PrinterHint() {
+  const { state, data } = useSource<HomeAssistantData>('homeassistant');
+  if (!state || data?.printers?.length) return null;
+  return (
+    <p className="settings-note printer-hint">
+      {tx('A Bambu Lab printer shows up once Home Assistant has the {link} from HACS.', {
+        link: (
+          <a href="https://github.com/greghesp/ha-bambulab" target="_blank" rel="noreferrer">
+            {t('Bambu Lab integration')}
+          </a>
+        ),
+      })}
+    </p>
+  );
+}
+
 /** Where this app's data shows: widgets (on Home, or one press to add) and the pages it brings. */
 export function ShowsUpIn(subject: Subject) {
   const { snap } = useStore();
+  const ha = useSource<HomeAssistantData>('homeassistant');
   const integration = subject.integration ?? integrationOf(subject.app!);
   const [home, setHome] = useState<Board | null>(null);
   const [adding, setAdding] = useState<WidgetType | null>(null);
@@ -119,6 +137,7 @@ export function ShowsUpIn(subject: Subject) {
   if (!widgets.length && !pages.length) return null;
   const on = isConnected(snap, integration);
   const onHome = (w: WidgetType) => !!home?.widgets.some((x) => x.type === w);
+  const hasPrinter = !!ha.data?.printers?.length;
 
   const add = async (w: WidgetType) => {
     if (!home) return;
@@ -139,7 +158,7 @@ export function ShowsUpIn(subject: Subject) {
     <div className="ws-row app-feeds">
       <span id="app-feeds-label">{on ? t('Shows up in') : t('Once connected, it shows up in')}</span>
       <ul className="app-feeds-list" aria-labelledby="app-feeds-label">
-        {widgets.map((w) => (
+        {widgets.filter((w) => w !== 'printer' || hasPrinter).map((w) => (
           <li key={w}>
             <span>{t(WIDGET_INFO[w].name)}</span>
             {onHome(w) ? (
@@ -161,6 +180,7 @@ export function ShowsUpIn(subject: Subject) {
           </li>
         ))}
       </ul>
+      {integration.id === 'homeassistant' && on && <PrinterHint />}
       {err && (
         <span className="crit-text" role="alert">
           {err}

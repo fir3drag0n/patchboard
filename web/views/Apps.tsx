@@ -8,7 +8,9 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AlsoConnected, ServiceSheet } from '../components/ServiceSheet.tsx';
 import type { CatalogAudit, Service } from '../../shared/types.ts';
-import { type Draft, draftFrom, draftProblem, EditApps, layoutOf } from '../components/AppEditor.tsx';
+import { AppForm, applyAppEdit, type Draft, draftFrom, draftProblem, EditApps, layoutOf } from '../components/AppEditor.tsx';
+import { AddAppPicker } from '../components/AddAppPicker.tsx';
+import type { JsonWidgetConfig } from '../../shared/jsonwidget.ts';
 import { AppTiles, TILE_SORTS, type TileSort } from '../components/AppTiles.tsx';
 import { Icon, Section } from '../components/ui.tsx';
 import { useJson } from '../lib/api.ts';
@@ -34,6 +36,37 @@ export function Apps() {
   /** The app form to open as editing starts (from a container page). */
   // A service with no tile, open in its own sheet: from Also connected, or ?service=<id>.
   const [service, setService] = useState<{ id: string; connect: boolean } | null>(null);
+  // One app's sheet, outside Edit apps: it saves itself with Done.
+  const [sheet, setSheet] = useState<{ app: Service; group: string; isNew: boolean; connect: boolean; stat?: JsonWidgetConfig } | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [sheetErr, setSheetErr] = useState('');
+  /** Open an app's sheet once its saved live number is known, so the form starts from it. */
+  const openSheet = async (app: Service, group: string, isNew: boolean, connect = false) => {
+    setSheetErr('');
+    let stats: Record<string, JsonWidgetConfig> = {};
+    try {
+      stats = ((await (await fetch('/api/app-order')).json()) as { stats?: Record<string, JsonWidgetConfig> } | null)?.stats ?? {};
+    } catch {
+      /* none yet */
+    }
+    setSheet({ app, group, isNew, connect, stat: isNew ? undefined : stats[app.name] });
+  };
+  /** The sheet's Done: this one app's change, applied to the saved layout and saved. */
+  const saveSheet = async (app: Service, group: string, stat: JsonWidgetConfig | null) => {
+    if (!snap || !sheet) return;
+    let stats: Record<string, JsonWidgetConfig> = {};
+    try {
+      stats = ((await (await fetch('/api/app-order')).json()) as { stats?: Record<string, JsonWidgetConfig> } | null)?.stats ?? {};
+    } catch {
+      /* none yet */
+    }
+    const next = applyAppEdit(draftFrom(snap.catalog, stats), sheet, app, group, stat);
+    const problem = draftProblem(next);
+    if (problem) return setSheetErr(problem);
+    const res = await fetch('/api/app-order', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(layoutOf(next, snap.catalog.renamed)) });
+    if (!res.ok) return setSheetErr(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `HTTP ${res.status}`);
+    setSheet(null);
+  };
   const [openForm, setOpenForm] = useState<{ app: Service; group: string; isNew: boolean; connect?: boolean } | null>(null);
   const startEditing = async () => {
     if (!snap) return;
@@ -57,6 +90,16 @@ export function Apps() {
   };
   // Home's Apps widget links here with ?arrange=1; a container page with
   // ?edit=<app> (its icon and live number) or ?adopt=<container>.
+  useEffect(() => {
+    const name = params.get('app');
+    if (!name || !snap) return;
+    const g = snap.catalog.groups.find((x) => x.services.some((s) => s.name === name));
+    const app = g?.services.find((s) => s.name === name);
+    if (g && app) void openSheet(app, g.name, false, params.get('connect') === '1');
+    const next = new URLSearchParams(params);
+    for (const k of ['app', 'connect']) next.delete(k);
+    setParams(next, { replace: true });
+  }, [params, !!snap]);
   useEffect(() => {
     const id = params.get('service');
     if (!id) return;
@@ -157,9 +200,14 @@ export function Apps() {
             ))}
           </div>
           {!snap.readOnly && (
-            <button type="button" className="button button-quiet" onClick={() => void startEditing()}>
-              {t('Edit apps')}
-            </button>
+            <>
+              <button type="button" className="button button-quiet" onClick={() => setAdding(true)}>
+                {t('Add an app')}
+              </button>
+              <button type="button" className="button button-quiet" onClick={() => void startEditing()}>
+                {t('Edit apps')}
+              </button>
+            </>
           )}
         </div>
       )}
@@ -173,7 +221,7 @@ export function Apps() {
         />
       ) : (
         <>
-          <AppTiles filter={q} size="large" sort={sort} legend />
+          <AppTiles filter={q} size="large" sort={sort} legend onEdit={snap.readOnly ? undefined : (s, g) => void openSheet(s, g, false)} />
           {q.trim() && !snap.catalog.groups.some((g) => g.services.some((s) => match(s.name))) && !dock.length && !extra.length && (
             <p className="empty">No apps match “{q.trim()}”.</p>
           )}
@@ -181,7 +229,7 @@ export function Apps() {
       )}
 
       {!draft && extra.length > 0 && (
-        <Section title="Running, not listed yet" count={String(extra.length)}>
+        <Section title="Running here, not listed yet" count={String(extra.length)}>
           {!snap.readOnly && (
             <p className="settings-note">
               <button type="button" className="text-button" onClick={() => void startEditing()}>
@@ -208,6 +256,38 @@ export function Apps() {
 
       {!draft && <AlsoConnected snap={snap} onOpen={(id) => setService({ id, connect: false })} />}
       {service && <ServiceSheet id={service.id} connect={service.connect} onClose={() => setService(null)} />}
+      {adding && (
+        <AddAppPicker
+          listed={snap.catalog.groups.flatMap((g) => g.services)}
+          running={(audit.data?.discovered ?? []).filter((d) => !snap.catalog.groups.some((g) => g.services.some((s) => s.container === d.container || s.name === d.name)))}
+          onPick={(app) => {
+            setAdding(false);
+            void openSheet(app, snap.catalog.groups[0]?.name ?? 'Apps', true);
+          }}
+          onOpen={(app) => {
+            setAdding(false);
+            void openSheet(app, snap.catalog.groups.find((g) => g.services.some((s) => s.name === app.name))?.name ?? 'Apps', false);
+          }}
+          onClose={() => setAdding(false)}
+        />
+      )}
+      {sheet && (
+        <AppForm
+          key={sheet.app.name}
+          app={sheet.app}
+          group={sheet.group}
+          isNew={sheet.isNew}
+          openConnection={sheet.connect}
+          saveLabel={sheet.isNew ? t('Add') : t('Done')}
+          error={sheetErr}
+          groups={snap.catalog.groups.map((g) => g.name)}
+          containers={[...containerMap(snap).keys()].sort()}
+          stat={sheet.stat}
+          taken={(n) => n.trim().toLowerCase() !== sheet.app.name.toLowerCase() && snap.catalog.groups.some((g) => g.services.some((s) => s.name.toLowerCase() === n.trim().toLowerCase()))}
+          onClose={() => setSheet(null)}
+          onSave={(app, group, stat) => void saveSheet(app, group, stat)}
+        />
+      )}
 
       {!draft && dock.length > 0 && (
         <Section title="Links">

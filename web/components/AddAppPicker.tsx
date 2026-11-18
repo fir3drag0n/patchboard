@@ -5,7 +5,9 @@
 // Sonarr and connecting Sonarr are one step, not two screens.
 
 import { useState } from 'react';
-import { sourceOf } from '../../shared/feeds.ts';
+import { sourceOf, WIDGET_SOURCES } from '../../shared/feeds.ts';
+import { WIDGET_INFO, type WidgetType } from '../../shared/board.ts';
+import { appLike } from './ServiceSheet.tsx';
 import { CATEGORIES, INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { UI_SETUP } from '../../shared/setup.ts';
 import type { Service } from '../../shared/types.ts';
@@ -25,7 +27,7 @@ export interface Running {
   container: string;
 }
 
-export function AddAppPicker({ listed, running, onPick, onClose }: { listed: Service[]; running: Running[]; onPick: (app: Service) => void; onClose: () => void }) {
+export function AddAppPicker({ listed, running, onPick, onOpen, onClose }: { listed: Service[]; running: Running[]; onPick: (app: Service) => void; /** An app already on Apps: open its own sheet. */ onOpen?: (app: Service) => void; onClose: () => void }) {
   const modal = useModal<HTMLDivElement>(onClose);
   const { snap } = useStore();
   const [find, setFind] = useState('');
@@ -39,10 +41,22 @@ export function AddAppPicker({ listed, running, onPick, onClose }: { listed: Ser
       .map((id) => INTEGRATIONS.find((i) => i.id === id))
       .filter((i): i is Integration => !!i && UI_SETUP.has(i.id) && !NOT_APPS.has(i.id) && !covered.has(sourceOf(i.id)) && match(i.name, i.adds));
   const here = running.filter((r) => match(r.name, r.container));
+  // A running container already offered above isn't offered again by name (Pihole and Pi-hole).
+  for (const r of running) {
+    const i = integrationOf({ name: r.name, container: r.container, icon: r.icon } as Service);
+    if (i) covered.add(sourceOf(i.id));
+  }
   const kinds = CATEGORIES.filter(([name]) => name !== 'Notifications')
     .map(([name, ids]) => [name, known(ids)] as const)
     .filter(([, list]) => list.length);
-  const nothing = !here.length && !kinds.length;
+  // A widget by name or what it shows ("bambu", "printer"), with the app that feeds it.
+  const widgets = q
+    ? (Object.keys(WIDGET_INFO) as WidgetType[])
+        .map((w) => ({ w, feeds: INTEGRATIONS.filter((i) => appLike(i) && (WIDGET_SOURCES[w] ?? []).includes(sourceOf(i.id))) }))
+        .filter(({ w, feeds }) => feeds.length > 0 && match(WIDGET_INFO[w].name, WIDGET_INFO[w].about))
+    : [];
+  const listedFor = (i: Integration) => listed.find((s) => { const x = integrationOf(s); return !!x && sourceOf(x.id) === sourceOf(i.id); });
+  const nothing = !here.length && !kinds.length && !widgets.length;
 
   return (
     <div className="palette-backdrop" onClick={onClose}>
@@ -87,6 +101,27 @@ export function AddAppPicker({ listed, running, onPick, onClose }: { listed: Ser
               </ul>
             </section>
           ))}
+          {widgets.length > 0 && (
+            <section>
+              <h3>{t('Widgets')}</h3>
+              <ul>
+                {widgets.flatMap(({ w, feeds }) =>
+                  feeds.map((i) => {
+                    const app = listedFor(i);
+                    return (
+                      <li key={`${w}-${i.id}`}>
+                        <button type="button" className="add-app-row" onClick={() => (app && onOpen ? onOpen(app) : onPick({ name: i.name, source: 'ui' }))}>
+                          <Icon name={i.name} icon={iconFor(i)} size={24} />
+                          <span className="add-app-name">{t(WIDGET_INFO[w].name)}</span>
+                          <span className="add-app-note">{t('through {name}', { name: i.name })}</span>
+                        </button>
+                      </li>
+                    );
+                  }),
+                )}
+              </ul>
+            </section>
+          )}
           {nothing && <p className="empty">{t('Nothing called that. Add it as a link below.')}</p>}
         </div>
         <footer className="add-app-foot">

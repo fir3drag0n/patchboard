@@ -27,6 +27,7 @@ export function AppTiles({
   sort = 'catalog',
   legend = false,
   groups,
+  onEdit,
 }: {
   filter?: string;
   size?: 'normal' | 'large';
@@ -34,6 +35,8 @@ export function AppTiles({
   legend?: boolean;
   /** Only these app groups (a board's own choice); every group when absent. */
   groups?: string[];
+  /** Apps page: each tile can open its own sheet. */
+  onEdit?: (s: Service, group: string) => void;
 }) {
   const { snap } = useStore();
   const nums = useAppNumbers();
@@ -62,7 +65,7 @@ export function AppTiles({
             {/* One Tab stop per group; arrow keys move between its apps. */}
             <Roving as="ul" className="tile-grid">
               {list.map((s, i) => (
-                <Tile key={s.name} s={s} stat={stats[i]} />
+                <Tile key={s.name} s={s} stat={stats[i]} onEdit={onEdit && (() => onEdit(s, g.name))} />
               ))}
             </Roving>
           </section>
@@ -96,7 +99,7 @@ export function TileLegend() {
   );
 }
 
-function Tile({ s, stat }: { s: Service; stat: ReturnType<typeof appStat> }) {
+function Tile({ s, stat, onEdit }: { s: Service; stat: ReturnType<typeof appStat>; onEdit?: () => void }) {
   const { snap } = useStore();
   const raised = alertLevelFor(snap?.alerts, s);
   const body = (
@@ -139,6 +142,13 @@ function Tile({ s, stat }: { s: Service; stat: ReturnType<typeof appStat> }) {
         <Link className="tile-connect" to={`/settings?tab=connections&setup=${integration.id}`} aria-label={t('Connect {name}', { name: integration.name })}>
           {t('Connect')}
         </Link>
+      )}
+      {onEdit && (
+        <button type="button" className="tile-edit" onClick={onEdit} aria-label={t('Edit {name}', { name: s.name })} title={t('Edit')}>
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.5 2.5 13.5 5.5 6 13H3v-3z" />
+          </svg>
+        </button>
       )}
       {s.container && s.href && (
         <Link className="tile-more" to={`/c/${s.container}`} aria-label={`${s.name} details`} title="Container details">

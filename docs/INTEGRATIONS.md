@@ -54,8 +54,8 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
    the app, or Add an app and pick it. Its sheet connects it and lists
    everything it shows up in. Services with no page of their own, like
    Weather or a calendar, list under Also connected.
-2. **A live number on an app's tile.** In Edit apps, open the app's ⋯ menu,
-   choose Icon and live number, and pick a preset or Any JSON API. An app
+2. **A live number on an app's tile.** On Apps, press the pencil on the
+   app's tile, and pick a preset or Any JSON API under Live number. An app
    already connected uses that address and key, so
    there's nothing to type; any other asks for its key once. Press Test. The
    key stays on the server.

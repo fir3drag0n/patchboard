@@ -48,7 +48,9 @@ import { CountdownWidget, MarketsWidget, SkyWidget } from './Kiosk.tsx';
 import { t } from '../lib/i18n.ts';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
-import type { FrigateData, NutData, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
+import type { FrigateData, NutData, Service, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
+import { sourceOf, WIDGET_SOURCES } from '../../shared/feeds.ts';
+import { integrationOf } from '../lib/connect.ts';
 import { headlineUps, upsLabel, upsLevel } from '../../shared/ups.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
@@ -373,8 +375,15 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
     if (!snap?.readOnly) setDraft(structuredClone(board));
     const back = params.get('back') ?? '';
     setBackTo(back.startsWith('/settings?') ? back : '');
+    // From Jump to: "Add widget: 3D printer" opens the drawer at that widget.
+    const add = params.get('add');
+    if (add && !snap?.readOnly) {
+      setAddFind(WIDGET_INFO[add as WidgetType]?.name ?? add);
+      setAdding(true);
+    }
     params.delete('arrange');
     params.delete('back');
+    params.delete('add');
     setParams(params, { replace: true });
   }, [!!board]);
   /** Arranging is over: back to the device it started from, or focus back where it started. */
@@ -389,6 +398,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
     if (leaving && !draft) navigate(backTo);
   }, [leaving, draft]);
   const [adding, setAdding] = useState(false);
+  const [addFind, setAddFind] = useState('');
   const [creating, setCreating] = useState(false);
   // The header's controls, over the board instead of a trip to Settings.
   const [headerOpen, setHeaderOpen] = useState(false);
@@ -730,7 +740,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
       {adding && draft && (
         <AddDrawer
           board={draft}
-          onClose={() => setAdding(false)}
+          initialFind={addFind}
+          onClose={() => (setAdding(false), setAddFind(''))}
           onAdd={(w) => {
             setAdding(false);
             if (w.type === 'json') setJsonEdit('new');
@@ -1355,14 +1366,24 @@ const KINDS: [string, WidgetType[]][] = [
 ];
 const kindOf = (t: WidgetType) => KINDS.find(([, list]) => list.includes(t))?.[0] ?? 'Other';
 
-function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () => void; onAdd: (w: Widget) => void }) {
+function AddDrawer({ board, initialFind = '', onClose, onAdd }: { board: BoardData; initialFind?: string; onClose: () => void; onAdd: (w: Widget) => void }) {
   const { snap } = useStore();
   const modal = useModal<HTMLDivElement>(onClose);
   const [picking, setPicking] = useState(false);
   const [q, setQ] = useState('');
-  const [find, setFind] = useState('');
+  const [find, setFind] = useState(initialFind);
   // A widget waiting on a connection: its service's sheet, over the board.
-  const [setting, setSetting] = useState<WidgetType | null>(null);
+  const [setting, setSetting] = useState<{ t: WidgetType; id: string } | null>(null);
+  // A widget several services can feed: which one you run, asked first.
+  const [choosing, setChoosing] = useState<WidgetType | null>(null);
+  const providers = (t: WidgetType) => INTEGRATIONS.filter((i) => appLike(i) && (WIDGET_SOURCES[t] ?? []).includes(sourceOf(i.id)));
+  // What runs here, by the integration it is: marked in the choice.
+  const runningHere = new Set([...containerMap(snap).keys()].map((c) => integrationOf({ name: c, container: c } as Service)?.id).filter((x): x is string => !!x).map(sourceOf));
+  const setUp = (t: WidgetType) => {
+    const list = providers(t);
+    if (list.length > 1) setChoosing(t);
+    else setSetting({ t, id: list[0]?.id ?? NEEDS[t]!.setup });
+  };
   // The widget the list points at, shown live with this server's data.
   const [peek, setPeek] = useState<WidgetType | null>(null);
   const now = useNow(15_000);
@@ -1390,12 +1411,26 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
     <div className="palette-backdrop" onClick={onClose}>
       <div className={`palette drawer ${picking ? '' : 'drawer-wide'}`} ref={modal} role="dialog" aria-label="Add a widget" onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
-          <h2>{picking ? 'Which container?' : 'Add a widget'}</h2>
-          <button type="button" className="text-button" onClick={picking ? () => setPicking(false) : onClose}>
-            {picking ? 'Back' : 'Close'}
+          <h2>{picking ? 'Which container?' : choosing ? t('Which do you run?') : 'Add a widget'}</h2>
+          <button type="button" className="text-button" onClick={picking ? () => setPicking(false) : choosing ? () => setChoosing(null) : onClose}>
+            {picking || choosing ? 'Back' : 'Close'}
           </button>
         </header>
-        {!picking && (
+        {choosing && (
+          <ul className="drawer-list" aria-label={t('Which do you run?')}>
+            {providers(choosing)
+              .sort((a, b) => Number(runningHere.has(sourceOf(b.id))) - Number(runningHere.has(sourceOf(a.id))))
+              .map((i) => (
+                <li key={i.id}>
+                  <button type="button" onClick={() => setSetting({ t: choosing, id: i.id })}>
+                    <strong>{i.name}</strong>
+                    <span>{runningHere.has(sourceOf(i.id)) ? t('Running here') : t(i.adds)}</span>
+                  </button>
+                </li>
+              ))}
+          </ul>
+        )}
+        {!picking && !choosing && (
           <input
             className="field palette-input"
             type="search"
@@ -1411,7 +1446,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
             autoFocus
           />
         )}
-        {!picking ? (
+        {choosing ? null : !picking ? (
           <div className="drawer-split">
           <ul className="drawer-list">
             {[...KINDS.map(([k]) => k), 'Other'].map((kind) => {
@@ -1452,7 +1487,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
                 <li key={t} className="is-waiting">
                   {/* Set up in place, so the board being arranged stays as it is. */}
                   {setup && appLike(setup) ? (
-                    <button type="button" onClick={() => setSetting(t)}>
+                    <button type="button" onClick={() => setUp(t)}>
                       {body}
                     </button>
                   ) : (
@@ -1497,14 +1532,15 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
         )}
       </div>
     </div>
-      {setting && NEEDS[setting] && (
+      {setting && (
         <ServiceSheet
-          id={NEEDS[setting]!.setup}
+          id={setting.id}
           connect
           feeds={false}
           onSaved={() => {
-            const t = setting;
+            const { t } = setting;
             setSetting(null);
+            setChoosing(null);
             onAdd({ id: WIDGET_INFO[t].multiple ? id(t) : t, type: t, size: WIDGET_INFO[t].size });
           }}
           onClose={() => setSetting(null)}

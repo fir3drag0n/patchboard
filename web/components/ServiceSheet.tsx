@@ -11,7 +11,7 @@ import type { Snapshot } from '../../shared/types.ts';
 import { iconFor, integrationOf, isConnected } from '../lib/connect.ts';
 import { t } from '../lib/i18n.ts';
 import { useModal } from '../lib/modal.ts';
-import { AppConnection, ShowsUpIn } from './AppSheet.tsx';
+import { AppConnection, PrinterHint, ShowsUpIn } from './AppSheet.tsx';
 import { Icon, Section } from './ui.tsx';
 
 /** Ways to be told about trouble, not apps: they belong with Alerts. */
@@ -76,7 +76,7 @@ export function ServiceSheet({ id, connect, feeds = true, onSaved, onClose }: { 
         <p className="settings-note">{t(integration.adds)}</p>
         <div className="ws-form">
           <AppConnection integration={integration} startOpen={connect} about={false} onChange={() => onSaved?.()} />
-          {feeds && <ShowsUpIn integration={integration} />}
+          {feeds ? <ShowsUpIn integration={integration} /> : integration.id === 'homeassistant' && <PrinterHint />}
         </div>
       </div>
     </div>

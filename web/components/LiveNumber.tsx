@@ -11,7 +11,8 @@ import { PRESETS, presetFor, presetRequest, secretName } from '../../shared/pres
 import type { SetupIntegration } from '../../shared/setup.ts';
 import type { Service } from '../../shared/types.ts';
 import { formatValue } from '../board/JsonWidget.tsx';
-import { integrationOf } from '../lib/connect.ts';
+import { integrationOf, isConnected } from '../lib/connect.ts';
+import { useStore } from '../lib/store.tsx';
 
 export interface LiveDraft {
   mode: string;
@@ -103,6 +104,10 @@ export function LiveNumberFields({ app, d, onChange }: { app: { name: string; hr
   const [test, setTest] = useState<{ text?: string; error?: string; sample?: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const suggested = presetFor(app);
+  // A connected app's tile already shows its own number, so the first choice says so.
+  const { snap } = useStore();
+  const ownIntegration = integrationOf(app as Service);
+  const own = snap && ownIntegration && isConnected(snap, ownIntegration) ? ownIntegration.name : '';
   const preset = PRESETS.find((x) => x.id === d.mode);
   const linked = !!preset && usesConn(d, preset);
   // Its integration's connection would fit this preset, whether or not the tile uses it.
@@ -176,7 +181,7 @@ export function LiveNumberFields({ app, d, onChange }: { app: { name: string; hr
     <div className="ws-row live-number">
       <span id="live-number-label">Live number on its tile</span>
       <select className="field" aria-labelledby="live-number-label" value={d.mode} onChange={(e) => (setTest(null), onChange({ ...d, mode: e.target.value, valueIdx: 0 }))}>
-        <option value="">None: show status and response time</option>
+        <option value="">{own ? `${own}'s own number` : 'Status only: up, and how fast it answers'}</option>
         {suggested && <option value={suggested.id}>{suggested.name} (suggested)</option>}
         {PRESETS.filter((p) => p.id !== suggested?.id).map((p) => (
           <option key={p.id} value={p.id}>

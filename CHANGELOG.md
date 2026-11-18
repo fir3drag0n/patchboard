@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **Every tile opens its own sheet:** the pencil on an app's tile in Apps
+  opens its icon, connection, number and where it shows up, and Done saves
+  it. Add an app sits on Apps too. Edit apps is for moving and grouping, and
+  a broken connection's link opens the sheet with the connection first.
+- **Widgets that several apps can feed ask which you run:** Next up asks
+  Jellyfin or Emby, Storage asks Unraid, Synology or QNAP, with the one
+  running here first.
+- **Find a widget by what it shows:** "bambu" or "printer" finds the 3D
+  printer in Add an app and in Jump to, along with the app that feeds it,
+  and Jump to connects any app by name. With Home Assistant on and no
+  printer, its sheet says to add the Bambu Lab integration from HACS.
+- **A connected app's tile number says so:** the first choice reads
+  "Sonarr's own number" instead of None, and Status only for apps without
+  a connection.
 - **An app's editor holds its connection:** open Sonarr in Edit apps and
   connect it there, see whether it's reachable, and see everything it shows
   up in, This week, Downloads and the Library page, with Add to Home for a
