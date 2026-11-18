@@ -323,7 +323,7 @@ test('an unreachable integration is mentioned quietly, and only after two minute
   assert.equal(late.length, 1);
   assert.equal(late[0].level, 'info');
   assert.equal(late[0].since, t - 3 * 60_000);
-  assert.equal(late[0].href, '/settings?tab=connections');
+  assert.equal(late[0].href, '/settings?tab=connections&setup=jellyfin');
 });
 
 test('Scrutiny: a failed SMART check is critical, a threshold warning is a warning, healthy drives stay quiet', () => {
@@ -400,4 +400,12 @@ test('the whole *arr family raises stuck imports and health errors under its own
   const arr = (msg: string) => ({ upcoming: [], queueTotal: 1, problems: [{ title: 'X', message: msg }], health: [{ level: 'error', message: 'down' }] });
   const alerts = computeAlerts(sources({ lidarr: arr('no files'), prowlarr: { upcoming: [], queueTotal: 0, problems: [], health: [{ level: 'error', message: 'Indexer failing' }] } }), catalog());
   assert.deepEqual(alerts.filter((a) => a.source === 'lidarr' || a.source === 'prowlarr').map((a) => a.title), ["Lidarr can't import a download", 'Lidarr health check', 'Prowlarr health check']);
+});
+
+test("an integration that can't be reached links to its own settings, not the top of the list", () => {
+  const failing = (id: SourceId): SourceState => ({ id, label: id, ok: false, error: 'Unreachable (ECONNREFUSED)', failingSince: Date.now() - 10 * 60_000, updatedAt: 0, data: null });
+  const alerts = computeAlerts({ sonarr: failing('sonarr'), stats: failing('stats') }, catalog());
+  assert.equal(alerts.find((a) => a.id === 'src-sonarr')?.href, '/settings?tab=connections&setup=sonarr');
+  // Patchboard's own sources have no settings row to open.
+  assert.equal(alerts.find((a) => a.id === 'src-stats')?.href, '/settings?tab=connections');
 });

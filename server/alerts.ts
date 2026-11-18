@@ -40,6 +40,7 @@ import type {
 } from '../shared/types.ts';
 import { config } from './config.ts';
 import { NAS_SOURCES } from '../shared/types.ts';
+import { INTEGRATIONS } from '../shared/integrations.ts';
 import { kvGet, lastEventAt } from './db.ts';
 import { settling, type Track } from './transitions.ts';
 import { hookTurnedAway, openToInternetAt } from './security.ts';
@@ -574,9 +575,11 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
 
   // An integration we can't reach is worth knowing about, but quietly, and
   // only once it has failed for two minutes: restarting Jellyfin isn't news.
+  // The link opens that integration's own settings, not the top of the list.
   for (const s of Object.values(sources)) {
     if (s && !s.ok && s.error && (!s.failingSince || now - s.failingSince >= SOURCE_GRACE_MS)) {
-      alerts.push({ id: `src-${s.id}`, level: 'info', ...say("Can't reach {name}", { name: s.label }), detail: s.error, since: s.failingSince, href: '/settings?tab=connections', source: s.id });
+      const href = INTEGRATIONS.some((i) => i.id === s.id) ? `/settings?tab=connections&setup=${encodeURIComponent(s.id)}` : '/settings?tab=connections';
+      alerts.push({ id: `src-${s.id}`, level: 'info', ...say("Can't reach {name}", { name: s.label }), detail: s.error, since: s.failingSince, href, source: s.id });
     }
   }
 
