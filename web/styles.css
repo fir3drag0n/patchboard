@@ -7399,21 +7399,35 @@ button.ha-act:hover {
   white-space: nowrap;
 }
 
+.printer-filament {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 10px;
+}
+
 .printer-trays {
   display: flex;
   gap: 8px;
-  margin: 10px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* A hairline keeps a black spool visible on a dark card and a white one on a light card. */
 .printer-trays i {
   display: block;
   width: 14px;
   height: 14px;
   border-radius: 50%;
   background: var(--ink-3);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 25%, transparent);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.printer-spool {
+  font-size: 13px;
+  color: var(--ink-3);
 }
 
 .printer-trays .is-active i {
@@ -11273,6 +11287,13 @@ a.req-come:hover .req-title {
   color: var(--head);
   background: none;
   box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* A finger needs 44 pixels; the underline stays at the foot of the taller tab. */
+@media (pointer: coarse) {
+  .seg.settings-parts button {
+    min-height: 44px;
+  }
 }
 
 .reader-actions {

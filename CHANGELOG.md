@@ -8,6 +8,12 @@
   still takes your own.
 - **"Can't reach" opens that integration:** the alert links straight to
   its settings instead of the top of Connections.
+- **One name for each thing:** a widget's gear and a connection's button
+  say Edit, Arrange board's extra tools sit under More, pasted keys are Saved
+  secrets, and Bookmarks and Elsewhere are both Links.
+- **Fixes:** Connections' Integrations, Sign-in and keys, App catalog and
+  Backup are full-size taps on a phone, and Edit apps' sections are
+  headings a screen reader can step through.
 - **A 3D printer widget** for Bambu Lab printers, through Home Assistant's
   Bambu Lab integration: the print and its picture, progress and layer,
   time left and when it's done, nozzle and bed heat, the filament loaded,

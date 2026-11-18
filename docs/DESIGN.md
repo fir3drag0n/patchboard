@@ -76,7 +76,7 @@ one click.
   every list sorts through the same control; sorts live in the URL.
   Arrange board keeps the viewed card sizes and fitted item counts, with
   floating controls and a bottom arrange bar: everyday moves in one row,
-  the rest under Tools with Reset apart from Save. Hidden header widgets
+  the rest under More with Reset apart from Save. Hidden header widgets
   stay out of the grid. Dragging assigns a starting column and relative
   vertical position, so neighboring columns stay put; narrower screens
   clamp the column. Dotted editing outlines surround card content and leave the gutters clear.

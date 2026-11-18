@@ -45,7 +45,7 @@ as in "(2) Patchboard", and the tab icon carries a dot.
 **Needs attention** sits in Home's header, with problem links wrapping under
 the status line, worst first. Three show, and the rest wait in a panel a
 click away, so the board never moves. To keep it as a card on the board
-instead, open Arrange board, then Tools, then Needs attention settings,
+instead, open Arrange board, then More, then Edit Needs attention,
 and pick A card on the board. Hiding header status also shows this widget
 as a card on this device, without changing its saved setting. Home always
 keeps it; another board, say one just for media, can remove it, and its
@@ -217,7 +217,7 @@ progress and albums played lately on Audiobookshelf and Navidrome.
 
 ![Calendar, Notes, Books, Watched, Listening and This week on the board](screenshots/household.webp)
 
-**No setup needed:** Bookmarks puts your links on the board, Search sends
+**No setup needed:** Links puts your links on the board, Search sends
 words to the engine you pick or, with `!yt`, `!sonarr` and the like, straight
 to a site or one of your apps, Clocks shows the time where your people are
 (or one big clock and the date), Feeds reads any RSS or Atom feed without a
@@ -227,7 +227,7 @@ the day's line, no key needed: write `BTC`, `AAPL`, `^GSPC` or `EUR/USD`.
 Sun and moon shows sunrise, sunset, the day getting longer or shorter, and
 tonight's moon. Countdown counts the days to the dates you name.
 
-![Bookmarks, Search, Clocks, Feeds and Releases on the board](screenshots/everyday.webp)
+![Links, Search, Clocks, Feeds and Releases on the board](screenshots/everyday.webp)
 
 **Downloads:** everything in qBittorrent, Transmission, Deluge, SABnzbd and
 NZBGet on one list, running or failed first: progress, speeds down and
@@ -317,7 +317,7 @@ its controls, or choose a Column in its settings. Editing keeps the full
 card preview and the same fitted counts; the arrange bar floats at the
 bottom instead of pushing the board down. Its row holds the everyday moves,
 Add widget, Cancel and Save; columns, Fit, colors, layouts and Reset sit
-under Tools. Colors gives a board its own theme, mode and accent, on every
+under More. Colors gives a board its own theme, mode and accent, on every
 screen that shows it, so the kitchen board can stay light while the rest
 stay dark. E-ink screens keep their ink. Fit the window trims lists until the board ends at the bottom of the
 screen. Recently added keeps every selected poster in one horizontal row,

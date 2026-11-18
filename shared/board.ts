@@ -377,7 +377,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   drives: { name: 'Drives', about: "Scrutiny: every drive's SMART verdict, temperature and age.", size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   proxmox: { name: 'Proxmox', about: 'Proxmox VE: each node and every VM and container, running or stopped.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   photos: { name: 'Photos', about: 'Immich: photos, videos and library size, and what Immich is working on.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
-  bookmarks: { name: 'Bookmarks', about: 'The links in Edit apps, Bookmarks, or brought over from Homepage, grouped as you keep them.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  bookmarks: { name: 'Links', about: 'The links in Edit apps, or brought over from Homepage, grouped as you keep them.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
   search: { name: 'Search', about: 'A search box for DuckDuckGo, Google, Bing, Kagi, Startpage or any site you name, with ! shortcuts: !yt, !w, your own apps such as !sonarr, and any you add. Opens the results in a new tab.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { title: false, fields: [engineField, searchUrlField, bangsField] } },
   clocks: {
     name: 'Clocks',

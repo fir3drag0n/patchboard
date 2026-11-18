@@ -923,7 +923,7 @@ function Keys() {
   };
   if (!list) return null;
   return (
-    <Section title="Keys" count={list.length ? String(list.length) : undefined}>
+    <Section title="Saved secrets" count={list.length ? String(list.length) : undefined}>
       <p className="settings-note">
         {tx('Keys you pasted for live numbers. Patchboard keeps them on the server and never shows them again. An API numbers widget can use one as {ref}.', {
           ref: <code>{'${secret:NAME}'}</code>,
@@ -1033,7 +1033,7 @@ function Integrations() {
           {su ? (
             <button type="button" className="text-button" aria-expanded={open === i.id} aria-label={st.on ? tr('Settings for {name}', { name: i.name }) : tr('Set up {name}', { name: i.name })} onClick={() => setOpen(open === i.id ? null : i.id)}>
               {/* The form below has Cancel; this stays its name and only shows it's open. */}
-              {st.on ? tr('Settings') : tr('Set up')}
+              {st.on ? tr('Edit') : tr('Set up')}
             </button>
           ) : (
             st.on && <span className="integration-slot" aria-hidden />

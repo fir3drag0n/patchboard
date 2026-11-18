@@ -23,7 +23,7 @@ export function BookmarksWidget() {
   const { snap } = useStore();
   const dock = snap?.catalog.dock ?? [];
   return (
-    <Section title="Bookmarks" action={snap?.readOnly ? undefined : { label: 'Edit', to: '/apps?arrange=1' }} className="bookmarks">
+    <Section title="Links" action={snap?.readOnly ? undefined : { label: 'Edit', to: '/apps?arrange=1' }} className="bookmarks">
       {dock.length === 0 ? (
         <Empty>
           No bookmarks yet. <Link to="/apps?arrange=1">Edit apps</Link> adds them, or brings them over from Homepage.

@@ -137,7 +137,7 @@ boards, cameras and lights and none of the server controls.
 
 | | |
 |---|---|
-| **Home** | The board: apps, Needs attention, Right now, Downloads, Watched, Listening, Bookmarks, Search, Clocks, Feeds, Releases, Markets, Sun and moon, Countdown, This week, inbox, reading, server, weather, changes, recently added, Next up, hosts, storage, power, drives, Proxmox, Docker hosts, network, photos, cameras, calendar, notes, chores, books, the car, Home Assistant lists, thermostat, shades, people and rooms, media managers, documents, Nextcloud, Git, monitoring alerts, miners, any container or JSON API. |
+| **Home** | The board: apps, Needs attention, Right now, Downloads, Watched, Listening, Links, Search, Clocks, Feeds, Releases, Markets, Sun and moon, Countdown, This week, inbox, reading, server, weather, changes, recently added, Next up, hosts, storage, power, drives, Proxmox, Docker hosts, network, photos, cameras, calendar, notes, chores, books, the car, Home Assistant lists, thermostat, shades, people and rooms, media managers, documents, Nextcloud, Git, monitoring alerts, miners, any container or JSON API. |
 | **Server** | Pools, datasets, disks, temperatures, scrubs, backups, CPU by hour, and when the pool fills at this rate (TrueNAS, or any mounted folder). |
 | **Stacks** | Every container by compose project, sortable by problems, CPU or memory. |
 | **Reading** | A Miniflux reader with search, feed and time filters, and keyboard navigation. |

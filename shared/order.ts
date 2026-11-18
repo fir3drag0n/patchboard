@@ -36,7 +36,7 @@ export interface AppOrder {
   icons?: Record<string, string>;
   /** Apps added in the UI (or copied in from services.yaml). */
   added?: AddedApp[];
-  /** Links in the Elsewhere row added in the UI (or copied in from services.yaml). */
+  /** Links in the Links row added in the UI (or copied in from services.yaml). */
   addedLinks?: Bookmark[];
   /** App name -> where its live number comes from. */
   stats?: Record<string, JsonWidgetConfig>;
@@ -62,7 +62,7 @@ const isUrl = (s: unknown) => {
 
 /**
  * services.yaml copied into a layout: every app becomes one saved here, in
- * its group and order, and every link joins the Elsewhere row. What the
+ * its group and order, and every link joins the Links row. What the
  * layout already says (renames, hidden apps, icons, apps added here) stays.
  */
 export function adoptYaml(cat: Catalog, prev: AppOrder | null | undefined): AppOrder {

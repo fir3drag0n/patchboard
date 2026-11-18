@@ -51,7 +51,7 @@ Patchboard can take both over, so the UI is the one place you change things.
 2. **Settings, Connections, Apps: Copy into Patchboard.** Every app in
    `services.yaml` becomes one saved in Patchboard, with its group, order,
    short name, icon, check and one-shot flag, and the links join the
-   Elsewhere row. Patchboard never edits the file.
+   Links row. Patchboard never edits the file.
 3. **Turn on a password** in Settings, Connections, Sign-in and keys, if you
    had `AUTH=password`.
 4. **Remove what was copied:** the `.env` (or all of it but the time zone),

@@ -244,9 +244,9 @@ try {
   await dialog.waitFor({ state: 'detached' });
   assert(await page.getByRole('button', { name: 'New board', exact: true }).evaluate((el) => el === document.activeElement), 'focus returns to New board');
   await page.getByRole('button', { name: /^Arrange board/ }).click();
-  await page.getByRole('button', { name: 'Reading settings', exact: true }).focus();
-  await page.getByRole('button', { name: 'Reading settings', exact: true }).click();
-  await page.getByRole('dialog', { name: 'Reading settings' }).waitFor();
+  await page.getByRole('button', { name: 'Edit Reading', exact: true }).focus();
+  await page.getByRole('button', { name: 'Edit Reading', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Edit Reading' }).waitFor();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Add widget', exact: true }).click();
   await page.getByRole('dialog', { name: 'Add a widget' }).waitFor();

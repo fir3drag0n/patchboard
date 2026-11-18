@@ -1,5 +1,5 @@
 // A board's own colors: theme, mode and accent over each screen's. Set from
-// Arrange board's Tools and from a device's pages in Settings, Devices. An
+// Arrange board's More and from a device's pages in Settings, Devices. An
 // e-ink screen has no colors to set, so there it shows nothing.
 
 import type { BoardLook } from '../../shared/board.ts';

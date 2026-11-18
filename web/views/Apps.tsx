@@ -195,7 +195,7 @@ export function Apps() {
       )}
 
       {!draft && dock.length > 0 && (
-        <Section title="Elsewhere">
+        <Section title="Links">
           <ul className="tile-grid">
             {dock.map((b) => (
               <li className="tile" data-tone="none" key={b.name}>

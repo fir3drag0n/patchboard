@@ -68,7 +68,9 @@ function OnePrinter({ p, many, haHref, now }: { p: Printer; many: boolean; haHre
         )}
         {working && p.minutesLeft != null && p.minutesLeft > 0 && (
           <p className="printer-time">
-            {left(p.minutesLeft)} · {clock(now + p.minutesLeft * 60_000)}
+            {left(p.minutesLeft)}
+            {/* A paused print isn't moving toward any finish time. */}
+            {p.status !== 'pause' && ` · ${clock(now + p.minutesLeft * 60_000)}`}
           </p>
         )}
         {heating && (
@@ -90,14 +92,18 @@ function OnePrinter({ p, many, haHref, now }: { p: Printer; many: boolean; haHre
           </p>
         )}
         {p.trays && p.trays.length > 0 && (
-          <ul className="printer-trays" aria-label={t('Filament')}>
-            {p.trays.map((tray, i) => (
-              <li key={i} className={tray.active ? 'is-active' : ''} title={tray.name} aria-current={tray.active || undefined}>
-                <i style={tray.color ? { background: tray.color } : undefined} aria-hidden />
-                <span className="sr-only">{tray.name}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="printer-filament">
+            <ul className="printer-trays" aria-label={t('Filament')}>
+              {p.trays.map((tray, i) => (
+                <li key={i} className={tray.active ? 'is-active' : ''} title={tray.name} aria-current={tray.active || undefined}>
+                  <i style={tray.color ? { background: tray.color } : undefined} aria-hidden />
+                  <span className="sr-only">{tray.name}</span>
+                </li>
+              ))}
+            </ul>
+            {/* The spool in use, named, so a phone or a keyboard needn't hover to learn it. */}
+            {p.trays.find((tray) => tray.active) && <span className="printer-spool" aria-hidden>{p.trays.find((tray) => tray.active)!.name}</span>}
+          </div>
         )}
       </div>
     </div>

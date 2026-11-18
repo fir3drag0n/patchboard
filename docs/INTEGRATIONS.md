@@ -59,7 +59,7 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
    key stays on the server.
 3. **An API numbers widget** on Home shows up to four values from any JSON
    API, with warning and alarm thresholds. Paste a key into a header or the
-   URL as it is: saving the board moves it to Settings, Keys and leaves a
+   URL as it is: saving the board moves it to Settings, Saved secrets and leaves a
    `${secret:NAME}` reference in the widget, so boards and setup files
    never carry it. `${env:WIDGET_NAME}` reads one from the environment.
 

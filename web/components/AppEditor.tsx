@@ -365,7 +365,7 @@ export function EditApps({
         </EditSection>
       )}
 
-      <EditSection title="Links" note="Sites that aren't apps on this server: your router, a status page, the bank. They show under Elsewhere on Apps.">
+      <EditSection title="Links" note="Sites that aren't apps on this server: your router, a status page, the bank. They show under Links on Apps.">
         {draft.dock.map((b, i) => (
           <li className="tile tile-arrange" data-tone="none" key={b.name}>
             <span className="tile-main">
@@ -497,7 +497,7 @@ function EditSection({ title, note, children }: { title: string; note: string; c
   return (
     <section className="tile-group edit-section">
       <header className="tile-group-head">
-        <h3>{title}</h3>
+        <h2>{title}</h2>
       </header>
       <div>
         <p className="settings-note edit-note">{note}</p>

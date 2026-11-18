@@ -525,13 +525,13 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             <span className="board-bar-hint">Drag into a column, then above or below another card. Hover or focus for controls.</span>
             {error && <span className="crit-text" role="alert">{error}</span>}
             {notice && !error && <span className="drawer-note">{notice}</span>}
-            {/* The everyday moves stay in this row; columns, fit, layouts and reset wait under Tools. */}
+            {/* The everyday moves stay in this row; columns, fit, layouts and reset wait under More. */}
             <button type="button" className="button button-quiet board-add" onClick={() => setAdding(true)}>
               Add widget
             </button>
             <button type="button" className="text-button board-tools-toggle" aria-expanded={tools} aria-controls="board-tools" onClick={() => setTools(!tools)}>
               {/* One label; aria-expanded and the pressed look say whether it's open. */}
-              Tools
+              More
             </button>
             {dirty ? (
               <HoldButton className="text-button" danger hint="Hold to discard changes" onConfirm={doneArranging}>
@@ -561,7 +561,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             </button>
             {draft.widgets.filter((w) => w.type === 'attention' && w.config?.style !== 'card' && homeStatusSize !== 'hidden').map((w) => (
               <Fragment key={w.id}>
-                <button type="button" className="button button-quiet" onClick={() => setSetting(w.id)}>Needs attention settings</button>
+                <button type="button" className="button button-quiet" onClick={() => setSetting(w.id)}>Edit Needs attention</button>
                 {!home && (
                   <button type="button" className="button button-quiet" onClick={() => (update((ws) => ws.filter((x) => x.id !== w.id)), setSaid('Needs attention removed.'))}>
                     Remove Needs attention
@@ -876,7 +876,7 @@ function Cell(props: {
               {props.cols === 1 ? '↓' : '→'}
             </button>
             {props.onConfigure && (
-              <button type="button" className="cell-btn cell-settings" onClick={props.onConfigure} aria-label={`${info.name} settings`} title="Name, width, items, look">
+              <button type="button" className="cell-btn cell-settings" onClick={props.onConfigure} aria-label={`Edit ${info.name}`} title="Edit: name, width, items, look">
                 Settings
               </button>
             )}
@@ -1494,7 +1494,7 @@ function SettingsDrawer({
   };
   return (
     <div className="palette-backdrop" onClick={dismiss}>
-      <div className="palette drawer widget-settings" ref={modal} role="dialog" aria-label={`${info.name} settings`} onClick={(e) => e.stopPropagation()}>
+      <div className="palette drawer widget-settings" ref={modal} role="dialog" aria-label={`Edit ${info.name}`} onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>{cfg.title || info.name}</h2>
           {onCancel ? (
