@@ -249,7 +249,7 @@ try {
   await page.getByRole('dialog', { name: 'Edit Reading' }).waitFor();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Add widget', exact: true }).click();
-  await page.getByRole('dialog', { name: 'Add a widget' }).waitFor();
+  await page.getByRole('dialog', { name: 'Add widget' }).waitFor();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   assert.deepEqual(await board(), saved, 'Cancel leaves the saved board intact');

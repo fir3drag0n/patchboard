@@ -1409,9 +1409,9 @@ function AddDrawer({ board, initialFind = '', onClose, onAdd }: { board: BoardDa
   return (
     <>
     <div className="palette-backdrop" onClick={onClose}>
-      <div className={`palette drawer ${picking ? '' : 'drawer-wide'}`} ref={modal} role="dialog" aria-label="Add a widget" onClick={(e) => e.stopPropagation()}>
+      <div className={`palette drawer ${picking ? '' : 'drawer-wide'}`} ref={modal} role="dialog" aria-label="Add widget" onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
-          <h2>{picking ? 'Which container?' : choosing ? t('Which do you run?') : 'Add a widget'}</h2>
+          <h2>{picking ? 'Which container?' : choosing ? t('Which do you run?') : 'Add widget'}</h2>
           <button type="button" className="text-button" onClick={picking ? () => setPicking(false) : choosing ? () => setChoosing(null) : onClose}>
             {picking || choosing ? 'Back' : 'Close'}
           </button>

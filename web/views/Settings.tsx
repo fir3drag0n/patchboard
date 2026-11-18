@@ -991,6 +991,9 @@ function Integrations() {
     if (setup && wanted) land(`int-${wanted}`);
   }, [!!setup]);
   if (!snap) return null;
+  // On its way to an app's sheet: draw nothing rather than a list that vanishes.
+  const forwarding = INTEGRATIONS.find((x) => x.id === wanted);
+  if (wanted && !snap.readOnly && forwarding && appLike(forwarding)) return null;
   const status = (i: Integration): { on: boolean; text: string; tone: 'ok' | 'warn' | 'off'; why?: string } => {
     if (i.id === 'updates' && snap.features?.includes('no-docker-cli'))
       return { on: false, text: tr('Off'), tone: 'off', why: tr('This is the slim image, which has no Docker CLI. Use the full image to update containers from here.') };

@@ -13,6 +13,8 @@
   printer in Add an app and in Jump to, along with the app that feeds it,
   and Jump to connects any app by name. With Home Assistant on and no
   printer, its sheet says to add the Bambu Lab integration from HACS.
+- **Polish:** Add widget is one name on the button and its panel, and a
+  link to fix a connection no longer flashes Settings on its way.
 - **A connected app's tile number says so:** the first choice reads
   "Sonarr's own number" instead of None, and Status only for apps without
   a connection.
