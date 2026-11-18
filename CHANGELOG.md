@@ -35,7 +35,8 @@
 - **One name for each thing:** a widget's gear and a connection's button
   say Edit, Arrange board's extra tools sit under More, pasted keys are Saved
   secrets, and Bookmarks and Elsewhere are both Links.
-- **Fixes:** Connections' Integrations, Sign-in and keys, App catalog and
+- **Fixes:** Add widget is back within reach while arranging on a phone or
+  a short screen: More opened its tools off the side of the bar. Connections' Integrations, Sign-in and keys, App catalog and
   Backup are full-size taps on a phone, and Edit apps' sections are
   headings a screen reader can step through.
 - **A 3D printer widget** for Bambu Lab printers, through Home Assistant's

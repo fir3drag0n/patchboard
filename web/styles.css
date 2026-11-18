@@ -9909,6 +9909,8 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
 
 .is-editing .board-bar {
   flex-direction: column;
+  /* One column that scrolls: wrapping would push Tools off the side of a short bar. */
+  flex-wrap: nowrap;
   align-items: stretch;
   gap: 10px;
 }

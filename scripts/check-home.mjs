@@ -343,6 +343,17 @@ try {
   assert(Math.abs(edges[0] - edges[1]) < 2, 'Reading and This week align when their content is close in height');
   const shelfTop = await page.locator('#w-recent').evaluate((card) => card.getBoundingClientRect().top);
   assert(Math.max(...edges) < shelfTop, 'aligning card edges preserves the full-width row below');
+  // On a phone, Add widget lives under More in the arrange bar: opening it keeps every tool on screen.
+  // A short phone screen: the bar's height cap is what used to push the tools off the side.
+  await page.setViewportSize({ width: 390, height: 640 });
+  await go();
+  await page.getByRole('button', { name: /^Arrange board/ }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).last().click();
+  const bar = await page.locator('.board-bar').evaluate((el) => ({ sw: el.scrollWidth, w: el.clientWidth }));
+  assert(bar.sw <= bar.w + 1, `the phone's arrange bar doesn't scroll sideways (${bar.sw} > ${bar.w})`);
+  const add = await page.locator('.board-add-phone').evaluate((el) => { const r = el.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; });
+  assert(add, "the phone's Add widget is on screen once More is open");
+  await page.getByRole('button', { name: 'Cancel', exact: true }).last().click();
   assert.deepEqual(errors, []);
   console.log('Compact header, clear failure states, settings toggles, aligned lists, editing gutters, saved placement, poster rows and keyboard paths passed.');
 } finally {
