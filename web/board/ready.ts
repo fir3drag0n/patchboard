@@ -3,48 +3,16 @@
 // starting layout drops the ones that would land empty.
 
 import { type Board, WIDGET_INFO, type WidgetType } from '../../shared/board.ts';
-import { type HomeAssistantData, NAS_SOURCES, type Snapshot } from '../../shared/types.ts';
+import { anyOn, WIDGET_SOURCES } from '../../shared/feeds.ts';
+import type { HomeAssistantData, Snapshot } from '../../shared/types.ts';
 
 export function widgetReady(snap: Snapshot | null | undefined): Partial<Record<WidgetType, boolean>> {
   const has = (id: string) => !!snap?.sources[id as keyof Snapshot['sources']];
-  return {
-    homeassistant: has('homeassistant'),
-    car: has('tessie'),
-    // Only once Home Assistant has a printer to show.
-    printer: !!(snap?.sources.homeassistant?.data as HomeAssistantData | undefined)?.printers?.length,
-    uptime: has('uptimekuma') || has('gatus') || has('healthchecks'),
-    dns: has('pihole') || has('adguard'),
-    speed: has('speedtest'),
-    photos: has('immich'),
-    cameras: has('frigate'),
-    proxmox: has('proxmox'),
-    drives: has('scrutiny'),
-    sync: has('syncthing'),
-    hosts: has('glances') || has('beszel'),
-    power: has('nut'),
-    storage: NAS_SOURCES.some(has),
-    dockerhosts: has('portainer'),
-    network: has('unifi') || has('tailscale'),
-    calendar: has('calendar'),
-    books: has('books'),
-    requests: has('overseerr'),
-    wake: !!snap?.features?.includes('wake'),
-    nextup: has('jellyfin') || has('emby'),
-    watched: has('tautulli') || has('jellyfin') || has('emby'),
-    listening: has('audiobookshelf') || has('navidrome'),
-    downloads: ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget', 'sonarr', 'radarr'].some(has),
-    managers: ['lidarr', 'readarr', 'prowlarr', 'bazarr'].some(has),
-    documents: has('paperless'),
-    nextcloud: has('nextcloud'),
-    git: has('gitea'),
-    monitoring: has('netdata') || has('prometheus'),
-    halist: has('homeassistant'),
-    climate: has('homeassistant'),
-    shades: has('homeassistant'),
-    people: has('homeassistant'),
-    rooms: has('homeassistant'),
-    miners: has('bitaxe'),
-  };
+  const out: Partial<Record<WidgetType, boolean>> = Object.fromEntries((Object.entries(WIDGET_SOURCES) as [WidgetType, string[]][]).map(([w, s]) => [w, anyOn(s, has)]));
+  // Only once Home Assistant has a printer to show.
+  out.printer = !!(snap?.sources.homeassistant?.data as HomeAssistantData | undefined)?.printers?.length;
+  out.wake = !!snap?.features?.includes('wake');
+  return out;
 }
 
 /** What a widget waits for: the integration to name, and the one Settings opens to set it up. */

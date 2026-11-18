@@ -51,7 +51,8 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
 
 1. **Built-in integrations** feed whole parts of Patchboard: Needs attention,
    the calendar, Right now, the Server page. You turn them on in Settings,
-   Connections, which also shows which ones run.
+   Connections, which also shows which ones run, or from the app itself:
+   its editor in Edit apps connects it and lists everything it shows up in.
 2. **A live number on an app's tile.** In Edit apps, open the app's ⋯ menu,
    choose Icon and live number, and pick a preset or Any JSON API. An app
    already set up in Settings, Connections uses that address and key, so

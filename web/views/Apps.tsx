@@ -31,7 +31,7 @@ export function Apps() {
   const [saving, setSaving] = useState(false);
   const audit = useJson<CatalogAudit>('/api/catalog/audit', 5 * 60_000);
   /** The app form to open as editing starts (from a container page). */
-  const [openForm, setOpenForm] = useState<{ app: Service; group: string; isNew: boolean } | null>(null);
+  const [openForm, setOpenForm] = useState<{ app: Service; group: string; isNew: boolean; connect?: boolean } | null>(null);
   const startEditing = async () => {
     if (!snap) return;
     setQ('');
@@ -62,7 +62,8 @@ export function Apps() {
     if (edit) {
       const g = snap.catalog.groups.find((x) => x.services.some((s) => s.name === edit));
       const app = g?.services.find((s) => s.name === edit);
-      if (g && app) setOpenForm({ app, group: g.name, isNew: false });
+      // ?connect=1 arrives from a broken connection: open its form straight away.
+      if (g && app) setOpenForm({ app, group: g.name, isNew: false, connect: params.get('connect') === '1' });
     }
     if (adopt) {
       const d = audit.data?.discovered.find((x) => x.container === adopt);
@@ -75,7 +76,7 @@ export function Apps() {
     }
     void startEditing();
     const next = new URLSearchParams(params);
-    for (const k of ['arrange', 'edit', 'adopt']) next.delete(k);
+    for (const k of ['arrange', 'edit', 'adopt', 'connect']) next.delete(k);
     setParams(next, { replace: true });
   }, [params, !!snap, !!audit.data]);
   if (!snap) return null;

@@ -10,6 +10,8 @@ import { useMemo, useRef, useState } from 'react';
 import type { JsonWidgetConfig } from '../../shared/jsonwidget.ts';
 import type { AddedApp, AppOrder } from '../../shared/order.ts';
 import { liveConfig, liveDraft, LiveNumberFields, saveKey } from './LiveNumber.tsx';
+import { AppConnection, ShowsUpIn } from './AppSheet.tsx';
+import { AddAppPicker } from './AddAppPicker.tsx';
 import { orderOf } from '../../shared/order.ts';
 import type { Bookmark, Catalog, DiscoveredService, Service } from '../../shared/types.ts';
 import { moved, useDragSort } from '../lib/dragsort.ts';
@@ -98,9 +100,11 @@ export function EditApps({
   discovered: DiscoveredService[];
   containers: string[];
   /** Open this app's form right away (arriving from a container page). */
-  initialForm?: { app: Service; group: string; isNew: boolean } | null;
+  initialForm?: { app: Service; group: string; isNew: boolean; connect?: boolean } | null;
 }) {
-  const [form, setForm] = useState<{ app: Service; group: string; isNew: boolean } | null>(initialForm);
+  const [form, setForm] = useState<{ app: Service; group: string; isNew: boolean; connect?: boolean } | null>(initialForm);
+  // Add an app opens the picker first; the group it was opened from comes along.
+  const [picking, setPicking] = useState<string | null>(null);
   const [link, setLink] = useState({ name: '', href: '' });
   const [linkErr, setLinkErr] = useState('');
   const addLink = () => {
@@ -253,7 +257,7 @@ export function EditApps({
               <button type="button" className="cell-btn" disabled={gi === groups.length - 1} onClick={() => setGroups(moved(groups, gi, gi + 1))} aria-label={`Move ${g.name} down`}>
                 ↓
               </button>
-              <button type="button" className="cell-btn" onClick={() => setForm({ app: { name: '', source: 'ui' }, group: g.name, isNew: true })} aria-label={`Add an app to ${g.name}`} title="Add an app here">
+              <button type="button" className="cell-btn" onClick={() => setPicking(g.name)} aria-label={`Add an app to ${g.name}`} title="Add an app here">
                 +
               </button>
               {g.services.length === 0 && (
@@ -335,7 +339,7 @@ export function EditApps({
           <button type="button" className="button button-quiet" onClick={addGroup}>
             New group
           </button>
-          <button type="button" className="button button-quiet" onClick={() => setForm({ app: { name: '', source: 'ui' }, group: groups[0]?.name ?? 'Apps', isNew: true })}>
+          <button type="button" className="button button-quiet" onClick={() => setPicking(groups[0]?.name ?? 'Apps')}>
             Add an app
           </button>
         </div>
@@ -440,11 +444,23 @@ export function EditApps({
         </EditSection>
       )}
 
+      {picking !== null && (
+        <AddAppPicker
+          listed={groups.flatMap((g) => g.services)}
+          running={adoptable}
+          onPick={(app) => {
+            setForm({ app, group: picking, isNew: true });
+            setPicking(null);
+          }}
+          onClose={() => setPicking(null)}
+        />
+      )}
       {form && (
         <AppForm
           app={form.app}
           group={form.group}
           isNew={form.isNew}
+          openConnection={!!form.connect}
           groups={groups.map((g) => g.name)}
           containers={containers}
           stat={draft.stats[form.app.name]}
@@ -548,6 +564,7 @@ function AppForm({
   app,
   group,
   isNew,
+  openConnection = false,
   groups,
   containers,
   stat,
@@ -558,6 +575,8 @@ function AppForm({
   app: Service;
   group: string;
   isNew: boolean;
+  /** Arriving from a broken connection: its form starts open. */
+  openConnection?: boolean;
   groups: string[];
   containers: string[];
   stat?: JsonWidgetConfig;
@@ -574,6 +593,8 @@ function AppForm({
   const file = useRef<HTMLInputElement>(null);
   const autoIcon = slug(v.name);
   const [live, setLive] = useState(() => liveDraft(app, stat));
+  // Bumped when the connection is saved here, so the live number looks again.
+  const [connTick, setConnTick] = useState(0);
 
   const upload = async (picked: File) => {
     setErr('');
@@ -691,7 +712,9 @@ function AppForm({
               A name from <a href="https://dashboardicons.com" target="_blank" rel="noreferrer">dashboard icons</a> or <a href="https://selfh.st/icons/" target="_blank" rel="noreferrer">selfh.st</a> (like <code>jellyfin</code>), any image URL, or your own file.
             </span>
           </div>
-          <LiveNumberFields app={{ ...v, name: v.name || app.name }} d={live} onChange={setLive} />
+          <AppConnection app={{ ...v, name: v.name || app.name }} startOpen={openConnection} onChange={() => setConnTick((n) => n + 1)} />
+          <LiveNumberFields key={connTick} app={{ ...v, name: v.name || app.name }} d={live} onChange={setLive} />
+          <ShowsUpIn app={{ ...v, name: v.name || app.name }} />
         </div>
         <div className="jw-actions">
           <button type="button" className="button board-save" onClick={() => void done()}>

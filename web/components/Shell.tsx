@@ -14,6 +14,8 @@ import { serviceFor } from '../lib/services.ts';
 import { useFollowOpens, useNightDim } from '../lib/household.ts';
 import { WallPages } from './WallPages.tsx';
 import { t } from '../lib/i18n.ts';
+import { anyOn, PAGE_SOURCES } from '../../shared/feeds.ts';
+import type { Snapshot } from '../../shared/types.ts';
 
 // On a phone the tab bar holds Home, Server, Stacks, then Reading once
 // Miniflux is set up (Upcoming until then), and More: every other page and
@@ -256,17 +258,9 @@ export function Shell() {
   const badges: Record<string, number> = { '/reading': unreadFeeds, '/downloads': unfinished, '/requests': liveData<{ pending?: number }>('overseerr')?.pending ?? 0 };
   const badge = (to: string) => (badges[to] > 0 ? <span className="nav-badge">{count(badges[to])}</span> : null);
   const phoneTabs = household ? ['/', '/upcoming', reading ? '/reading' : '/weather'] : ['/', '/server', '/stacks', reading ? '/reading' : '/upcoming'];
-  // Downloads only once a download client is set up.
-  const hasDownloads = ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget'].some((id) => snap?.sources[id as 'qbit']);
-  // Library once Sonarr or Radarr is.
-  const hasLibrary = !!(snap?.sources.sonarr || snap?.sources.radarr);
-  // Requests once Overseerr or Jellyseerr is.
-  const hasRequests = !!snap?.sources.overseerr;
-  // Media once Plex (through Tautulli), Jellyfin or Emby is.
-  const hasMedia = !!(snap?.sources.tautulli || snap?.sources.jellyfin || snap?.sources.emby);
-  // Ad blocking once Pi-hole or AdGuard Home is.
-  const hasBlocking = !!(snap?.sources.pihole || snap?.sources.adguard);
-  const nav = NAV.filter((n) => !(household && adminPage(n.to)) && (n.to !== '/blocking' || hasBlocking) && (n.to !== '/media' || hasMedia) && (n.to !== '/downloads' || hasDownloads) && (n.to !== '/library' || hasLibrary) && (n.to !== '/requests' || hasRequests));
+  // Downloads, Library, Requests, Media and Ad blocking appear once something feeds them (shared/feeds.ts).
+  const on = (id: string) => !!snap?.sources[id as keyof Snapshot['sources']];
+  const nav = NAV.filter((n) => !(household && adminPage(n.to)) && (!PAGE_SOURCES[n.to] || anyOn(PAGE_SOURCES[n.to], on)));
   const more: { to: string; label: string }[] = [...nav.filter((n) => !phoneTabs.includes(n.to)), { to: '/weather', label: 'Weather' }, { to: '/settings', label: 'Settings' }].filter(
     (m) => !phoneTabs.includes(m.to) && !(household && adminPage(m.to)),
   );

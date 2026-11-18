@@ -6,7 +6,9 @@ import { HELP } from '../lib/docs.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { CATEGORIES, INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { sourceOf } from '../../shared/feeds.ts';
+import { integrationOf } from '../lib/connect.ts';
 import { useUrlChoice } from '../lib/url.ts';
 import { land, useLanding } from '../lib/landing.ts';
 import type { CatalogAudit, SelfCheck } from '../../shared/types.ts';
@@ -975,6 +977,17 @@ function Integrations() {
   const wanted = new URLSearchParams(useLocation().search).get('setup');
   const [open, setOpen] = useState<string | null>(wanted);
   const [results, setResults] = useState<Record<string, { ok: boolean; text: string } | null>>({});
+  // An app already on Apps is set up in its own sheet: a link here for it
+  // (an alert, a widget's "Check the connection") goes there instead.
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!wanted || !snap || snap.readOnly) return;
+    const app = snap.catalog.groups.flatMap((g) => g.services).find((s) => {
+      const i = integrationOf(s);
+      return !!i && sourceOf(i.id) === sourceOf(wanted);
+    });
+    if (app) navigate(`/apps?edit=${encodeURIComponent(app.name)}&connect=1`, { replace: true });
+  }, [wanted, !!snap]);
   useEffect(() => {
     fetch('/api/setup/integrations')
       .then((r) => r.json())

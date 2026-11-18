@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **An app's editor holds its connection:** open Sonarr in Edit apps and
+  connect it there, see whether it's reachable, and see everything it shows
+  up in, This week, Downloads and the Library page, with Add to Home for a
+  widget that isn't on the board yet.
+- **Add an app lists everything Patchboard knows:** what runs here and
+  isn't listed yet, then every app it can connect, by kind, with a search.
+  Picking Emby opens Emby, ready to connect; anything else goes in by its
+  link.
+- **A broken connection opens its app:** "Can't reach" and a widget's
+  Check the connection open that app's editor with its connection form
+  already open, when the app is on Apps.
 - **A connected app's tile number needs no key:** in Edit apps, a live
   number for Sonarr, Jellyfin, Home Assistant and the rest uses the address
   and key already saved in Settings, Connections. "Use another address"
