@@ -196,6 +196,7 @@ test('guessFromImage: product names from images, container names for local build
   assert.deepEqual(guessFromImage('plexinc/pms-docker:latest', 'plex'), { name: 'Plex', icon: 'plex.png' });
   assert.deepEqual(guessFromImage('lscr.io/linuxserver/sonarr:latest', 'sonarr'), { name: 'Sonarr', icon: 'sonarr.png' });
   assert.equal(guessFromImage('trivia-night-web', 'trivia-night-web').name, 'Trivia Night');
+  assert.deepEqual(guessFromImage('automorph-arm64:local', 'automorph@oracle3'), { name: 'Automorph', icon: 'automorph.png' });
 });
 
 test('labels: patchboard.* beats homepage.*, and widget credentials are never kept', () => {
