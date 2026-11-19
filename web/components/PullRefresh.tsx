@@ -1,5 +1,5 @@
-// Pull down to refresh, for the installed app: iOS and Android give a
-// home-screen app no gesture of its own, while a browser tab already has one.
+// Pull down to refresh, for the installed app and for a browser tab on a
+// touch screen (where the page turns the browser's own pull off).
 // The page follows the finger down and a ring fills in the gap above it; let
 // go past the line and the page reloads, which also picks up a new version.
 
@@ -32,9 +32,11 @@ export function PullRefresh() {
   const [going, setGoing] = useState(false);
 
   useEffect(() => {
-    if (!installed()) return;
     // CSS uses it too: a little more room under the status bar.
-    document.documentElement.classList.add('is-installed');
+    if (installed()) document.documentElement.classList.add('is-installed');
+    // A browser tab has no gesture of its own here either: the page turns the
+    // browser's pull off (overscroll-behavior), so every touch screen gets this one.
+    if (!installed() && !matchMedia('(pointer: coarse)').matches) return;
     let startY = 0;
     let active = false;
     let dist = 0;
