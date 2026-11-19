@@ -34,7 +34,7 @@ import { immichAdapter } from './adapters/immich.ts';
 import { type GuestAction, proxmoxAdapter, proxmoxControl } from './adapters/proxmox.ts';
 import { scrutinyAdapter } from './adapters/scrutiny.ts';
 import { gatusAdapter, healthchecksAdapter, mailcowAdapter } from './adapters/monitors.ts';
-import { beszelAdapter } from './adapters/beszel.ts';
+import { beszelAdapter, beszelHostDetail } from './adapters/beszel.ts';
 import { syncthingAdapter } from './adapters/syncthing.ts';
 import { tracearrAdapter } from './adapters/tracearr.ts';
 import { glancesAdapter } from './adapters/glances.ts';
@@ -2492,6 +2492,18 @@ app.get('/api/uptime', (c) => {
 });
 
 // Time series for charts: /api/history?key=cpu&key=ctr.mem:plex&hours=24
+// Another server's CPU by hour and busiest containers, from Beszel (Server page, ?host=).
+app.get('/api/hosts/:name/beszel', async (c) => {
+  const name = c.req.param('name');
+  if (!NAME.test(name)) return c.json({ error: 'Bad host name' }, 400);
+  try {
+    const detail = await beszelHostDetail(name);
+    return detail ? c.json(detail) : c.json({ error: 'Beszel has no system by this name' }, 404);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+});
+
 app.get('/api/history', (c) => {
   const keys = c.req.queries('key') ?? [];
   const hours = Math.min(Math.max(Number(c.req.query('hours') ?? 24) || 24, 1), 24 * 120);

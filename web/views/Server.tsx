@@ -337,6 +337,7 @@ function OtherServer({ host, picker, docker, now }: { host: string; picker: Reac
         </div>
         <aside className="detail-side">
           <HostResources box={box} configured={!!beszelState} error={beszelState?.error} />
+          {box && <HostBeszel host={host} />}
           {links.length > 0 && (
             <Section title="Links" id="links">
               <dl className="ledger">
@@ -401,6 +402,72 @@ function HostResources({ box, configured, error }: { box: GlancesHost | undefine
         )}
       </dl>
     </Section>
+  );
+}
+
+/** CPU by hour and the busiest containers of another server, both from Beszel. */
+function HostBeszel({ host }: { host: string }) {
+  const [detail, setDetail] = useState<{ series: Series; containers: { name: string; cpu: number; memBytes: number }[] } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let gone = false;
+    const load = () =>
+      fetch(`/api/hosts/${encodeURIComponent(host)}/beszel`)
+        .then(async (r) => {
+          const body = (await r.json().catch(() => ({}))) as { series?: Series; containers?: []; error?: string };
+          if (gone) return;
+          if (r.ok && body.series) {
+            setDetail({ series: body.series, containers: body.containers ?? [] });
+            setError(null);
+          } else setError(body.error ?? `HTTP ${r.status}`);
+        })
+        .catch((e) => !gone && setError((e as Error).message));
+    setDetail(null);
+    void load();
+    const t = setInterval(load, 60_000);
+    return () => {
+      gone = true;
+      clearInterval(t);
+    };
+  }, [host]);
+  const list = detail?.containers ?? [];
+  const byCpu = [...list].sort((a, b) => b.cpu - a.cpu).slice(0, 5);
+  const byMem = [...list].sort((a, b) => b.memBytes - a.memBytes).slice(0, 5);
+  const link = (n: string) => <Link to={`/c/${n}@${host}`} className="ident">{n}</Link>;
+  return (
+    <>
+      <Section title="CPU by hour" count="last 7 days, from Beszel" id="cpu">
+        {error ? <Empty>{error}.</Empty> : <HourHeatmap series={detail?.series} label={`CPU by hour on ${host} over the last seven days`} />}
+      </Section>
+      {list.length > 0 && (
+        <Section title="Busiest containers" count="now, from Beszel" id="busiest">
+          <div className="busiest">
+            <div>
+              <h3>CPU</h3>
+              <ol>
+                {byCpu.map((c) => (
+                  <li key={c.name}>
+                    {link(c.name)}
+                    <span className="mono">{pct(c.cpu)}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div>
+              <h3>Memory</h3>
+              <ol>
+                {byMem.map((c) => (
+                  <li key={c.name}>
+                    {link(c.name)}
+                    <span className="mono">{size(c.memBytes)}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </Section>
+      )}
+    </>
   );
 }
 

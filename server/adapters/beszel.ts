@@ -75,3 +75,77 @@ export function beszelAdapter(): Adapter<GlancesData> {
     },
   };
 }
+
+// CPU by hour for one system, from Beszel's own history: 20-minute averages
+// for the last day, 2-hour ones before that (Beszel keeps those a week).
+// A record is stamped when its window ends; each point goes to the window's middle.
+
+interface StatRow {
+  created?: string;
+  type?: string;
+  stats?: { cpu?: number };
+}
+
+const WINDOW: Record<string, number> = { '20m': 20 * 60_000, '120m': 120 * 60_000 };
+
+export function toCpuSeries(rows: StatRow[], dayAgo: number): [number, number][] {
+  const out: [number, number][] = [];
+  for (const r of rows) {
+    const end = Date.parse((r.created ?? '').replace(' ', 'T'));
+    const span = WINDOW[r.type ?? ''];
+    const cpu = r.stats?.cpu;
+    if (!span || !Number.isFinite(end) || typeof cpu !== 'number') continue;
+    // The last day comes from the finer 20-minute rows; 2-hour rows fill the week before.
+    if (r.type === '120m' && end > dayAgo) continue;
+    if (r.type === '20m' && end <= dayAgo) continue;
+    if (span > 60 * 60_000) for (let t = end - span + 30 * 60_000; t < end; t += 60 * 60_000) out.push([t, cpu]);
+    else out.push([end - span / 2, cpu]);
+  }
+  return out.sort((a, b) => a[0] - b[0]);
+}
+
+/** A container as Beszel's agent sees it now: CPU in percent, memory in MB. */
+interface BeszelContainer {
+  name?: string;
+  cpu?: number;
+  memory?: number;
+}
+
+export interface HostDetail {
+  series: [number, number][];
+  containers: { name: string; cpu: number; memBytes: number }[];
+}
+
+const cpuCache = new Map<string, { at: number; detail: HostDetail }>();
+
+export async function beszelHostDetail(host: string): Promise<HostDetail | null> {
+  if (!config.beszel) return null;
+  const hit = cpuCache.get(host);
+  if (hit && Date.now() - hit.at < 60_000) return hit.detail;
+  const { url, username, password } = config.beszel;
+  const auth = await getJson<{ token?: string }>(`${url}/api/collections/users/auth-with-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identity: username, password }),
+  });
+  if (!auth.token) throw new Error('Beszel refused the sign-in');
+  const headers = { Authorization: auth.token };
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const list = await getJson<{ items?: BeszelSystem[] }>(`${url}/api/collections/systems/records?perPage=200`, { headers });
+  const sys = (list.items ?? []).find((s) => norm(s.name ?? '') === norm(host));
+  if (!sys?.id) return null;
+  const since = new Date(Date.now() - 8 * 86_400_000).toISOString().replace('T', ' ');
+  const filter = encodeURIComponent(`system='${sys.id}' && (type='20m' || type='120m') && created>='${since}'`);
+  const [rows, ctrs] = await Promise.all([
+    getJson<{ items?: StatRow[] }>(`${url}/api/collections/system_stats/records?perPage=500&sort=created&fields=created,type,stats&filter=${filter}`, { headers }),
+    getJson<{ items?: BeszelContainer[] }>(`${url}/api/collections/containers/records?perPage=500&fields=name,cpu,memory&filter=${encodeURIComponent(`system='${sys.id}'`)}`, { headers }),
+  ]);
+  const detail: HostDetail = {
+    series: toCpuSeries(rows.items ?? [], Date.now() - 86_400_000),
+    containers: (ctrs.items ?? [])
+      .filter((x) => x.name)
+      .map((x) => ({ name: x.name!, cpu: x.cpu ?? 0, memBytes: (x.memory ?? 0) * 1024 * 1024 })),
+  };
+  cpuCache.set(host, { at: Date.now(), detail });
+  return detail;
+}
