@@ -62,6 +62,7 @@ export const PAGE_SOURCES: Record<string, string[]> = {
   '/requests': ['overseerr'],
   '/media': ['tautulli', 'jellyfin', 'emby'],
   '/blocking': ['pihole', 'adguard'],
+  '/reading': ['miniflux'],
 };
 
 /** Integrations that report under another source's name: Plex is read through Tautulli's place. */
