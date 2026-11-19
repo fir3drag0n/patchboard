@@ -18,7 +18,7 @@ export const WIDGET_SOURCES: Partial<Record<WidgetType, string[]>> = {
   // Only once Home Assistant reports a printer; see widgetReady.
   printer: ['homeassistant'],
   car: ['tessie'],
-  uptime: ['uptimekuma', 'gatus', 'healthchecks'],
+  uptime: ['uptimekuma', 'gatus', 'healthchecks', 'mailcow'],
   dns: ['pihole', 'adguard'],
   speed: ['speedtest'],
   photos: ['immich'],

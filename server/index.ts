@@ -33,7 +33,7 @@ import { speedtestAdapter } from './adapters/speedtest.ts';
 import { immichAdapter } from './adapters/immich.ts';
 import { type GuestAction, proxmoxAdapter, proxmoxControl } from './adapters/proxmox.ts';
 import { scrutinyAdapter } from './adapters/scrutiny.ts';
-import { gatusAdapter, healthchecksAdapter } from './adapters/monitors.ts';
+import { gatusAdapter, healthchecksAdapter, mailcowAdapter } from './adapters/monitors.ts';
 import { beszelAdapter } from './adapters/beszel.ts';
 import { syncthingAdapter } from './adapters/syncthing.ts';
 import { tracearrAdapter } from './adapters/tracearr.ts';
@@ -172,6 +172,7 @@ const FACTORIES: Record<string, () => Made | null> = {
   scrutiny: () => (config.scrutiny ? { adapter: scrutinyAdapter() } : null),
   gatus: () => (config.gatus ? { adapter: gatusAdapter() } : null),
   healthchecks: () => (config.healthchecks ? { adapter: healthchecksAdapter() } : null),
+  mailcow: () => (config.mailcow ? { adapter: mailcowAdapter() } : null),
   beszel: () => (config.beszel ? { adapter: beszelAdapter() } : null),
   syncthing: () => (config.syncthing ? { adapter: syncthingAdapter() } : null),
   tracearr: () => (config.tracearr ? { adapter: tracearrAdapter() } : null),

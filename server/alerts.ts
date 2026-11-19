@@ -57,6 +57,7 @@ const MONITORS = [
   ['uptimekuma', 'Uptime Kuma'],
   ['gatus', 'Gatus'],
   ['healthchecks', 'Healthchecks.io'],
+  ['mailcow', 'Mailcow'],
 ] as const;
 
 /** An integration's own web page, with an optional path, or nothing when it isn't set up. */

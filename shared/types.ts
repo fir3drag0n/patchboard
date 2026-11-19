@@ -24,6 +24,7 @@ export type SourceId =
   | 'uptimekuma'
   | 'gatus'
   | 'healthchecks'
+  | 'mailcow'
   | 'beszel'
   | 'syncthing'
   | 'tracearr'
