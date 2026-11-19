@@ -306,7 +306,7 @@ const sameHost = (a: string, b: string) => a.toLowerCase().replace(/[^a-z0-9]/g,
 /** Another Docker host: its resources from Beszel, its containers, its backups and its links. */
 function OtherServer({ host, picker, docker, now }: { host: string; picker: React.ReactNode; docker: DockerData | null; now: number }) {
   const { snap } = useStore();
-  const { data: beszel } = useSource<GlancesData>('beszel');
+  const { state: beszelState, data: beszel } = useSource<GlancesData>('beszel');
   const { data: backups } = useSource<BackupsData>('backups');
   const state = docker?.hosts?.find((h) => h.name === host);
   const box = beszel?.hosts.find((h) => sameHost(h.name, host));
@@ -336,7 +336,7 @@ function OtherServer({ host, picker, docker, now }: { host: string; picker: Reac
           )}
         </div>
         <aside className="detail-side">
-          <HostResources box={box} configured={!!beszel} />
+          <HostResources box={box} configured={!!beszelState} error={beszelState?.error} />
           {links.length > 0 && (
             <Section title="Links" id="links">
               <dl className="ledger">
@@ -359,13 +359,13 @@ function OtherServer({ host, picker, docker, now }: { host: string; picker: Reac
   );
 }
 
-function HostResources({ box, configured }: { box: GlancesHost | undefined; configured: boolean }) {
+function HostResources({ box, configured, error }: { box: GlancesHost | undefined; configured: boolean; error?: string }) {
   const limits = useLimits();
   const { temp: unit } = useAppearance();
   if (!box) {
     return (
       <Section title="Resources" id="resources">
-        <Empty>{configured ? 'Beszel has no system by this name.' : 'Connect Beszel for CPU, memory and disk of this server.'}</Empty>
+        <Empty>{!configured ? 'Connect Beszel for CPU, memory and disk of this server.' : error ? `Can't read Beszel: ${error}.` : 'Beszel has no system by this name.'}</Empty>
       </Section>
     );
   }
