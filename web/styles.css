@@ -3201,6 +3201,11 @@ a.vitals {
   background: var(--warn);
 }
 
+/* Backups: a night that arrived is green, so a red one stands out at a glance. */
+.backup-grid .sq-up {
+  background: var(--ok);
+}
+
 .sq-down {
   background: var(--crit);
 }
