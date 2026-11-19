@@ -415,14 +415,16 @@ function HostContainers({ host, containers, error }: { host: string; containers:
     <Section title="Containers" count={`${running} of ${containers.length} running`} action={{ label: 'All stacks', to: '/stacks' }} id="containers">
       {error && <p className="crit-text">Can't reach {host}: {error}.</p>}
       {containers.length ? (
-        <ul className="nas-alerts">
+        <ul className="host-ctrs">
           {sorted.map((c) => {
-            const bad = c.state !== 'running' || c.health === 'unhealthy';
+            const led = c.state !== 'running' ? 'crit' : c.health === 'unhealthy' ? 'warn' : 'ok';
+            // One line each: "Up 3 days (healthy)" reads as "3 days", trouble keeps Docker's words.
+            const short = c.state === 'running' && c.health !== 'unhealthy' ? c.status.replace(/^Up\s+/, '').replace(/\s*\((healthy|health: starting)\)$/, '') : c.status;
             return (
-              <li key={c.id} data-tone={bad ? 'crit' : 'info'}>
-                <Led state={c.state !== 'running' ? 'crit' : c.health === 'unhealthy' ? 'warn' : 'ok'} />
+              <li key={c.id} title={c.status}>
+                <Led state={led} label={c.state} />
                 <Link to={`/c/${c.name}`} className="ident">{c.name.replace(`@${host}`, '')}</Link>
-                <span className="nas-text">{c.status}</span>
+                <span className={`ctr-status mono ${led === 'crit' ? 'crit-text' : led === 'warn' ? 'warn-text' : ''}`}>{short}</span>
               </li>
             );
           })}
