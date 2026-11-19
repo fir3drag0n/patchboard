@@ -274,17 +274,23 @@ function NasStorage({ nas, label }: { nas: NasSystem | null; label: string }) {
   return (
     <Section title="Storage" count={nas.platform} action={{ label: 'Open', href: nas.webUrl }} id="storage">
       {nas.state && <p className="crit-text">{nas.state}.</p>}
-      <dl className="ledger">
+      <div className="nas-vols">
         {nas.volumes.map((v) => {
           const p = v.total ? (v.used / v.total) * 100 : 0;
           return (
-            <Row key={v.name} k={v.name}>
+            <div key={v.name} className="nas-vol">
+              <div className="nas-vol-head">
+                <span className="nas-vol-title">{v.name}</span>
+                <span className="nas-vol-pct">{Math.round(p)}%</span>
+              </div>
               <Meter label={`${v.name} storage used`} value={p} level={v.status === 'failed' ? 'crit' : v.status === 'warn' ? 'warn' : storageLevel(p, limits)} />
-              <span className="ledger-aside mono">{Math.round(p)}% of {size(v.total)}, {size(Math.max(0, v.total - v.used))} free</span>
-            </Row>
+              <span className="nas-vol-words">
+                {size(v.used)} used, {size(Math.max(0, v.total - v.used))} free of {size(v.total)}
+              </span>
+            </div>
           );
         })}
-      </dl>
+      </div>
       <ul className="disks">
         {disks.map((d) => (
           <li key={d.name}>

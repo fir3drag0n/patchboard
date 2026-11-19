@@ -6579,6 +6579,46 @@ a.vw:hover {
   margin: 4px 0 6px;
 }
 
+/* Server, Unraid storage: each volume a bar with its share used. */
+.nas-vols {
+  display: grid;
+  gap: 16px;
+  margin: 4px 0 18px;
+}
+
+.nas-vol-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.nas-vol-title {
+  font-weight: 600;
+  color: var(--head);
+}
+
+.nas-vol-pct {
+  font: var(--display-weight) 26px/1 var(--f-display);
+  color: var(--head);
+}
+
+.nas-vol .meter {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.nas-vol .meter > span {
+  border-radius: 6px;
+}
+
+.nas-vol-words {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
 /* Needs attention: Ignore sits after the alert, small, so the row stays one line. */
 .alert:has(.alert-ignore) {
   display: flex;
