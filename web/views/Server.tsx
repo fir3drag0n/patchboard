@@ -6,9 +6,9 @@ import { Roll } from '../components/Roll.tsx';
 import { Fragment, useEffect, useState } from 'react';
 import { arrange } from '../../shared/pages.ts';
 import { CustomizePage, type SectionDef, usePage } from '../components/PageCustomize.tsx';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useLanding } from '../lib/landing.ts';
-import type { BackupRun, BackupsData, Pool, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
+import type { BackupRun, BackupsData, DockerData, GlancesData, GlancesHost, NasSystem, Pool, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
 import { Spark, Split } from '../components/Spark.tsx';
 import { HourHeatmap } from '../components/Squares.tsx';
 import { Empty, Led, Meter, Section } from '../components/ui.tsx';
@@ -59,7 +59,24 @@ export function Server() {
   const glance = useGlance();
   useLanding(!!snap);
   const { hash } = useLocation();
+  const [params, setParams] = useSearchParams();
+  const { data: docker } = useSource<DockerData>('docker');
   if (!snap) return null;
+  // Other Docker hosts (DOCKER_HOSTS) each get a view of their own: ?host=name.
+  const others = (docker?.hosts ?? []).map((h) => h.name);
+  const host = others.includes(params.get('host') ?? '') ? params.get('host')! : null;
+  const nasSource = NAS_SOURCES.map((id) => snap.sources[id]).find(Boolean);
+  const localName = (nasSource?.data as NasSystem | null)?.name ?? nas?.hostname ?? 'This server';
+  const picker = others.length > 0 && (
+    <div className="seg server-hosts" role="tablist" aria-label="Server">
+      {[null, ...others].map((h) => (
+        <button key={h ?? ''} type="button" role="tab" aria-selected={host === h} tabIndex={host === h ? 0 : -1} onClick={() => setParams(h ? { host: h } : {})}>
+          {h ?? localName}
+        </button>
+      ))}
+    </div>
+  );
+  if (host) return <OtherServer host={host} picker={picker} docker={docker} now={now} />;
   // Arriving at a section you've hidden (the header's CPU graph, say): say so, instead of landing nowhere.
   const wanted = decodeURIComponent(hash.slice(1)).replace(/^storage-.*/, 'storage');
   const hiddenHere = (page.hidden ?? []).includes(wanted) ? SERVER_SECTIONS.find((x) => x.id === wanted)?.label : undefined;
@@ -69,6 +86,8 @@ export function Server() {
       case 'storage':
         return nas ? (
           nas.pools.map((p) => <PoolSection key={p.name} pool={p} snapshots={nas.snapshots} now={now} />)
+        ) : nasSource ? (
+          <NasStorage nas={nasSource.data as NasSystem | null} label={nasSource.label} />
         ) : (
           <FallbackStorage sys={sys} configured={!!nasState} error={nasState?.error} />
         );
@@ -109,6 +128,7 @@ export function Server() {
         </div>
         <CustomizePage page="server" title="Server" sections={SERVER_SECTIONS} />
       </header>
+      {picker}
 
       {hiddenHere && <p className="update-notice">{hiddenHere} is hidden on this page. Customize shows it again.</p>}
       <div className="detail-grid">
@@ -238,6 +258,178 @@ function FallbackStorage({ sys, configured, error }: { sys: SystemData | null; c
           : 'Connect your NAS for real pool capacity, health, disks and alerts.'}{' '}
         <Link to={configured ? '/settings?tab=connections&setup=truenas' : '/settings?tab=connections#integrations'}>{configured ? 'Check TrueNAS' : 'Connect it'}</Link>
       </p>
+    </Section>
+  );
+}
+
+/** Unraid, Synology and QNAP: the same volumes and disks the Storage widget shows. */
+const NAS_SOURCES = ['unraid', 'synology', 'qnap'] as const;
+
+function NasStorage({ nas, label }: { nas: NasSystem | null; label: string }) {
+  const limits = useLimits();
+  const { temp: unit } = useAppearance();
+  if (!nas) return <Section title="Storage" id="storage"><Empty>Connecting to {label}.</Empty></Section>;
+  const rank = { failed: 0, warn: 1, ok: 2 } as const;
+  const disks = [...nas.disks].sort((a, b) => rank[a.status] - rank[b.status]);
+  return (
+    <Section title="Storage" count={nas.platform} action={{ label: 'Open', href: nas.webUrl }} id="storage">
+      {nas.state && <p className="crit-text">{nas.state}.</p>}
+      <dl className="ledger">
+        {nas.volumes.map((v) => {
+          const p = v.total ? (v.used / v.total) * 100 : 0;
+          return (
+            <Row key={v.name} k={v.name}>
+              <Meter label={`${v.name} storage used`} value={p} level={v.status === 'failed' ? 'crit' : v.status === 'warn' ? 'warn' : storageLevel(p, limits)} />
+              <span className="ledger-aside mono">{Math.round(p)}% of {size(v.total)}, {size(Math.max(0, v.total - v.used))} free</span>
+            </Row>
+          );
+        })}
+      </dl>
+      <ul className="disks">
+        {disks.map((d) => (
+          <li key={d.name}>
+            <span className="ident">{d.name}</span>
+            <span className="disk-model" title={d.model}>{d.role ?? ''}</span>
+            <span className={`mono disk-temp ${d.status !== 'ok' ? 'crit-text' : d.tempC != null && d.tempC >= limits.diskWarnC ? 'warn-text' : ''}`}>
+              {d.status !== 'ok' ? (d.detail ?? 'trouble') : d.tempC != null ? temp(d.tempC, unit) : 'spun down'}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+/** Beszel names a system as it likes ("Oracle 3"); Docker hosts are named in DOCKER_HOSTS ("oracle3"). */
+const sameHost = (a: string, b: string) => a.toLowerCase().replace(/[^a-z0-9]/g, '') === b.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+/** Another Docker host: its resources from Beszel, its containers, its backups and its links. */
+function OtherServer({ host, picker, docker, now }: { host: string; picker: React.ReactNode; docker: DockerData | null; now: number }) {
+  const { snap } = useStore();
+  const { data: beszel } = useSource<GlancesData>('beszel');
+  const { data: backups } = useSource<BackupsData>('backups');
+  const state = docker?.hosts?.find((h) => h.name === host);
+  const box = beszel?.hosts.find((h) => sameHost(h.name, host));
+  const containers = (docker?.containers ?? []).filter((c) => c.name.endsWith(`@${host}`));
+  const links = (snap?.catalog.groups ?? []).flatMap((g) => g.services).filter((s) => s.href && sameHost(s.name.split(' ').pop() ?? '', host));
+  const pick = (runs: BackupRun[] | undefined) =>
+    (runs ?? []).map((r) => ({ ...r, items: r.items.filter((i) => sameHost(i.label, host)) })).filter((r) => r.items.length);
+  const facts = [box?.os, box?.uptime && `up ${box.uptime}`, box?.cores && `${box.cores} cores`].filter(Boolean);
+  return (
+    <div className="page server">
+      <header className="detail-head">
+        <div className="detail-titles">
+          <h1 className="page-title">Server</h1>
+          <p className="detail-ident">{[host, ...facts].join(', ')}</p>
+        </div>
+      </header>
+      {picker}
+      <div className="detail-grid">
+        <div className="detail-main">
+          <HostContainers host={host} containers={containers} error={state && !state.ok ? state.error : undefined} />
+          {backups && (
+            <Section title="Backups" count="nightly" className="backups-sec" id="backups">
+              <BackupSet title="Databases" runs={pick(backups.db)} now={now} />
+              <BackupSet title="Files" runs={pick(backups.files)} now={now} />
+              {!pick(backups.db).length && !pick(backups.files).length && <Empty>No backup job is named {host}.</Empty>}
+            </Section>
+          )}
+        </div>
+        <aside className="detail-side">
+          <HostResources box={box} configured={!!beszel} />
+          {links.length > 0 && (
+            <Section title="Links" id="links">
+              <dl className="ledger">
+                {links.map((l) => (
+                  <Row key={l.name} k={l.name}>
+                    <a href={l.href} target="_blank" rel="noreferrer">{l.href!.replace(/^https?:\/\//, '')}</a>
+                  </Row>
+                ))}
+                {box && (
+                  <Row k="Beszel">
+                    <a href={box.url} target="_blank" rel="noreferrer">System page</a>
+                  </Row>
+                )}
+              </dl>
+            </Section>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function HostResources({ box, configured }: { box: GlancesHost | undefined; configured: boolean }) {
+  const limits = useLimits();
+  const { temp: unit } = useAppearance();
+  if (!box) {
+    return (
+      <Section title="Resources" id="resources">
+        <Empty>{configured ? 'Beszel has no system by this name.' : 'Connect Beszel for CPU, memory and disk of this server.'}</Empty>
+      </Section>
+    );
+  }
+  const disk = box.disks[0]?.pct;
+  return (
+    <Section title="Resources" count={box.ok ? 'now' : undefined} id="resources">
+      {!box.ok && <p className="crit-text">{box.error}.</p>}
+      <div className="metric">
+        <Roll className="metric-num" value={pct(box.cpuPct)} />
+        <span className="metric-label">CPU{box.load != null ? `, load ${box.load.toFixed(2)}` : ''}</span>
+        <Meter label="CPU" value={box.cpuPct} />
+      </div>
+      <div className="metric">
+        <Roll className="metric-num" value={pct(box.memPct)} />
+        <span className="metric-label">Memory in use</span>
+        <Meter label="Memory in use" value={box.memPct} level={box.memPct >= 90 ? 'crit' : box.memPct >= 80 ? 'warn' : 'ok'} />
+      </div>
+      {disk != null && (
+        <div className="metric">
+          <Roll className="metric-num" value={pct(disk)} />
+          <span className="metric-label">Disk used</span>
+          <Meter label="Disk used" value={disk} level={storageLevel(disk, limits)} />
+        </div>
+      )}
+      <dl className="ledger">
+        <Row k="Network">
+          <span className="mono">{speed(box.rx + box.tx)}</span>
+        </Row>
+        {box.tempC != null && (
+          <Row k="Temperature">
+            <span className="mono">{temp(box.tempC, unit)}</span>
+          </Row>
+        )}
+      </dl>
+    </Section>
+  );
+}
+
+const STATE_ORDER: Record<string, number> = { restarting: 0, dead: 0, exited: 1, created: 2, paused: 2, running: 3 };
+
+function HostContainers({ host, containers, error }: { host: string; containers: import('../../shared/types.ts').Container[]; error?: string }) {
+  const running = containers.filter((c) => c.state === 'running').length;
+  const sorted = [...containers].sort(
+    (a, b) => (STATE_ORDER[a.state] ?? 1) - (STATE_ORDER[b.state] ?? 1) || Number(b.health === 'unhealthy') - Number(a.health === 'unhealthy') || a.name.localeCompare(b.name),
+  );
+  return (
+    <Section title="Containers" count={`${running} of ${containers.length} running`} action={{ label: 'All stacks', to: '/stacks' }} id="containers">
+      {error && <p className="crit-text">Can't reach {host}: {error}.</p>}
+      {containers.length ? (
+        <ul className="nas-alerts">
+          {sorted.map((c) => {
+            const bad = c.state !== 'running' || c.health === 'unhealthy';
+            return (
+              <li key={c.id} data-tone={bad ? 'crit' : 'info'}>
+                <Led state={c.state !== 'running' ? 'crit' : c.health === 'unhealthy' ? 'warn' : 'ok'} />
+                <Link to={`/c/${c.name}`} className="ident">{c.name.replace(`@${host}`, '')}</Link>
+                <span className="nas-text">{c.status}</span>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        !error && <Empty>No containers reported yet.</Empty>
+      )}
     </Section>
   );
 }

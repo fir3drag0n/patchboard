@@ -6574,6 +6574,12 @@ a.vw:hover {
   margin: 4px 0 6px;
 }
 
+/* Server: one tab per Docker host (DOCKER_HOSTS), this server first. */
+.server-hosts {
+  display: flex;
+  margin: 4px 0 14px;
+}
+
 /* ---------- Weather widget ---------- */
 
 .ww-now {
