@@ -743,7 +743,7 @@ app.post('/api/containers/:name/ignore', async (c) => {
   else list.delete(name);
   kvSet('ignored', [...list]);
   recordAudit(who(c), ignore ? 'container.ignore' : 'container.unignore', name);
-  hub.refreshAlerts();
+  hub.refreshAlerts(true);
   return c.json({ ok: true });
 });
 

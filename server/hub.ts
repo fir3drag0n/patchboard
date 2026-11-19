@@ -333,11 +333,12 @@ export class Hub {
     this.refreshAlerts();
   }
 
-  refreshAlerts(): void {
+  /** `force` sends the alerts even when unchanged, so an Ignore shows at once in every open tab. */
+  refreshAlerts(force = false): void {
     const next = computeAlerts(this.sources, getCatalog(), pendingUpdates());
-    if (JSON.stringify(next) !== JSON.stringify(this.alerts)) {
+    if (force || JSON.stringify(next) !== JSON.stringify(this.alerts)) {
       this.alerts = next;
-      this.emit({ type: 'alerts', alerts: next });
+      this.emit({ type: 'alerts', alerts: next, ignored: kvGet<string[]>('ignored') ?? [] });
     }
     void notifyAlerts(this.alerts);
   }
