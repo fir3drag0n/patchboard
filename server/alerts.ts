@@ -41,7 +41,7 @@ import type {
 import { config } from './config.ts';
 import { NAS_SOURCES } from '../shared/types.ts';
 import { INTEGRATIONS } from '../shared/integrations.ts';
-import { kvGet, lastEventAt } from './db.ts';
+import { kvGet, kvSet, lastEventAt } from './db.ts';
 import { settling, type Track } from './transitions.ts';
 import { hookTurnedAway, openToInternetAt } from './security.ts';
 
@@ -93,6 +93,14 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
 
   const docker = data<DockerData>(sources, 'docker');
   const containers = docker?.containers ?? [];
+  // Ignored by hand (switched off for good, say): no alert while it is stopped.
+  // Once it runs again the ignore ends, so a later crash is reported.
+  const ignored = kvGet<string[]>('ignored') ?? [];
+  if (docker) {
+    const kept = ignored.filter((n) => containers.find((x) => x.name === n)?.state !== 'running');
+    if (kept.length !== ignored.length) kvSet('ignored', kept);
+    for (const n of kept) expectStopped.add(n);
+  }
   // Another Docker host that stopped answering: its containers are unknown, not down.
   for (const h of docker?.hosts ?? []) {
     if (!h.ok) alerts.push({ id: `dockerhost-${h.name}`, level: 'critical', subject: h.name, ...say('Docker host {name} is down', { name: h.name }), detail: h.error, href: '/settings?tab=connections&setup=dockerhosts', source: 'docker' });

@@ -352,6 +352,7 @@ export class Hub {
       catalog: getCatalog(),
       updates: pendingUpdates(),
       readOnly: config.readOnly,
+      ignored: kvGet<string[]>('ignored') ?? [],
       self: { version: APP_VERSION, container: config.demo ? 'patchboard' : selfContainer, ...(config.demo ? { check: { at: Date.now(), state: 'current' as const } } : selfCheckStatus() ? { check: selfCheckStatus() } : {}) },
       limits: { poolWarnPct: config.poolWarnPct, poolCritPct: config.poolCritPct, diskWarnC: config.diskWarnC, diskCritC: config.diskCritC, tireLowPsi: config.tireLowPsi, tireSpreadPsi: config.tireSpreadPsi },
       pages: kvGet('pages') ?? {},

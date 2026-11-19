@@ -729,6 +729,24 @@ app.get('/api/containers/:name', async (c) => {
   }
 });
 
+// Ignore a stopped container, or stop ignoring it: Needs attention leaves it
+// out until it runs again (server/alerts.ts). Same action header as below.
+app.post('/api/containers/:name/ignore', async (c) => {
+  const name = c.req.param('name');
+  if (!NAME.test(name)) return c.json({ error: 'Bad container name' }, 400);
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.readOnly) return c.json({ error: 'Read-only' }, 403);
+  const { ignore } = await c.req.json<{ ignore?: boolean }>().catch(() => ({ ignore: undefined }));
+  if (typeof ignore !== 'boolean') return c.json({ error: 'Say ignore: true or false' }, 400);
+  const list = new Set(kvGet<string[]>('ignored') ?? []);
+  if (ignore) list.add(name);
+  else list.delete(name);
+  kvSet('ignored', [...list]);
+  recordAudit(who(c), ignore ? 'container.ignore' : 'container.unignore', name);
+  hub.refreshAlerts();
+  return c.json({ ok: true });
+});
+
 // Start, stop or restart. The custom header can't be sent by a cross-site form
 // or a plain link, so another page can't trigger this through the browser.
 app.post('/api/containers/:name/action', async (c) => {

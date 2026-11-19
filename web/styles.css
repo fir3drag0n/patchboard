@@ -6574,6 +6574,24 @@ a.vw:hover {
   margin: 4px 0 6px;
 }
 
+/* Needs attention: Ignore sits after the alert, small, so the row stays one line. */
+.alert:has(.alert-ignore) {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.alert:has(.alert-ignore) > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-ignore {
+  font-size: 12px;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
 /* Server, another host: its containers one per line, two columns where there's room. */
 .host-ctrs {
   list-style: none;

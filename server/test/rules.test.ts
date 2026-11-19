@@ -63,6 +63,19 @@ test('a stop from Patchboard is a note at once, not after the grace for unexplai
   }
 });
 
+test('an ignored container stays out of Needs attention until it runs again', () => {
+  kvSet('ignored', ['bentopdf']);
+  try {
+    assert.deepEqual(computeAlerts(sources({ docker: { containers: [down('bentopdf'), down('unpackerr')] } }), catalog()).map((a) => a.id), ['ctr-down-unpackerr']);
+    // Running again ends the ignore, so the next stop is reported.
+    const up: Container = { ...down('bentopdf'), state: 'running', status: 'Up 1 minute' };
+    computeAlerts(sources({ docker: { containers: [up] } }), catalog());
+    assert.deepEqual(computeAlerts(sources({ docker: { containers: [down('bentopdf')] } }), catalog()).map((a) => a.id), ['ctr-down-bentopdf']);
+  } finally {
+    kvSet('ignored', null);
+  }
+});
+
 test('a dependency stopped from Patchboard never hides a dependent that crashed', () => {
   kvSet('parked', ['radarr']);
   try {

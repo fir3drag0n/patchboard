@@ -62,3 +62,40 @@ export function ContainerActions({ name, running, self, onSent, locked }: { name
     </div>
   );
 }
+
+/** Leave a stopped container out of Needs attention until it runs again, or take it back. */
+export function IgnoreButton({ name, ignored, compact }: { name: string; ignored: boolean; compact?: boolean }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const send = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/containers/${encodeURIComponent(name)}/ignore`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' },
+        body: JSON.stringify({ ignore: !ignored }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <button
+        type="button"
+        className={compact ? 'text-button alert-ignore' : 'button button-quiet'}
+        disabled={busy}
+        title={ignored ? 'Report it again when it is stopped' : 'Stopped on purpose: no alert until it runs again'}
+        onClick={() => void send()}
+      >
+        {ignored ? 'Stop ignoring' : 'Ignore'}
+      </button>
+      {error && <span className="ctr-actions-result crit-text">{error}</span>}
+    </>
+  );
+}
