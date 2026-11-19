@@ -114,6 +114,21 @@ interface BeszelContainer {
 export interface HostDetail {
   series: [number, number][];
   containers: { name: string; cpu: number; memBytes: number }[];
+  /** The root disk and any extra filesystems the agent watches, in bytes. */
+  volumes: { name: string; used: number; total: number }[];
+}
+
+const GIB = 1024 ** 3;
+
+/** Beszel's newest one-minute record: d/du in GB for the root disk, efs for the others. */
+export function toVolumes(stats: { d?: number; du?: number; efs?: Record<string, { d?: number; du?: number }> } | undefined): HostDetail['volumes'] {
+  if (!stats) return [];
+  const out: HostDetail['volumes'] = [];
+  if (typeof stats.d === 'number' && stats.d > 0) out.push({ name: 'System', used: (stats.du ?? 0) * GIB, total: stats.d * GIB });
+  for (const [name, fs] of Object.entries(stats.efs ?? {})) {
+    if (typeof fs?.d === 'number' && fs.d > 0) out.push({ name, used: (fs.du ?? 0) * GIB, total: fs.d * GIB });
+  }
+  return out;
 }
 
 const cpuCache = new Map<string, { at: number; detail: HostDetail }>();
@@ -136,15 +151,17 @@ export async function beszelHostDetail(host: string): Promise<HostDetail | null>
   if (!sys?.id) return null;
   const since = new Date(Date.now() - 8 * 86_400_000).toISOString().replace('T', ' ');
   const filter = encodeURIComponent(`system='${sys.id}' && (type='20m' || type='120m') && created>='${since}'`);
-  const [rows, ctrs] = await Promise.all([
+  const [rows, ctrs, latest] = await Promise.all([
     getJson<{ items?: StatRow[] }>(`${url}/api/collections/system_stats/records?perPage=500&sort=created&fields=created,type,stats&filter=${filter}`, { headers }),
     getJson<{ items?: BeszelContainer[] }>(`${url}/api/collections/containers/records?perPage=500&fields=name,cpu,memory&filter=${encodeURIComponent(`system='${sys.id}'`)}`, { headers }),
+    getJson<{ items?: { stats?: Parameters<typeof toVolumes>[0] }[] }>(`${url}/api/collections/system_stats/records?perPage=1&sort=-created&fields=stats&filter=${encodeURIComponent(`system='${sys.id}' && type='1m'`)}`, { headers }),
   ]);
   const detail: HostDetail = {
     series: toCpuSeries(rows.items ?? [], Date.now() - 86_400_000),
     containers: (ctrs.items ?? [])
       .filter((x) => x.name)
       .map((x) => ({ name: x.name!, cpu: x.cpu ?? 0, memBytes: (x.memory ?? 0) * 1024 * 1024 })),
+    volumes: toVolumes(latest.items?.[0]?.stats),
   };
   cpuCache.set(host, { at: Date.now(), detail });
   return detail;

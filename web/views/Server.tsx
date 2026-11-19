@@ -274,23 +274,7 @@ function NasStorage({ nas, label }: { nas: NasSystem | null; label: string }) {
   return (
     <Section title="Storage" count={nas.platform} action={{ label: 'Open', href: nas.webUrl }} id="storage">
       {nas.state && <p className="crit-text">{nas.state}.</p>}
-      <div className="nas-vols">
-        {nas.volumes.map((v) => {
-          const p = v.total ? (v.used / v.total) * 100 : 0;
-          return (
-            <div key={v.name} className="nas-vol">
-              <div className="nas-vol-head">
-                <span className="nas-vol-title">{v.name}</span>
-                <span className="nas-vol-pct">{Math.round(p)}%</span>
-              </div>
-              <Meter label={`${v.name} storage used`} value={p} level={v.status === 'failed' ? 'crit' : v.status === 'warn' ? 'warn' : storageLevel(p, limits)} />
-              <span className="nas-vol-words">
-                {size(v.used)} used, {size(Math.max(0, v.total - v.used))} free of {size(v.total)}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      <VolumeBars volumes={nas.volumes} />
       <ul className="disks">
         {disks.map((d) => (
           <li key={d.name}>
@@ -303,6 +287,30 @@ function NasStorage({ nas, label }: { nas: NasSystem | null; label: string }) {
         ))}
       </ul>
     </Section>
+  );
+}
+
+/** Each volume a bar with its share used: Unraid's array and pools, an Oracle's disks. */
+function VolumeBars({ volumes }: { volumes: { name: string; used: number; total: number; status?: string }[] }) {
+  const limits = useLimits();
+  return (
+    <div className="nas-vols">
+      {volumes.map((v) => {
+        const p = v.total ? (v.used / v.total) * 100 : 0;
+        return (
+          <div key={v.name} className="nas-vol">
+            <div className="nas-vol-head">
+              <span className="nas-vol-title">{v.name}</span>
+              <span className="nas-vol-pct">{Math.round(p)}%</span>
+            </div>
+            <Meter label={`${v.name} storage used`} value={p} level={v.status === 'failed' ? 'crit' : v.status === 'warn' ? 'warn' : storageLevel(p, limits)} />
+            <span className="nas-vol-words">
+              {size(v.used)} used, {size(Math.max(0, v.total - v.used))} free of {size(v.total)}
+            </span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -413,17 +421,17 @@ function HostResources({ box, configured, error }: { box: GlancesHost | undefine
 
 /** CPU by hour and the busiest containers of another server, both from Beszel. */
 function HostBeszel({ host }: { host: string }) {
-  const [detail, setDetail] = useState<{ series: Series; containers: { name: string; cpu: number; memBytes: number }[] } | null>(null);
+  const [detail, setDetail] = useState<{ series: Series; containers: { name: string; cpu: number; memBytes: number }[]; volumes: { name: string; used: number; total: number }[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let gone = false;
     const load = () =>
       fetch(`/api/hosts/${encodeURIComponent(host)}/beszel`)
         .then(async (r) => {
-          const body = (await r.json().catch(() => ({}))) as { series?: Series; containers?: []; error?: string };
+          const body = (await r.json().catch(() => ({}))) as { series?: Series; containers?: []; volumes?: []; error?: string };
           if (gone) return;
           if (r.ok && body.series) {
-            setDetail({ series: body.series, containers: body.containers ?? [] });
+            setDetail({ series: body.series, containers: body.containers ?? [], volumes: body.volumes ?? [] });
             setError(null);
           } else setError(body.error ?? `HTTP ${r.status}`);
         })
@@ -442,6 +450,11 @@ function HostBeszel({ host }: { host: string }) {
   const link = (n: string) => <Link to={`/c/${n}@${host}`} className="ident">{n}</Link>;
   return (
     <>
+      {(detail?.volumes.length ?? 0) > 0 && (
+        <Section title="Storage" count="from Beszel" id="storage">
+          <VolumeBars volumes={detail!.volumes} />
+        </Section>
+      )}
       <Section title="CPU by hour" count="last 7 days, from Beszel" id="cpu">
         {error ? <Empty>{error}.</Empty> : <HourHeatmap series={detail?.series} label={`CPU by hour on ${host} over the last seven days`} />}
       </Section>
