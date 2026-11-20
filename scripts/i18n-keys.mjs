@@ -57,6 +57,8 @@ for (const m of (setup.match(/export const THRESHOLDS[^=]*= \[([\s\S]*?)\n\];/)?
 }
 // The problem titles the server writes, which a browser says in its own language.
 for (const m of readFileSync('server/alerts.ts', 'utf8').matchAll(new RegExp(String.raw`\bsay\(` + str, 'g'))) keys.add(pick(m, 1));
+// Fork: the maintenance alerts carry their English template as say.key.
+for (const m of readFileSync('server/maintenance.ts', 'utf8').matchAll(new RegExp(String.raw`\bkey:\s*` + str, 'g'))) keys.add(pick(m, 1));
 // A widget's views, named in shared/board.ts.
 for (const m of (readFileSync('shared/board.ts', 'utf8').match(/export function viewsOf[\s\S]*?\n}/)?.[0] ?? '').matchAll(/\['[\w]*', '([^']+)'\]/g)) keys.add(m[1]);
 keys.delete('');

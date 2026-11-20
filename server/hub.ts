@@ -11,6 +11,7 @@ import type { Adapter } from './adapters/adapter.ts';
 import type { Alert, CarData, ChangeEvent, ChecksData, Container, DeviceView, DockerData, ServerEvent, Snapshot, SourceId, SourceState, StatsData, SystemData, TruenasData } from '../shared/types.ts';
 import { carKey, type MinerData, minerKey, TIRES } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
+import { maintenanceAlerts } from './maintenance.ts';
 import { dockerCli } from './cli.ts';
 import { checkSelfImage, composeMounted, selfCheckStatus, whoAmI } from './updater.ts';
 import { notifyAlerts } from './notify.ts';
@@ -335,7 +336,7 @@ export class Hub {
 
   /** `force` sends the alerts even when unchanged, so an Ignore shows at once in every open tab. */
   refreshAlerts(force = false): void {
-    const next = computeAlerts(this.sources, getCatalog(), pendingUpdates());
+    const next = [...computeAlerts(this.sources, getCatalog(), pendingUpdates()), ...maintenanceAlerts()];
     if (force || JSON.stringify(next) !== JSON.stringify(this.alerts)) {
       this.alerts = next;
       this.emit({ type: 'alerts', alerts: next, ignored: kvGet<string[]>('ignored') ?? [] });

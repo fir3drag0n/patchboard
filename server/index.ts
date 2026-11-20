@@ -57,6 +57,7 @@ import { prowlarrControl } from './adapters/indexers.ts';
 import { bazarrControl } from './adapters/subtitles.ts';
 import { adguardClient, cleanDomain, type DnsControl, type DnsDomains, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
+import { checkAll, checkTarget, MAINT_ACTIONS, MAINT_TARGETS, type MaintTarget, maintenanceEnabled, maintenanceState, startAction } from './maintenance.ts';
 import { adoptEnvironment, candidate, checkThresholds, describeThresholds, saveThresholds, savedThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { authLocked, authProblem, envHas, withConfig } from './config.ts';
 import { type HaAction, haActionFor, haAllows, pinnedEntities } from '../shared/ha.ts';
@@ -1712,6 +1713,29 @@ app.post('/api/wake/:name', async (c) => {
   recordAudit(who(c), 'wake', name);
   return c.json({ ok: true });
 });
+
+// Maintenance (fork): updates on the other machines through the n8n gate.
+app.get('/api/maintenance', (c) => c.json({ enabled: maintenanceEnabled(), targets: MAINT_TARGETS, actions: MAINT_ACTIONS, state: maintenanceState() }));
+app.post('/api/maintenance/:target/:action', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (!maintenanceEnabled()) return c.json({ error: 'Maintenance is not set up (PB_WARTUNG_URL, PB_WARTUNG_TOKEN)' }, 400);
+  const target = c.req.param('target') as MaintTarget;
+  const action = c.req.param('action');
+  if (!MAINT_TARGETS.includes(target) || !MAINT_ACTIONS[target].includes(action)) return c.json({ error: 'Not allowed' }, 400);
+  recordAudit(who(c), `maintenance.${action}`, target);
+  if (action === 'status') {
+    await checkTarget(target);
+    hub.refreshAlerts();
+    return c.json({ ok: true, state: maintenanceState() });
+  }
+  if (!startAction(target, action, () => hub.refreshAlerts())) return c.json({ error: 'Something is already running there' }, 409);
+  return c.json({ ok: true, state: maintenanceState() });
+});
+if (maintenanceEnabled() && !config.demo) {
+  const sweep = () => void checkAll().then(() => hub.refreshAlerts());
+  setTimeout(sweep, 60_000);
+  setInterval(sweep, 6 * 60 * 60_000);
+}
 
 // ---------- Integration setup from the UI ----------
 // Saving and testing need sign-in (when it's on) and the action header, like

@@ -15804,3 +15804,17 @@ a.lib-title:hover {
     row-gap: 18px;
   }
 }
+
+/* ---------- Maintenance (fork) ---------- */
+.maint-body { display: grid; gap: 8px; }
+.maint-line { margin: 0; }
+.maint-meta { opacity: 0.7; font-size: 0.9em; margin: 0; }
+.maint-reboot { color: var(--warn); }
+.maint-list { margin: 0; padding-left: 18px; }
+.maint-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.maint-job { border-left: 3px solid var(--line); padding: 4px 10px; }
+.maint-job.is-running { border-color: var(--warn); }
+.maint-job.is-ok { border-color: var(--ok); }
+.maint-job.is-fail { border-color: var(--crit); }
+.maint-out { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 14em; overflow: auto; margin: 6px 0 0; font-size: 0.85em; }
+.maint-fail { color: var(--crit); }

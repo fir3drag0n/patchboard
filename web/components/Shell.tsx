@@ -44,6 +44,7 @@ const NAV = [
   { to: '/library', label: 'Library', desktop: true },
   { to: '/requests', label: 'Requests', desktop: true },
   { to: '/blocking', label: 'Ad blocking', desktop: true },
+  { to: '/maintenance', label: 'Maintenance', desktop: true },
 ];
 
 // "g" then a letter, as in Gmail and GitHub.
@@ -60,7 +61,7 @@ const GO: Record<string, [string, string]> = {
 
 // Pages for whoever runs the server. A household device doesn't see them;
 // it does see Server, which only shows how things stand.
-const ADMIN = ['/stacks', '/logs', '/apps', '/settings', '/c', '/downloads', '/library', '/requests', '/media', '/blocking'];
+const ADMIN = ['/maintenance', '/stacks', '/logs', '/apps', '/settings', '/c', '/downloads', '/library', '/requests', '/media', '/blocking'];
 export const adminPage = (path: string) => ADMIN.some((a) => path === a || path.startsWith(`${a}/`));
 
 const isTyping = (el: EventTarget | null) =>
@@ -202,7 +203,7 @@ export function Shell() {
     const p = location.pathname;
     // A container page uses its app's name, as its heading does.
     const ctr = p.startsWith('/c/') ? decodeURIComponent(p.slice(3)) : '';
-    const page = p === '/' || p.startsWith('/b/') ? '' : ctr ? (serviceFor(snap, ctr)?.name ?? ctr) : p.startsWith('/logs') ? 'Logs' : ({ '/server': 'Server', '/stacks': 'Stacks', '/reading': 'Reading', '/upcoming': 'Upcoming', '/weather': 'Weather', '/apps': 'Apps', '/settings': 'Settings' } as Record<string, string>)[p];
+    const page = p === '/' || p.startsWith('/b/') ? '' : ctr ? (serviceFor(snap, ctr)?.name ?? ctr) : p.startsWith('/logs') ? 'Logs' : ({ '/server': 'Server', '/stacks': 'Stacks', '/reading': 'Reading', '/upcoming': 'Upcoming', '/weather': 'Weather', '/apps': 'Apps', '/settings': 'Settings', '/maintenance': 'Maintenance' } as Record<string, string>)[p];
     if (page !== undefined) setPageName(page);
   }, [location.pathname, !!snap]);
 
