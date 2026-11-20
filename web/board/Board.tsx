@@ -1250,8 +1250,9 @@ function HostVitals({ host, nav }: { host: string; nav: ReactNode }) {
             <span className="vw-label">{t('CPU')}</span>
             <Meter label={`${host} CPU`} value={h.cpuPct} level={h.cpuPct >= 90 ? 'crit' : h.cpuPct >= 75 ? 'warn' : 'ok'} />
           </Link>
-          <Link to={`/server?host=${encodeURIComponent(host)}`} className="vw" aria-label={`Memory in use ${size(h.memUsed)}`}>
-            <Roll className="vw-num" value={size(h.memUsed)} />
+          {/* Beszel's summary gives memory only as a percentage; bytes when a source has them. */}
+          <Link to={`/server?host=${encodeURIComponent(host)}`} className="vw" aria-label={`Memory in use ${h.memUsed ? size(h.memUsed) : pct(h.memPct)}`}>
+            <Roll className="vw-num" value={h.memUsed ? size(h.memUsed) : pct(h.memPct)} />
             <span className="vw-label">{t('Memory in use')}</span>
             <Meter label={`${host} memory`} value={h.memPct} level={h.memPct >= 90 ? 'crit' : h.memPct >= 75 ? 'warn' : 'ok'} />
           </Link>
