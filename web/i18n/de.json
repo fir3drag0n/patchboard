@@ -1292,5 +1292,12 @@
  "{n} containers": "{n} Container",
  "{name} has updates: {what}": "{name}: Updates verfügbar ({what})",
  "Mailcow update available: {version}": "Mailcow-Update verfügbar: {version}",
- "{name} needs a restart": "{name} braucht einen Neustart"
+ "{name} needs a restart": "{name} braucht einen Neustart",
+ "Previous server": "Vorheriger Server",
+ "Next server": "Nächster Server",
+ "No numbers from Beszel for {name}.": "Keine Werte von Beszel für {name}.",
+ "This server": "Dieser Server",
+ "Not answering": "Antwortet nicht",
+ "Containers": "Container",
+ "Every Mailcow container and the mail queue join the Uptime widget. A stopped container, or a queue past MAILCOW_QUEUE_MAX, shows in Needs attention.": "Alle Mailcow-Container und die Mail-Warteschlange kommen ins Uptime-Widget. Ein gestoppter Container oder eine Warteschlange über MAILCOW_QUEUE_MAX erscheint unter „Needs attention“."
 }

@@ -6674,6 +6674,18 @@ a.vw:hover {
   display: flex;
   margin: 4px 0 14px;
 }
+/* Fork: the tabs, and on the right two arrows that step through the machines. */
+.server-hosts-bar { display: flex; align-items: center; gap: 8px; }
+.server-hosts-bar .server-hosts { flex: 1 1 auto; min-width: 0; overflow-x: auto; }
+.server-hosts-step { display: flex; gap: 4px; margin: 4px 0 14px; flex: none; }
+.server-hosts-step .button, .vw-step { min-width: 36px; font-size: 1.2em; line-height: 1; padding: 4px 10px; }
+/* Fork: the home Server widget steps through the machines. */
+.vw-nav { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.vw-host { font-weight: 600; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vw-dots { display: flex; gap: 4px; }
+.vw-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.vw-dots i.is-on { background: var(--ok); }
+.vw-none { margin: 4px 0; }
 
 /* ---------- Weather widget ---------- */
 

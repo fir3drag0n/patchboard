@@ -48,7 +48,7 @@ import { CountdownWidget, MarketsWidget, SkyWidget } from './Kiosk.tsx';
 import { t } from '../lib/i18n.ts';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
-import type { FrigateData, NutData, Service, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
+import type { DockerData, FrigateData, GlancesData, NutData, Service, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
 import { sourceOf, WIDGET_SOURCES } from '../../shared/feeds.ts';
 import { integrationOf } from '../lib/connect.ts';
 import { headlineUps, upsLabel, upsLevel } from '../../shared/ups.ts';
@@ -1188,7 +1188,93 @@ function PickField({ label, hint, names, value, onChange }: { label: string; hin
   );
 }
 
+// Fork: with other Docker hosts the Server widget steps through every
+// machine, one every 15 seconds; the arrows step by hand and restart the wait.
+const NORM = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+const ROTATE_MS = 15_000;
+
 export function Vitals({ compact = false }: { compact?: boolean }) {
+  const { snap } = useStore();
+  const { data: docker } = useSource<DockerData>('docker');
+  const others = (docker?.hosts ?? []).map((h) => h.name);
+  const n = others.length + 1;
+  const [idx, setIdx] = useState(0);
+  const [restart, setRestart] = useState(0);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (n < 2 || paused) return;
+    const id = setInterval(() => setIdx((i) => (i + 1) % n), ROTATE_MS);
+    return () => clearInterval(id);
+  }, [n, restart, paused]);
+  if (n < 2) return <LocalVitals compact={compact} />;
+  const i = idx % n;
+  const host = i === 0 ? null : others[i - 1];
+  const localName = (snap?.sources.unraid?.data as { name?: string } | null | undefined)?.name ?? t('This server');
+  const step = (d: number) => {
+    setIdx((x) => (x + d + n) % n);
+    setRestart((r) => r + 1);
+  };
+  const nav = (
+    <div className="vw-nav">
+      <button type="button" className="button button-quiet vw-step" aria-label={t('Previous server')} onClick={() => step(-1)}>‹</button>
+      <span className="vw-host" aria-live="polite">{host ?? localName}</span>
+      <span className="vw-dots" aria-hidden>{Array.from({ length: n }, (_, k) => <i key={k} className={k === i ? 'is-on' : ''} />)}</span>
+      <button type="button" className="button button-quiet vw-step" aria-label={t('Next server')} onClick={() => step(1)}>›</button>
+    </div>
+  );
+  return (
+    <div className="vw-rotor" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)}>
+      {host ? <HostVitals host={host} nav={nav} /> : <LocalVitals compact={compact} nav={nav} />}
+    </div>
+  );
+}
+
+/** Another machine's numbers, from Beszel. */
+function HostVitals({ host, nav }: { host: string; nav: ReactNode }) {
+  const { snap } = useStore();
+  const limits = useLimits();
+  const hosts = (['beszel', 'glances'] as const).flatMap((id) => (snap?.sources[id]?.data as GlancesData | null | undefined)?.hosts ?? []);
+  const h = hosts.find((x) => NORM(x.name) === NORM(host));
+  const disk = h?.disks[0];
+  return (
+    <Section title="Server" action={{ label: 'Details', to: `/server?host=${encodeURIComponent(host)}` }} className="vitals-widget">
+      {nav}
+      {!h ? (
+        <p className="vw-none">{t('No numbers from Beszel for {name}.', { name: host })}</p>
+      ) : !h.ok ? (
+        <p className="vw-none warn-text">{t('Not answering')}</p>
+      ) : (
+        <div className="vw-grid">
+          <Link to={`/server?host=${encodeURIComponent(host)}`} className="vw" aria-label={`CPU ${pct(h.cpuPct)}`}>
+            <Roll className="vw-num" value={pct(h.cpuPct)} />
+            <span className="vw-label">{t('CPU')}</span>
+            <Meter label={`${host} CPU`} value={h.cpuPct} level={h.cpuPct >= 90 ? 'crit' : h.cpuPct >= 75 ? 'warn' : 'ok'} />
+          </Link>
+          <Link to={`/server?host=${encodeURIComponent(host)}`} className="vw" aria-label={`Memory in use ${size(h.memUsed)}`}>
+            <Roll className="vw-num" value={size(h.memUsed)} />
+            <span className="vw-label">{t('Memory in use')}</span>
+            <Meter label={`${host} memory`} value={h.memPct} level={h.memPct >= 90 ? 'crit' : h.memPct >= 75 ? 'warn' : 'ok'} />
+          </Link>
+          {disk && (
+            <Link to={`/server?host=${encodeURIComponent(host)}`} className="vw" aria-label={`Storage ${Math.round(disk.pct)}% full`}>
+              <Roll className="vw-num" value={`${Math.round(disk.pct)}%`} />
+              <span className="vw-label">{t('Storage')}</span>
+              <Meter label={`${host} storage used`} value={disk.pct} level={storageLevel(disk.pct, limits)} />
+            </Link>
+          )}
+          {h.uptime && (
+            <div className="vw">
+              <Roll className="vw-num" value={h.uptime} />
+              <span className="vw-label">{t('Uptime')}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function LocalVitals({ compact = false, nav }: { compact?: boolean; nav?: ReactNode }) {
   const limits = useLimits();
   const { data: sys } = useSource<SystemData>('system');
   const { data: nas } = useSource<TruenasData>('truenas');
@@ -1202,6 +1288,7 @@ export function Vitals({ compact = false }: { compact?: boolean }) {
   const used = m ? Math.max(0, m.total - m.available - m.arc) : 0;
   return (
     <Section title="Server" action={{ label: 'Details', to: '/server' }} className="vitals-widget">
+      {nav}
       <div className="vw-grid">
         <Link to="/server#cpu" className="vw" title="CPU by hour, and what's using it" aria-label={`CPU ${pct(sys.cpuPct)}`}>
           <Roll className="vw-num" value={pct(sys.cpuPct)} />

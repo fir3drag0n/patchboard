@@ -17,6 +17,7 @@ import { ago, agoLong, duration, pct, plural, shortDate, size, speed, temp, upti
 import { storageLevel, useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { locale } from '../lib/region.ts';
+import { t } from '../lib/i18n.ts';
 
 const DAY = 86_400_000;
 
@@ -67,13 +68,23 @@ export function Server() {
   const host = others.includes(params.get('host') ?? '') ? params.get('host')! : null;
   const nasSource = NAS_SOURCES.map((id) => snap.sources[id]).find(Boolean);
   const localName = (nasSource?.data as NasSystem | null)?.name ?? nas?.hostname ?? 'This server';
+  // Fork: arrows on the right step through the machines, round and round.
+  const all = [null, ...others];
+  const go = (h: string | null) => setParams(h ? { host: h } : {});
+  const stepHost = (d: number) => go(all[(all.indexOf(host) + d + all.length) % all.length]);
   const picker = others.length > 0 && (
-    <div className="seg server-hosts" role="tablist" aria-label="Server">
-      {[null, ...others].map((h) => (
-        <button key={h ?? ''} type="button" role="tab" aria-selected={host === h} tabIndex={host === h ? 0 : -1} onClick={() => setParams(h ? { host: h } : {})}>
-          {h ?? localName}
-        </button>
-      ))}
+    <div className="server-hosts-bar">
+      <div className="seg server-hosts" role="tablist" aria-label="Server">
+        {all.map((h) => (
+          <button key={h ?? ''} type="button" role="tab" aria-selected={host === h} tabIndex={host === h ? 0 : -1} onClick={() => go(h)}>
+            {h ?? localName}
+          </button>
+        ))}
+      </div>
+      <div className="server-hosts-step">
+        <button type="button" className="button button-quiet" aria-label={t('Previous server')} onClick={() => stepHost(-1)}>‹</button>
+        <button type="button" className="button button-quiet" aria-label={t('Next server')} onClick={() => stepHost(1)}>›</button>
+      </div>
     </div>
   );
   if (host) return <OtherServer host={host} picker={picker} docker={docker} now={now} />;
