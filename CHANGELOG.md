@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- **Ignore a container you stopped on purpose:** Needs attention and the
+  container's page get an Ignore button. It stays quiet until the
+  container runs again, so a later crash still shows.
+- **Mailcow:** its containers and the mail queue join the Uptime widget. A
+  stopped container, or a queue past the limit you set (20 by default),
+  shows in Needs attention.
+- **Pull to refresh in a phone browser,** not only in the installed app.
+- **Fixes:** Reading shows in the navigation only when Miniflux is
+  connected. A locally built image on another Docker host gets the right
+  icon.
+
+Thanks to fir3drag0n, whose fork these come from.
+
 ## 1.17.0 (2026-11-18)
 
 - **Every app in one place:**

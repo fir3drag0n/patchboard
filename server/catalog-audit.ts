@@ -45,7 +45,8 @@ function titleCase(s: string): string {
 export function guessFromImage(image: string, containerName: string): { name: string; icon: string } {
   const repo = image.replace(/@sha256:.*/, '').replace(/:[^/]+$/, '').split('/').pop() ?? image;
   // Locally built images are named project-service; the container name reads better.
-  const base = /^[a-z0-9]+(-[a-z0-9]+)+$/.test(repo) && !image.includes('/') ? containerName : repo;
+  // A container on another Docker host is named "app@host"; the host is no part of the app.
+  const base = /^[a-z0-9]+(-[a-z0-9]+)+$/.test(repo) && !image.includes('/') ? containerName.replace(/@[^@]*$/, '') : repo;
   const known = KNOWN[base] ?? KNOWN[repo];
   if (known) return { name: known[0], icon: `${known[1]}.png` };
   return { name: titleCase(base.replace(/-web$|-frontend$|-app$/, '')), icon: `${base.replace(/-web$|-frontend$/, '')}.png` };

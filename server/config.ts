@@ -308,6 +308,7 @@ function build(str: Lookup) {
     syncthing: str('SYNCTHING_URL') && str('SYNCTHING_KEY') ? { url: trimSlash(str('SYNCTHING_URL')!), key: str('SYNCTHING_KEY')!, verifyTls: str('SYNCTHING_VERIFY_TLS') === '1' } : undefined,
     gatus: str('GATUS_URL') ? { url: trimSlash(str('GATUS_URL')!) } : undefined,
     healthchecks: str('HEALTHCHECKS_KEY') ? { url: trimSlash(str('HEALTHCHECKS_URL') ?? 'https://healthchecks.io'), key: str('HEALTHCHECKS_KEY')! } : undefined,
+    mailcow: pair('MAILCOW_URL', 'MAILCOW_KEY') ? { ...pair('MAILCOW_URL', 'MAILCOW_KEY')!, queueMax: Number(str('MAILCOW_QUEUE_MAX') ?? 20) || 20 } : undefined,
     beszel:
       str('BESZEL_URL') && str('BESZEL_USERNAME') && str('BESZEL_PASSWORD')
         ? { url: trimSlash(str('BESZEL_URL')!), username: str('BESZEL_USERNAME')!, password: str('BESZEL_PASSWORD')! }

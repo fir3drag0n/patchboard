@@ -29,7 +29,7 @@ import type {
 } from '../../shared/types.ts';
 import { HealthStrip } from '../components/Squares.tsx';
 import { copyText } from '../lib/copy.ts';
-import { type Action, ContainerActions, VERB } from '../components/Actions.tsx';
+import { type Action, ContainerActions, IgnoreButton, VERB } from '../components/Actions.tsx';
 import { UpdateButton, UpdateNotice, UpdatePanel, UpdateUndo, useUpdateJob } from '../components/Updater.tsx';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Icon, Ident, Section } from '../components/ui.tsx';
@@ -248,8 +248,9 @@ export function ContainerPage() {
                 // The button you pressed is about to be swapped for another: hold focus on the state line.
                 document.getElementById('ctr-state')?.focus();
               }} locked={upd.job?.status === 'running' || (!!pending && !pending.stuck)} />;
+            const ignore = !snap.readOnly && !running && !svc?.expectStopped && <IgnoreButton key="ignore" name={name} ignored={(snap.ignored ?? []).includes(name)} />;
             // In reading and tab order too: a stopped container leads with Start.
-            return running ? [update, actions] : [actions, update];
+            return running ? [update, actions] : [actions, ignore, update];
           })()}
         </div>
       </div>

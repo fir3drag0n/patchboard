@@ -52,6 +52,10 @@ as a card on this device, without changing its saved setting. Home always
 keeps it; another board, say one just for media, can remove it, and its
 status line then leads back to Home's list.
 
+A container you stopped on purpose gets **Ignore** beside it, and its page
+has the same button. It stays out of Needs attention until it runs again,
+so a later crash still shows.
+
 ## Pages
 
 **Server:** pools, datasets, backups, disks, CPU by hour, and when the pool

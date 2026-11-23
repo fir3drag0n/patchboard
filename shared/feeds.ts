@@ -18,7 +18,7 @@ export const WIDGET_SOURCES: Partial<Record<WidgetType, string[]>> = {
   // Only once Home Assistant reports a printer; see widgetReady.
   printer: ['homeassistant'],
   car: ['tessie'],
-  uptime: ['uptimekuma', 'gatus', 'healthchecks'],
+  uptime: ['uptimekuma', 'gatus', 'healthchecks', 'mailcow'],
   dns: ['pihole', 'adguard'],
   speed: ['speedtest'],
   photos: ['immich'],
@@ -62,6 +62,7 @@ export const PAGE_SOURCES: Record<string, string[]> = {
   '/requests': ['overseerr'],
   '/media': ['tautulli', 'jellyfin', 'emby'],
   '/blocking': ['pihole', 'adguard'],
+  '/reading': ['miniflux'],
 };
 
 /** Integrations that report under another source's name: Plex is read through Tautulli's place. */

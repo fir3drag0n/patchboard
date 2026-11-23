@@ -287,7 +287,7 @@ function Beats({ m }: { m: KumaMonitor }) {
 }
 
 /** Uptime Kuma, Gatus and Healthchecks.io in one list; a link out only when there's one of them. */
-const MONITOR_SOURCES = ['uptimekuma', 'gatus', 'healthchecks'] as const;
+const MONITOR_SOURCES = ['uptimekuma', 'gatus', 'healthchecks', 'mailcow'] as const;
 
 export function UptimeWidget({ now }: { now: number }) {
   const { snap } = useStore();

@@ -24,6 +24,7 @@ export type SourceId =
   | 'uptimekuma'
   | 'gatus'
   | 'healthchecks'
+  | 'mailcow'
   | 'beszel'
   | 'syncthing'
   | 'tracearr'
@@ -1598,6 +1599,8 @@ export interface Snapshot {
   updates: Record<string, ImageUpdate>;
   /** READ_ONLY=1, or a household device: the UI hides every control that changes something. */
   readOnly: boolean;
+  /** Stopped containers left out of Needs attention until they run again. */
+  ignored?: string[];
   /** This browser is a household device: it views, and may switch pinned lights and scenes when `lights` is true. */
   household?: { id: string; name: string; lights: boolean } & DeviceView;
   /** Settings, Alerts thresholds, so meters turn amber and red where alerts do. */
@@ -1623,7 +1626,7 @@ export interface Snapshot {
 export type ServerEvent =
   | { type: 'source'; state: SourceState }
   | { type: 'sources'; sources: Snapshot['sources'] }
-  | { type: 'alerts'; alerts: Alert[] }
+  | { type: 'alerts'; alerts: Alert[]; ignored?: string[] }
   | { type: 'changes'; changes: ChangeEvent[] }
   | { type: 'updates'; updates: Record<string, ImageUpdate> }
   | { type: 'catalog'; catalog: Catalog }

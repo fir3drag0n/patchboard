@@ -95,3 +95,58 @@ export function healthchecksAdapter(): Adapter<UptimeKumaData> {
     },
   };
 }
+
+// Mailcow: GET /api/v1/get/status/containers and /api/v1/get/mailq/all with
+// a read-only key (X-API-Key), allowed only from the address Patchboard comes from.
+// Each container is a monitor; the mail queue is one more, down past queueMax.
+
+export interface MailcowContainer {
+  container?: string;
+  state?: string;
+  started_at?: string;
+}
+
+export function fromMailcow(containers: Record<string, MailcowContainer>, queue: unknown[], queueMax: number): KumaMonitor[] {
+  const out: KumaMonitor[] = Object.entries(containers)
+    .filter(([, c]) => c && typeof c === 'object' && c.container)
+    .map(([key, c]) => {
+      const up = c.state === 'running';
+      return {
+        id: `mailcow-${key}`,
+        name: `Mailcow ${(c.container ?? key).replace(/-mailcow$/, '')}`,
+        group: 'Mailcow',
+        status: up ? 'up' : 'down',
+        since: up ? Date.parse(c.started_at ?? '') || undefined : undefined,
+        msg: up ? undefined : `state ${c.state ?? 'unknown'}`,
+        beats: [],
+      } satisfies KumaMonitor;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const waiting = queue.length;
+  out.push({
+    id: 'mailcow-queue',
+    name: 'Mail queue',
+    group: 'Mailcow',
+    status: waiting > queueMax ? 'down' : 'up',
+    msg: waiting ? `${waiting} mail${waiting === 1 ? '' : 's'} waiting` : undefined,
+    beats: [],
+  });
+  return out;
+}
+
+export function mailcowAdapter(): Adapter<UptimeKumaData> {
+  const { url, key, queueMax } = config.mailcow!;
+  const headers = { 'X-API-Key': key };
+  return {
+    id: 'mailcow',
+    label: 'Mailcow',
+    intervalMs: 60 * SECOND,
+    async fetch() {
+      const [containers, queue] = await Promise.all([
+        getJson<Record<string, MailcowContainer>>(`${url}/api/v1/get/status/containers`, { headers }),
+        getJson<unknown[]>(`${url}/api/v1/get/mailq/all`, { headers }),
+      ]);
+      return { link: url, monitors: fromMailcow(containers ?? {}, Array.isArray(queue) ? queue : [], queueMax) };
+    },
+  };
+}

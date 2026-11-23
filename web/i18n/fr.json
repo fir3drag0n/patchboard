@@ -897,6 +897,7 @@
  "Yes": "Oui",
  "Your background, text and accent.": "Votre fond, votre texte et votre accent.",
  "Your cron jobs and backups join the Uptime widget. A job that misses its check-in shows in Needs attention.": "Vos tâches cron et sauvegardes rejoignent le widget Disponibilité. Une tâche qui manque son signal apparaît dans À traiter.",
+ "Every Mailcow container and the mail queue join the Uptime widget. A stopped container, or a queue longer than you allow, shows in Needs attention.": "Chaque conteneur Mailcow et la file d’attente des mails rejoignent le widget Disponibilité. Un conteneur arrêté, ou une file au-delà de votre limite, apparaît dans À traiter.",
  "Your icon shows on every device.": "Votre icône s'affiche sur tous les appareils.",
  "Your own domains, comma-separated, e.g. example.com. Links on private and Tailscale addresses are always checked.": "Vos propres domaines, séparés par des virgules, par ex. example.com. Les liens sur des adresses privées et Tailscale sont toujours vérifiés.",
  "Your reverse proxy signs people in and passes their name along.": "Votre proxy inverse connecte les gens et transmet leur nom.",

@@ -1326,6 +1326,15 @@ export function demoAdapters(): Adapter[] {
         { id: 'hc-photos', name: 'Photo sync', group: 'jobs', status: 'pending', beats: [] },
       ],
     })),
+    // Mailcow: the mail server's containers and its queue.
+    demo<UptimeKumaData>('mailcow', 'Mailcow', 60 * SECOND, () => ({
+      link: 'https://mail.example.com',
+      monitors: [
+        { id: 'mailcow-postfix', name: 'Mailcow postfix', group: 'Mailcow', status: 'up', beats: [] },
+        { id: 'mailcow-dovecot', name: 'Mailcow dovecot', group: 'Mailcow', status: 'up', beats: [] },
+        { id: 'mailcow-queue', name: 'Mail queue', group: 'Mailcow', status: 'up', msg: undefined, beats: [] },
+      ],
+    })),
     demo<ScrutinyData>('scrutiny', 'Scrutiny', 5 * MINUTE, () => {
       const T = 1e12;
       const at = Date.now() - 40 * MINUTE;

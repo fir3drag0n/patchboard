@@ -2,6 +2,7 @@
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
 import { useChartTip } from '../components/ChartTip.tsx';
+import { IgnoreButton } from '../components/Actions.tsx';
 import { HeaderServer } from '../components/HeaderServer.tsx';
 import { StreamRow } from '../components/StreamRow.tsx';
 import { HOME_ID } from '../../shared/board.ts';
@@ -426,6 +427,8 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
               ) : (
                 <div>{body}</div>
               )}
+              {/* A stopped container you switched off on purpose: one click and it stays quiet until it runs again. */}
+              {!snap?.readOnly && a.subject && /^ctr-(down|parked)-/.test(a.id) && <IgnoreButton name={a.subject} ignored={false} compact />}
             </li>
           );
         })}
