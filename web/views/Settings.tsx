@@ -41,20 +41,10 @@ import { CURRENCIES, currency, locale, money, num, REGIONS } from '../lib/region
 import { LANGUAGES, msg, t as tr, tn, tx } from '../lib/i18n.ts';
 import { copyText } from '../lib/copy.ts';
 import { Devices } from '../components/Devices.tsx';
+import { tabKeys } from '../lib/tabs.ts';
 
 type Tab = 'look' | 'home' | 'devices' | 'alerts' | 'connections' | 'activity';
 
-/** Tabs move with the arrow keys, Home and End, as tabs do everywhere else. */
-function tabKeys(e: React.KeyboardEvent<HTMLDivElement>) {
-  const tabs = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
-  const at = tabs.indexOf(document.activeElement as HTMLButtonElement);
-  if (at < 0) return;
-  const to = e.key === 'ArrowRight' ? (at + 1) % tabs.length : e.key === 'ArrowLeft' ? (at - 1 + tabs.length) % tabs.length : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : -1;
-  if (to < 0) return;
-  e.preventDefault();
-  tabs[to].focus();
-  tabs[to].click();
-}
 type Part = 'integrations' | 'access' | 'apps' | 'backup';
 const PARTS: [Part, string][] = [
   ['integrations', msg('Integrations')],

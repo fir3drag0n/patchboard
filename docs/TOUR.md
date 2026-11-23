@@ -62,6 +62,10 @@ so a later crash still shows.
 fills at this rate. On a short landscape screen, such as a tablet on the
 wall, the page packs into three columns and fits without scrolling. Open it
 from a household link and the tablet can look but not change anything.
+Each of your other Docker hosts gets a tab: its containers, stopped ones
+first, and with Beszel connected its CPU, memory, disks, CPU by hour and
+busiest containers. Unraid, Synology and QNAP show their volumes and disks
+here too.
 
 **Monitor:** the server on one full screen, built for a tablet on the wall.
 Live lines for CPU, memory and network; CPU and memory as a hundred squares

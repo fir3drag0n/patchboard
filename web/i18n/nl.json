@@ -550,7 +550,7 @@
  "Every catalog entry matches a container, and every running app is listed.": "Elke catalogusregel hoort bij een container, en elke actieve app staat erin.",
  "Every minute": "Elke minuut",
  "Every other device signs out. Locked out later? Set AUTH=none in the environment and restart.": "Je wordt op alle andere apparaten afgemeld. Kun je je later niet meer aanmelden? Stel AUTH=none in als omgevingsvariabele en herstart Patchboard.",
- "Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.": "Elk systeem dat Beszel bewaakt, verschijnt in de Hosts-widget met CPU, geheugen, schijf, netwerk en temperatuur. Een agent die geen gegevens meer verstuurt of een schijf boven je opslagdrempel verschijnt in Vraagt aandacht.",
+ "Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. Another Docker host with the same name gets CPU by hour, its busiest containers and its disks on its Server tab. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.": "Elk systeem dat Beszel bewaakt, verschijnt in de Hosts-widget met CPU, geheugen, schijf, netwerk en temperatuur. Een andere Docker-host met dezelfde naam toont CPU per uur, de drukste containers en de schijven op zijn Server-tabblad. Een agent die geen gegevens meer verstuurt of een schijf boven je opslagdrempel verschijnt in Vraagt aandacht.",
  "Every volume and drive in the Storage widget, with how full each volume is and each drive's health and temperature. A degraded or crashed volume, a failing drive, a full volume or a hot drive shows in Needs attention.": "Elk volume en elke schijf in de Opslag-widget, met vullingsgraad, schijfstatus en temperatuur. Een gedegradeerd of uitgevallen volume, defecte schijf, vol volume of te warme schijf verschijnt in Vraagt aandacht.",
  "Every volume and drive in the Storage widget, with how full each volume is and each drive's health and temperature. A full volume, a drive with abnormal health or a hot drive shows in Needs attention.": "Elk volume en elke schijf in de Opslag-widget, met vullingsgraad, schijfstatus en temperatuur. Een vol volume, schijf met afwijkende status of te warme schijf verschijnt in Vraagt aandacht.",
  "failed to sign in": "kon zich niet aanmelden",
@@ -1252,5 +1252,7 @@
  "Diun's webhook, with its token. Put it in Diun's DIUN_NOTIF_WEBHOOK_ENDPOINT:": "De webhook van Diun, met zijn token. Zet hem in DIUN_NOTIF_WEBHOOK_ENDPOINT van Diun:",
  "Diun's webhook, with its token": "De webhook van Diun, met zijn token",
  "Selected: copy it": "Geselecteerd: kopieer het",
- "This browser didn’t copy. Try again from another browser.": "Deze browser kopieerde niet. Probeer het in een andere browser."
+ "This browser didn’t copy. Try again from another browser.": "Deze browser kopieerde niet. Probeer het in een andere browser.",
+ "Containers": "Containers",
+ "This server": "Deze server"
 }

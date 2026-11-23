@@ -13,7 +13,7 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Running it anywhere
 
-- [ ] Unraid and TrueNAS app templates
+- [ ] Patchboard in the TrueNAS app catalog and Unraid's Community Applications
 - [ ] A Proxmox LXC script, and running from Node without Docker
 
 ### Polish

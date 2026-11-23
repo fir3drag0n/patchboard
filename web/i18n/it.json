@@ -550,7 +550,7 @@
  "Every catalog entry matches a container, and every running app is listed.": "Ogni voce del catalogo corrisponde a un container e ogni app attiva è elencata.",
  "Every minute": "Ogni minuto",
  "Every other device signs out. Locked out later? Set AUTH=none in the environment and restart.": "La sessione termina su tutti gli altri dispositivi. Se perdi l'accesso, imposta AUTH=none nell'ambiente e riavvia.",
- "Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.": "Ogni sistema seguito da Beszel entra nel widget Host: CPU, memoria, disco, rete e temperatura. Un sistema il cui agente tace, o un disco oltre le soglie di archiviazione, compare in Richiede attenzione.",
+ "Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. Another Docker host with the same name gets CPU by hour, its busiest containers and its disks on its Server tab. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.": "Ogni sistema seguito da Beszel entra nel widget Host: CPU, memoria, disco, rete e temperatura. Un altro host Docker con lo stesso nome mostra la CPU per ora, i container più attivi e i dischi nella sua scheda Server. Un sistema il cui agente tace, o un disco oltre le soglie di archiviazione, compare in Richiede attenzione.",
  "Every volume and drive in the Storage widget, with how full each volume is and each drive's health and temperature. A degraded or crashed volume, a failing drive, a full volume or a hot drive shows in Needs attention.": "Tutti i volumi e i dischi nel widget Archiviazione, con spazio occupato, stato e temperatura. Volumi degradati, non funzionanti o pieni e dischi guasti o troppo caldi compaiono in Richiede attenzione.",
  "Every volume and drive in the Storage widget, with how full each volume is and each drive's health and temperature. A full volume, a drive with abnormal health or a hot drive shows in Needs attention.": "Tutti i volumi e i dischi nel widget Archiviazione, con spazio occupato, stato e temperatura. Volumi pieni e dischi con problemi o troppo caldi compaiono in Richiede attenzione.",
  "failed to sign in": "non è riuscito ad accedere",
@@ -1252,5 +1252,7 @@
  "Diun's webhook, with its token. Put it in Diun's DIUN_NOTIF_WEBHOOK_ENDPOINT:": "Il webhook di Diun, con il suo token. Mettilo in DIUN_NOTIF_WEBHOOK_ENDPOINT di Diun:",
  "Diun's webhook, with its token": "Il webhook di Diun, con il suo token",
  "Selected: copy it": "Selezionato: copialo",
- "This browser didn’t copy. Try again from another browser.": "Questo browser non ha copiato. Riprova da un altro browser."
+ "This browser didn’t copy. Try again from another browser.": "Questo browser non ha copiato. Riprova da un altro browser.",
+ "Containers": "Container",
+ "This server": "Questo server"
 }

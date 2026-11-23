@@ -550,7 +550,7 @@
  "Every catalog entry matches a container, and every running app is listed.": "Cada entrada del catálogo coincide con un contenedor, y cada app en marcha está en la lista.",
  "Every minute": "Cada minuto",
  "Every other device signs out. Locked out later? Set AUTH=none in the environment and restart.": "Se cerrará la sesión en los demás dispositivos. ¿Pierdes el acceso después? Define AUTH=none en el entorno y reinicia.",
- "Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.": "Cada sistema que vigila Beszel se une al widget de Hosts: CPU, memoria, disco, red y temperatura. Un sistema cuyo agente deja de responder, o un disco que supera tus umbrales de almacenamiento, aparece en Requiere atención.",
+ "Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. Another Docker host with the same name gets CPU by hour, its busiest containers and its disks on its Server tab. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.": "Cada sistema que vigila Beszel se une al widget de Hosts: CPU, memoria, disco, red y temperatura. Otro host de Docker con el mismo nombre muestra la CPU por hora, sus contenedores más activos y sus discos en su pestaña de Servidor. Un sistema cuyo agente deja de responder, o un disco que supera tus umbrales de almacenamiento, aparece en Requiere atención.",
  "Every volume and drive in the Storage widget, with how full each volume is and each drive's health and temperature. A degraded or crashed volume, a failing drive, a full volume or a hot drive shows in Needs attention.": "Cada volumen y disco en el widget de Almacenamiento, con lo lleno que está cada volumen y la salud y temperatura de cada disco. Un volumen degradado o caído, un disco que falla, un volumen lleno o un disco caliente aparece en Requiere atención.",
  "Every volume and drive in the Storage widget, with how full each volume is and each drive's health and temperature. A full volume, a drive with abnormal health or a hot drive shows in Needs attention.": "Cada volumen y disco en el widget de Almacenamiento, con lo lleno que está cada volumen y la salud y temperatura de cada disco. Un volumen lleno, un disco con salud anómala o un disco caliente aparece en Requiere atención.",
  "failed to sign in": "no pudo iniciar sesión",
@@ -1252,5 +1252,7 @@
  "Diun's webhook, with its token. Put it in Diun's DIUN_NOTIF_WEBHOOK_ENDPOINT:": "El webhook de Diun, con su token. Ponlo en DIUN_NOTIF_WEBHOOK_ENDPOINT de Diun:",
  "Diun's webhook, with its token": "El webhook de Diun, con su token",
  "Selected: copy it": "Seleccionado: cópialo",
- "This browser didn’t copy. Try again from another browser.": "Este navegador no copió. Inténtalo desde otro navegador."
+ "This browser didn’t copy. Try again from another browser.": "Este navegador no copió. Inténtalo desde otro navegador.",
+ "Containers": "Contenedores",
+ "This server": "Este servidor"
 }

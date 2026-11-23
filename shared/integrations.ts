@@ -470,7 +470,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'beszel',
     name: 'Beszel',
-    adds: 'Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.',
+    adds: 'Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. Another Docker host with the same name gets CPU by hour, its busiest containers and its disks on its Server tab. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.',
     env: ['BESZEL_URL', 'BESZEL_USERNAME', 'BESZEL_PASSWORD'],
     where: 'A Beszel user that can see your systems; make one with the read-only role in Beszel’s user settings. The address is the hub, port 8090.',
     source: true,

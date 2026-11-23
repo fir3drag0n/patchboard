@@ -6592,6 +6592,93 @@ a.vw:hover {
   padding-top: 2px;
 }
 
+/* Server, storage on Unraid, Synology, QNAP or another host: a bar per volume. */
+.nas-vols {
+  display: grid;
+  gap: 16px;
+  margin: 4px 0 18px;
+}
+
+.nas-vol-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.nas-vol-title {
+  font-weight: 600;
+  color: var(--head);
+}
+
+.nas-vol-pct {
+  font: var(--display-weight) 26px/1 var(--f-display);
+  color: var(--head);
+}
+
+.nas-vol .meter {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.nas-vol .meter > span {
+  border-radius: 6px;
+}
+
+.nas-vol-words {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* Server, another host: its containers one per line, two columns where there's room. */
+.host-ctrs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  column-gap: 24px;
+}
+
+.host-ctrs li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.host-ctrs .ident {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.host-ctrs .ctr-status {
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* Server: a tab per Docker host, this server first. */
+.server-hosts-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+
+.server-hosts-bar .server-hosts {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+}
+
 /* ---------- Weather widget ---------- */
 
 .ww-now {

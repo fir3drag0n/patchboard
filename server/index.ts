@@ -34,7 +34,7 @@ import { immichAdapter } from './adapters/immich.ts';
 import { type GuestAction, proxmoxAdapter, proxmoxControl } from './adapters/proxmox.ts';
 import { scrutinyAdapter } from './adapters/scrutiny.ts';
 import { gatusAdapter, healthchecksAdapter, mailcowAdapter } from './adapters/monitors.ts';
-import { beszelAdapter } from './adapters/beszel.ts';
+import { beszelAdapter, beszelHostDetail } from './adapters/beszel.ts';
 import { syncthingAdapter } from './adapters/syncthing.ts';
 import { tracearrAdapter } from './adapters/tracearr.ts';
 import { glancesAdapter } from './adapters/glances.ts';
@@ -77,7 +77,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction, DEMO_PRINT_SVG } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction, demoHostDetail, DEMO_PRINT_SVG } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
@@ -2489,6 +2489,18 @@ app.get('/api/uptime', (c) => {
   const snap = hub.snapshot();
   const expect = new Set(snap.catalog.groups.flatMap((g) => g.services.filter((s) => s.expectStopped && s.container).map((s) => s.container!)));
   return c.json(uptimeDays(hub.containers(), days, expect));
+});
+
+// Another Docker host's CPU by hour, busiest containers and disks, from Beszel (Server page, ?host=).
+app.get('/api/hosts/:name/beszel', async (c) => {
+  const name = c.req.param('name');
+  if (!NAME.test(name)) return c.json({ error: 'Bad host name' }, 400);
+  try {
+    const detail = config.demo ? demoHostDetail(name) : await beszelHostDetail(name);
+    return detail ? c.json(detail) : c.json({ error: 'Beszel has no system by this name' }, 404);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
 });
 
 // Time series for charts: /api/history?key=cpu&key=ctr.mem:plex&hours=24

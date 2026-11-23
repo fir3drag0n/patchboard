@@ -8,12 +8,19 @@
 - **Mailcow:** its containers and the mail queue join the Uptime widget. A
   stopped container, or a queue past the limit you set (20 by default),
   shows in Needs attention.
+- **A Server tab for each Docker host:** its containers, stopped ones
+  first, and with Beszel its CPU, memory, disks, CPU by hour and busiest
+  containers. Unraid, Synology and QNAP storage shows on Server too.
 - **Pull to refresh in a phone browser,** not only in the installed app.
+- **TrueNAS and Unraid templates:** paste examples/truenas.yml into
+  TrueNAS's Install via YAML, or add the Unraid template with the one
+  command in README.
 - **Fixes:** Reading shows in the navigation only when Miniflux is
   connected. A locally built image on another Docker host gets the right
   icon.
 
-Thanks to fir3drag0n, whose fork these come from.
+Ignore, Mailcow, the Server tabs, pull to refresh and both fixes come from
+fir3drag0n's fork. Thank you.
 
 ## 1.17.0 (2026-11-18)
 

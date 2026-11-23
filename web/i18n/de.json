@@ -550,7 +550,7 @@
  "Every catalog entry matches a container, and every running app is listed.": "Jeder Katalogeintrag ist einem Container zugeordnet und jede laufende App ist erfasst.",
  "Every minute": "Jede Minute",
  "Every other device signs out. Locked out later? Set AUTH=none in the environment and restart.": "Alle anderen Geräte werden abgemeldet. Falls du dich aussperrst, setze AUTH=none in der Umgebung und starte Patchboard neu.",
- "Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.": "Alle von Beszel überwachten Systeme erscheinen im Hosts-Widget mit CPU, Arbeitsspeicher, Laufwerk, Netzwerk und Temperatur. Meldet sich ein Agent nicht mehr oder überschreitet ein Laufwerk die Speichergrenzwerte, erscheint das unter Handlungsbedarf.",
+ "Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. Another Docker host with the same name gets CPU by hour, its busiest containers and its disks on its Server tab. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.": "Alle von Beszel überwachten Systeme erscheinen im Hosts-Widget mit CPU, Arbeitsspeicher, Laufwerk, Netzwerk und Temperatur. Ein anderer Docker-Host mit demselben Namen bekommt CPU nach Stunde, seine aktivsten Container und seine Laufwerke auf seinem Server-Tab. Meldet sich ein Agent nicht mehr oder überschreitet ein Laufwerk die Speichergrenzwerte, erscheint das unter Handlungsbedarf.",
  "Every volume and drive in the Storage widget, with how full each volume is and each drive's health and temperature. A degraded or crashed volume, a failing drive, a full volume or a hot drive shows in Needs attention.": "Das Speicherplatz-Widget zeigt alle Volumes und Laufwerke, den Füllstand der Volumes sowie Zustand und Temperatur der Laufwerke. Beeinträchtigte oder ausgefallene Volumes, defekte Laufwerke, volle Volumes und überhitzte Laufwerke erscheinen unter Handlungsbedarf.",
  "Every volume and drive in the Storage widget, with how full each volume is and each drive's health and temperature. A full volume, a drive with abnormal health or a hot drive shows in Needs attention.": "Das Speicherplatz-Widget zeigt alle Volumes und Laufwerke, den Füllstand der Volumes sowie Zustand und Temperatur der Laufwerke. Volle Volumes und Laufwerke mit auffälligem Zustand oder hoher Temperatur erscheinen unter Handlungsbedarf.",
  "failed to sign in": "konnte sich nicht anmelden",
@@ -1252,5 +1252,7 @@
  "Diun's webhook, with its token. Put it in Diun's DIUN_NOTIF_WEBHOOK_ENDPOINT:": "Diuns Webhook mit seinem Token. Trag ihn in Diuns DIUN_NOTIF_WEBHOOK_ENDPOINT ein:",
  "Diun's webhook, with its token": "Diuns Webhook mit seinem Token",
  "Selected: copy it": "Markiert: jetzt kopieren",
- "This browser didn’t copy. Try again from another browser.": "Dieser Browser hat nicht kopiert. Versuch es in einem anderen Browser."
+ "This browser didn’t copy. Try again from another browser.": "Dieser Browser hat nicht kopiert. Versuch es in einem anderen Browser.",
+ "Containers": "Container",
+ "This server": "Dieser Server"
 }

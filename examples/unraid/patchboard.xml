@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Patchboard</Name>
+  <Repository>ghcr.io/sourpatchdad/patchboard:latest</Repository>
+  <Registry>https://github.com/sourpatchdad/patchboard/pkgs/container/patchboard</Registry>
+  <Network>bridge</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/sourpatchdad/patchboard/issues</Support>
+  <Project>https://github.com/sourpatchdad/patchboard</Project>
+  <Overview>A start page and control center for your server. It shows what needs you, your containers, storage, downloads and media, and lets you act on them. Connect Unraid itself in Apps for the array, pools and disks. Sign-in is off until you turn on a password in Settings, Connections, Sign-in and keys.</Overview>
+  <Category>Tools: Status:Stable</Category>
+  <WebUI>http://[IP]:[PORT:3200]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/sourpatchdad/patchboard/main/examples/unraid/patchboard.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/sourpatchdad/patchboard/main/web/public/icon-512.png</Icon>
+  <Config Name="Web UI" Target="3200" Default="3200" Mode="tcp" Description="The port Patchboard answers on." Type="Port" Display="always" Required="true" Mask="false">3200</Config>
+  <Config Name="Data" Target="/data" Default="/mnt/user/appdata/patchboard" Mode="rw" Description="Settings, boards, history and the encrypted keys." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/patchboard</Config>
+  <Config Name="Docker socket" Target="/var/run/docker.sock" Default="/var/run/docker.sock" Mode="ro" Description="Reads your containers, their logs and their stats." Type="Path" Display="always" Required="true" Mask="false">/var/run/docker.sock</Config>
+  <Config Name="Backup logs" Target="/logs" Default="" Mode="ro" Description="A folder your backup scripts log to, for the Backups grid. docs/CONFIGURATION.md has the format." Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Runbook" Target="/docs" Default="" Mode="ro" Description="A folder with RUNBOOK.md, for runbook sections on container pages." Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+</Container>
