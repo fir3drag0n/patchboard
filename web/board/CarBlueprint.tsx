@@ -749,6 +749,9 @@ function Sheet({
               const sx = ex - 34;
               return (
                 <Hit label={`${tr('Charge port')}: ${tr(sheet.state)}${sheet.kw ? `, ${sheet.kw}` : ''}`} onOpen={() => setPick('port')}>
+                  {/* The label is what a finger aims at: a target the size of it, and one round the port itself. */}
+                  <rect className="bp-hit-area bp-callout-hit" x={sx - 1} y={ly - 9} width={ex - sx + 2} height="10" />
+                  <circle className="bp-hit-area" cx={cx} cy={cy} r="4" />
                   <circle className="bp-dot" cx={cx} cy={cy} r="0.8" />
                   <path className="bp-lead" d={`M${cx} ${cy} L${ex} ${ly} H${sx}`} />
                   {sheet.charging && <path className="bp-cable-flow" d={`M${sx} ${ly} H${ex} L${cx} ${cy}`} />}

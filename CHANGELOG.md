@@ -58,8 +58,8 @@
   view is your own drawing, so every angle it rests on is exact. Pictures
   takes front and rear three-quarter views as well now.
 - **Control the car from the drawing:** tap the doors, the glass, the
-  frunk, the trunk, a tire or the charge port on a view, or the Status and
-  Charging panels below it; point at one and
+  frunk, the trunk, a tire or the charge port (or its "Charging" label) on
+  a view, or the Status and Charging panels below it; point at one and
   a dashed outline names it, as a drawing marks a detail, and one that
   stands open stays marked. The part opens in the place of the live
   metrics, with what it can do. Hold to lock or unlock, open the frunk
