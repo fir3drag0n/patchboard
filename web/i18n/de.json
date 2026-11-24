@@ -1382,5 +1382,11 @@
  "Not measured yet": "Noch nicht gemessen",
  "Figures": "Werte",
  "Not enough history yet": "Noch nicht genug Verlauf",
- "Range, last 7 days": "Reichweite, letzte 7 Tage"
+ "Range, last 7 days": "Reichweite, letzte 7 Tage",
+ "Feels like": "Gefühlt",
+ "Humidity": "Luftfeuchte",
+ "No hourly forecast yet": "Noch keine Stundenvorhersage",
+ "until {time}": "bis {time}",
+ "UV": "UV",
+ "Wind": "Wind"
 }

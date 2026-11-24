@@ -1382,5 +1382,11 @@
  "Not measured yet": "Nog niet gemeten",
  "Figures": "Waarden",
  "Not enough history yet": "Nog niet genoeg geschiedenis",
- "Range, last 7 days": "Bereik, laatste 7 dagen"
+ "Range, last 7 days": "Bereik, laatste 7 dagen",
+ "Feels like": "Voelt als",
+ "Humidity": "Luchtvochtigheid",
+ "No hourly forecast yet": "Nog geen verwachting per uur",
+ "until {time}": "tot {time}",
+ "UV": "UV",
+ "Wind": "Wind"
 }

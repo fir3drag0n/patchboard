@@ -1382,5 +1382,11 @@
  "Not measured yet": "Non ancora misurata",
  "Figures": "Valori",
  "Not enough history yet": "Storico ancora insufficiente",
- "Range, last 7 days": "Autonomia, ultimi 7 giorni"
+ "Range, last 7 days": "Autonomia, ultimi 7 giorni",
+ "Feels like": "Percepita",
+ "Humidity": "Umidità",
+ "No hourly forecast yet": "Nessuna previsione oraria ancora",
+ "until {time}": "fino alle {time}",
+ "UV": "UV",
+ "Wind": "Vento"
 }

@@ -146,7 +146,11 @@ day-by-day list.
 
 ![Upcoming](screenshots/upcoming.webp)
 
-**Weather:** the next 24 hours, the week, sunrise and sunset, US alerts.
+**Weather:** the next 24 hours, the week, sunrise and sunset, US alerts. The
+weather widget's Display style makes it an office display: the
+conditions now, large, the next 24 hours as one chart of temperature over
+the chance of rain, and the week on one scale. "Wall: weather" starts a
+board with it for a TV or a wall tablet.
 
 ![Weather](screenshots/weather.webp)
 

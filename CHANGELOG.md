@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **The weather as an office display:** the weather widget's Display
+  style fills a screen with what it's doing now, large, the next 24 hours
+  as one chart of temperature over the chance of rain with night shaded and
+  sunrise and sunset marked, and the week with each day's low and high on
+  one scale. Show it alone on a TV or wall tablet, or start a board from
+  "Wall: weather".
+
 ## 1.19.0 (2026-11-24)
 
 - **Your car as a live engineering drawing:** the car widget's Dashboard

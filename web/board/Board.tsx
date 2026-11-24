@@ -62,6 +62,7 @@ import { useHistory, useJson } from '../lib/api.ts';
 import { holdBoardLook, useAppearance } from '../lib/appearance.ts';
 import { useLanding } from '../lib/landing.ts';
 import { deg, pct, size, uptime, weatherText } from '../lib/format.ts';
+import { WeatherDisplay } from './WeatherDisplay.tsx';
 import { checkFor, containerMap, serviceFor, statusLine } from '../lib/services.ts';
 import { storageLevel, useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
@@ -1088,7 +1089,13 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
     case 'json':
       return <JsonWidgetView board={board} id={w.id} json={w.config?.json} saved={saved} />;
     case 'weather':
-      return <WeatherWidget />;
+      return w.config?.style === 'display' ? (
+        <Section title="Weather" action={{ label: 'Forecast', to: '/weather' }} className="weather-widget weather-display">
+          <WeatherDisplay />
+        </Section>
+      ) : (
+        <WeatherWidget />
+      );
     case 'markets':
       return <MarketsWidget board={board} id={w.id} config={w.config} />;
     case 'sky':

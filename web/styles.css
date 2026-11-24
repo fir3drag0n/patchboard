@@ -15282,27 +15282,28 @@ html.wall-swipe .widget-page {
 /* The car's drawing sheet alone on a screen: a poster for a monitor or an
    e-ink frame. The sheet takes the whole screen, centred; its title gives
    way, unless it has a failure to report, and editing stays on the board. */
-.widget-page .widget-alone:has(.bp-stage) {
+.widget-page .widget-alone:has(.bp-stage, .wd-stage) {
   align-self: center;
 }
 
 /* A poster is one screen exactly: a TV remote or an e-ink frame can't scroll. */
-.widget-page:has(.bp-stage) {
+.widget-page:has(.bp-stage, .wd-stage) {
   height: calc(100dvh / var(--zoom));
   min-height: 0;
   overflow: hidden;
 }
 
-.widget-page .widget-alone:has(.bp-stage) > .section {
+.widget-page .widget-alone:has(.bp-stage, .wd-stage) > .section {
   margin: 0;
 }
 
-.widget-page .section:has(.bp-stage) .section-head:not(:has(.section-stale)),
+.widget-page .section:has(.bp-stage, .wd-stage) .section-head:not(:has(.section-stale)),
 .widget-page .car-views {
   display: none;
 }
 
-.widget-page .bp-stage {
+.widget-page .bp-stage,
+.widget-page .wd-stage {
   width: min(100%, calc((100dvh / var(--zoom) - 32px) * var(--ratio, 16 / 9)));
 }
 
@@ -16974,4 +16975,348 @@ a.lib-title:hover {
   .app-version {
     row-gap: 18px;
   }
+}
+
+/* The weather as an office display. One 16:9 sheet sized by its own width,
+   so every figure keeps its place from a board card to a 55-inch TV. */
+.wd-stage {
+  container-type: size;
+  width: min(100%, calc((100dvh / var(--zoom) - 300px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+}
+
+.wd {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 37% 1fr;
+  grid-template-rows: auto minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-areas: 'head head' 'now day' 'now week';
+  gap: 2.2cqw 3.2cqw;
+  padding: 2.6cqw 3cqw;
+  color: var(--head);
+  font-size: 1.5cqw;
+}
+
+.wd-head {
+  grid-area: head;
+  display: flex;
+  align-items: baseline;
+  gap: 1.6cqw;
+  padding-bottom: 1.2cqw;
+  border-bottom: 1px solid var(--line);
+}
+
+.wd-place {
+  font-size: 2.2cqw;
+  font-weight: 600;
+}
+
+.wd-date {
+  color: var(--ink-2);
+  font-size: 1.6cqw;
+}
+
+/* The clock stays left with the date: a TV's own overlays sit in its top right corner. */
+.wd-clock {
+  font-size: 2.2cqw;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.wd-now {
+  grid-area: now;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.wd-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.4cqw;
+  margin-top: 0.4cqw;
+}
+
+.wd-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wd-icon .wd-sun circle,
+.wd-icon .wd-sun path {
+  stroke: var(--warn);
+}
+
+.wd-icon .wd-flakes {
+  stroke-width: 3.2;
+}
+
+.wd-icon-now {
+  width: 11cqw;
+  height: 11cqw;
+  flex: none;
+  color: var(--ink-2);
+}
+
+.wd-temp {
+  font-size: 11cqw;
+  font-weight: 300;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.wd-cond {
+  font-size: 2.6cqw;
+  margin-top: 1cqw;
+}
+
+.wd-range {
+  font-size: 1.7cqw;
+  color: var(--ink-2);
+  margin-top: 0.3cqw;
+}
+
+.wd-alert {
+  align-self: flex-start;
+  margin-top: 1.2cqw;
+  padding: 0.5cqw 1cqw;
+  border-radius: 0.5cqw;
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  font-size: 1.4cqw;
+  font-weight: 600;
+}
+
+.wd-alert small {
+  font-weight: 400;
+  font-size: inherit;
+}
+
+.wd-alert.is-severe {
+  border-color: var(--crit, var(--warn));
+  color: var(--crit, var(--warn));
+}
+
+.wd-stats {
+  margin: auto 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.4cqw 1.6cqw;
+  padding-top: 1.6cqw;
+  border-top: 1px solid var(--line);
+}
+
+.wd-stats dt {
+  font-size: 1.1cqw;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wd-stats dd {
+  margin: 0.2cqw 0 0;
+  font-size: 1.9cqw;
+  font-variant-numeric: tabular-nums;
+}
+
+.wd-h {
+  margin: 0 0 0.8cqw;
+  font-size: 1.2cqw;
+  font-weight: 500;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wd-day {
+  grid-area: day;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.wd-chart {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 2.4cqw 1.6cqw 2.6cqw 1cqw;
+}
+
+.wd-chart svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.wd-night {
+  fill: var(--line-soft, var(--line));
+  opacity: 0.55;
+}
+
+.wd-rain {
+  fill: var(--accent);
+  opacity: 0.45;
+}
+
+.wd-line {
+  fill: none;
+  stroke: var(--head);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.wd-pt {
+  position: absolute;
+  transform: translate(-50%, -125%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wd-pt b {
+  font-size: 1.5cqw;
+  font-weight: 500;
+}
+
+.wd-pt i {
+  font-style: normal;
+  font-size: 1.05cqw;
+  color: var(--accent);
+}
+
+.wd-mark {
+  position: absolute;
+  top: -2.2cqw;
+  transform: translateX(-50%);
+  font-size: 1.05cqw;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.wd-mark::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 1.7cqw;
+  height: calc(100cqh);
+  max-height: 16cqw;
+  border-left: 1px dashed var(--ink-3);
+  opacity: 0.6;
+}
+
+.wd-hours {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2.4cqw;
+}
+
+.wd-hours span {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 1.15cqw;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.wd-week {
+  grid-area: week;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.wd-week ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  display: grid;
+  grid-auto-rows: 1fr;
+  min-height: 0;
+}
+
+.wd-week li {
+  display: grid;
+  grid-template-columns: 6cqw 2.6cqw 3.6cqw 3.4cqw 1fr 3.4cqw;
+  align-items: center;
+  gap: 1cqw;
+  border-top: 1px solid var(--line);
+  font-size: 1.5cqw;
+  font-variant-numeric: tabular-nums;
+}
+
+.wd-icon-day {
+  width: 2.6cqw;
+  height: 2.6cqw;
+  color: var(--ink-2);
+}
+
+.wd-wrain {
+  color: var(--accent);
+  font-size: 1.25cqw;
+}
+
+.wd-lo {
+  color: var(--ink-3);
+  text-align: right;
+}
+
+.wd-track {
+  position: relative;
+  height: 0.6cqw;
+  border-radius: 1cqw;
+  background: var(--line);
+}
+
+.wd-track b {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 1cqw;
+  background: linear-gradient(90deg, var(--accent), var(--warn));
+}
+
+.wd-empty {
+  color: var(--ink-3);
+}
+
+html[data-eink] .wd-rain {
+  fill: var(--head);
+  opacity: 0.35;
+}
+
+/* On e-ink, a hairline track and the day's range in solid ink; night a light tint. */
+html[data-eink] .wd-track {
+  background: none;
+  border-top: 1px solid var(--ink-3);
+  height: 0;
+  overflow: visible;
+}
+
+html[data-eink] .wd-track b {
+  top: -0.35cqw;
+  bottom: auto;
+  height: 0.7cqw;
+  background: var(--head);
+}
+
+html[data-eink] .wd-night {
+  fill: var(--ink-3);
+  opacity: 0.15;
+}
+
+html[data-eink] .wd-icon .wd-sun circle,
+html[data-eink] .wd-icon .wd-sun path {
+  stroke: currentColor;
 }
