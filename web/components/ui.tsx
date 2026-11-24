@@ -4,7 +4,7 @@ import { type ReactNode, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { SourceState } from '../../shared/types.ts';
 import { INTEGRATIONS } from '../../shared/integrations.ts';
-import { ago } from '../lib/format.ts';
+import { ago, agoLong } from '../lib/format.ts';
 import { useStore } from '../lib/store.tsx';
 import { iconUrl } from '../lib/services.ts';
 import { t } from '../lib/i18n.ts';
@@ -189,5 +189,16 @@ export function Meter({ value, level, label }: { value: number; level?: 'ok' | '
     <span className={`meter meter-${level ?? 'ok'}`} role="meter" aria-label={label} aria-valuenow={Math.round(value)} aria-valuemin={0} aria-valuemax={100}>
       <span style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
     </span>
+  );
+}
+
+/** A past time, short on screen ("40m") and in full for a screen reader ("40 minutes ago"). */
+export function Ago({ at, now, className }: { at: number | string; now?: number; className?: string }) {
+  const ms = typeof at === 'number' ? at : Date.parse(at);
+  return (
+    <time className={className ? `ago ${className}` : 'ago'} dateTime={Number.isFinite(ms) ? new Date(ms).toISOString() : undefined}>
+      <span aria-hidden>{ago(at, now)}</span>
+      <span className="sr-only">{agoLong(at, now)}</span>
+    </time>
   );
 }

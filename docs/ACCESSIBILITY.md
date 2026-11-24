@@ -37,6 +37,16 @@ building, against a temporary demo database; it never uses your saved boards or 
   purpose, including the unavailable-history state.
 - Afterward, the check confirms the saved setup is unchanged.
 
+## Contrast in every look
+
+`npm run test:contrast` opens 17 pages in all ten theme looks (five themes,
+dark and light), e-ink and color e-ink. It measures each visible text
+against the color painted behind it and fails under 4.5:1, or 3:1 for large
+text. Text over a picture, disabled controls and faded (stopped) apps are
+left out. Plain e-ink also fails on any colored text, fill or border.
+`themes.test.ts` checks the tokens themselves: text, the accent, every
+accent preset and the status colors on each neutral surface.
+
 A separate script, `npm run test:ui`, checks Home placement, full poster
 rows, Fit, keyboard containment, Escape, focus return, cancelled editor
 drafts, import cancellation and the skip link. Unit tests cover theme text
@@ -116,6 +126,12 @@ browser, OS, assistive technology and result:
 3. On Windows, turn on a real contrast theme. Check keyboard focus, selected
    tabs, disabled actions, warnings, graphs and dialogs. Chromium's emulation
    covers system-color rendering but not every OS/browser combination.
+
+Before the spoken walkthrough, the accessibility tree of every page was
+read through as a screen reader would announce it (2026-11-23): headings,
+group names, link names, form labels and times. Times read in full ("40
+minutes ago"), app groups and Ad blocking's Pause buttons are announced
+as groups, and every search field has a name.
 
 Chromium zoom, minimum-font and Firefox text-only zoom checks run in CI.
 A spoken screen-reader walkthrough and native Windows contrast-theme checks

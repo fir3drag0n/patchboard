@@ -94,9 +94,9 @@
   --ink-3: #626771;
   --head: #0b0c0e;
   --accent: #2563c9;
-  --ok: #1d7a45;
-  --warn: #9a5b00;
-  --crit: #c0362c;
+  --ok: #1c7643;
+  --warn: #965900;
+  --crit: #bd352b;
   --term-bg: #fbfbfc;
 
   --sq-up: color-mix(in srgb, var(--ink-3) 50%, var(--surface));
@@ -8852,6 +8852,11 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
   scrollbar-color: color-mix(in srgb, var(--ink-3) 55%, transparent) transparent;
 }
 
+/* A short time's spoken form stays inside its own row, even one that scrolls sideways. */
+.ago {
+  position: relative;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -13728,6 +13733,11 @@ html[data-eink] :is(.seg button[aria-pressed='true'], .seg button[aria-selected=
   color: #fff;
 }
 
+/* A count in a selected tab is white on that black too, not quiet gray. */
+html[data-eink] :is(.seg button[aria-pressed='true'], .seg button[aria-selected='true'], .chip[aria-pressed='true'], .chip[aria-selected='true']) .dlp-count {
+  color: inherit;
+}
+
 /* The Monitor on e-ink: paper, ink, and the waffles in solid black. */
 .monitor.tint-eink {
   --bg: #fff;
@@ -15097,6 +15107,11 @@ html[data-eink][data-eink-color] .led[data-state='ok'] {
     width: 100%;
     margin-left: 0;
   }
+}
+
+/* Blocking's Pause buttons: a group for screen readers, no box of its own. */
+.dlp-pause {
+  display: contents;
 }
 
 .dlp-count {

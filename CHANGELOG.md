@@ -15,6 +15,13 @@
 - **TrueNAS and Unraid templates:** paste examples/truenas.yml into
   TrueNAS's Install via YAML, or add the Unraid template with the one
   command in README.
+- **Easier to read in every theme:** light themes' warning, problem and
+  OK colors, and the Teal and Blue accents, are a shade darker so they
+  pass 4.5:1 on every surface. On e-ink, a count in a selected tab is no
+  longer gray on black. A new check measures every text in every theme.
+- **Screen readers:** times say "40 minutes ago" instead of "40m", app
+  groups and Ad blocking's Pause buttons are announced as groups, and the
+  Logs and settings-import fields have names.
 - **Fixes:** Reading shows in the navigation only when Miniflux is
   connected. A locally built image on another Docker host gets the right
   icon.

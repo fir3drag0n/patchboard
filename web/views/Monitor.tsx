@@ -111,6 +111,7 @@ export function Monitor() {
 
   return (
     <div className={`monitor tint-${tint}`}>
+      <h1 className="sr-only">{tr('Monitor')}</h1>
       <WallPages />
       <header className="mon-status">
         <Link to="/" className="mon-host" title="Back to Home">

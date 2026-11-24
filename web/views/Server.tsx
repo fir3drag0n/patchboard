@@ -11,9 +11,9 @@ import { useLanding } from '../lib/landing.ts';
 import type { BackupRun, BackupsData, DockerData, GlancesData, GlancesHost, NasSystem, Pool, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
 import { Spark, Split } from '../components/Spark.tsx';
 import { HourHeatmap } from '../components/Squares.tsx';
-import { Empty, Led, Meter, Section } from '../components/ui.tsx';
+import { Ago, Empty, Led, Meter, Section } from '../components/ui.tsx';
 import { useHistory } from '../lib/api.ts';
-import { ago, agoLong, duration, pct, plural, shortDate, size, speed, temp, uptime } from '../lib/format.ts';
+import { agoLong, duration, pct, plural, shortDate, size, speed, temp, uptime } from '../lib/format.ts';
 import { storageLevel, useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { locale } from '../lib/region.ts';
@@ -751,7 +751,7 @@ function NasAlerts({ nas, now }: { nas: TruenasData; now: number }) {
               <Led state={LEVEL_TONE[a.level] === 'crit' ? 'crit' : LEVEL_TONE[a.level] === 'warn' ? 'warn' : 'idle'} />
               <span className="nas-level mono">{a.level.toLowerCase()}</span>
               <span className="nas-text">{a.text}</span>
-              {a.at && <time>{ago(a.at, now)}</time>}
+              {a.at && <Ago at={a.at} now={now} />}
             </li>
           ))}
         </ul>

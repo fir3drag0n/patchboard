@@ -543,7 +543,7 @@ function Portability() {
         </button>
       </div>
       <div className="import-row">
-        <input className="field" placeholder={tr('Paste settings here')} value={text} onChange={(e) => setText(e.target.value)} />
+        <input className="field" placeholder={tr('Paste settings here')} aria-label={tr('Paste settings here')} value={text} onChange={(e) => setText(e.target.value)} />
         <button
           type="button"
           className="button button-quiet"

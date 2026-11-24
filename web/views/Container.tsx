@@ -32,7 +32,7 @@ import { copyText } from '../lib/copy.ts';
 import { type Action, ContainerActions, IgnoreButton, VERB } from '../components/Actions.tsx';
 import { UpdateButton, UpdateNotice, UpdatePanel, UpdateUndo, useUpdateJob } from '../components/Updater.tsx';
 import { Spark } from '../components/Spark.tsx';
-import { Empty, Icon, Ident, Section } from '../components/ui.tsx';
+import { Ago, Empty, Icon, Ident, Section } from '../components/ui.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
 import { ago, agoLong, pct, plural, shortDate, size, speed } from '../lib/format.ts';
 import { lineClass, logTime, useLogStream } from '../lib/logs.ts';
@@ -567,7 +567,7 @@ function History({ name, now }: { name: string; now: number }) {
         <li key={c.id} className={`change change-${c.kind.split('.')[1]} ${c.kind === 'container.stopped' && over ? 'is-over' : ''}`}>
           <div>
             <span className="change-text">{c.kind === 'container.action' ? (actionWord[c.detail ?? ''] ?? changeText[c.kind]) : c.kind === 'container.restarted' && c.detail === 'updated' ? 'Updated' : changeText[c.kind]}</span>
-            <time>{ago(c.at, now)}</time>
+            <Ago at={c.at} now={now} />
           </div>
         </li>
       ))}
