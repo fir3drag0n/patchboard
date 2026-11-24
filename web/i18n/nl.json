@@ -1331,5 +1331,7 @@
  "Vehicle status": "Voertuigstatus",
  "Voltage and current": "Spanning en stroom",
  "Which view is this?": "Welke weergave is dit?",
- "Your picture": "Je afbeelding"
+ "Your picture": "Je afbeelding",
+ "Show the {view} large": "{view} groot tonen",
+ "Side view": "Zijaanzicht"
 }

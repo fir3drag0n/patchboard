@@ -1331,5 +1331,7 @@
  "Vehicle status": "État du véhicule",
  "Voltage and current": "Tension et courant",
  "Which view is this?": "De quelle vue s’agit-il ?",
- "Your picture": "Votre image"
+ "Your picture": "Votre image",
+ "Show the {view} large": "Afficher la {view} en grand",
+ "Side view": "Vue de côté"
 }

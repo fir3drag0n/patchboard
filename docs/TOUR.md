@@ -179,7 +179,8 @@ whole card a live engineering drawing for a wall screen or an e-ink
 reader: the front, rear and top views across the top, the side view
 dimensioned in millimetres, the live charge, range, power and
 temperatures, and panels for status, charging, range and tires. Tap any
-of them for its detail, with the week's or the day's line. Settings,
+of them for its detail, with the week's or the day's line, or tap a small
+view to turn the car to it. Settings,
 Alerts sets when a tire counts as soft, or turns the warning off. Patchboard records each reading Tessie
 has, without waking the car, so the lines fill in from the day you
 set it up. Set the widget to One number for the battery, the range or the

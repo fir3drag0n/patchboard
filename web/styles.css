@@ -8410,6 +8410,12 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
   color: var(--ink-2);
 }
 
+/* A view is only looked at: taps go to the part drawn over it, and a
+   picture's uncropped edges never catch one meant for a view beside it. */
+.bp-view {
+  pointer-events: none;
+}
+
 /* A drawing on paper loses its paper here too. */
 .bp-img.is-drawing {
   filter: grayscale(1) contrast(1.35) brightness(1.18);
@@ -8421,9 +8427,8 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
   mix-blend-mode: screen;
 }
 
-/* The charging cable: a drawn line; while charging, dashes run along it
-   toward the car. Still for reduced motion and on e-ink. */
-.bp-cable-line,
+/* While charging, dashes run along the charge port's leader toward the
+   car. Still for reduced motion and on e-ink. */
 .bp-cable-flow {
   fill: none;
   stroke: var(--ink-2);
@@ -8444,13 +8449,26 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
   }
 }
 
+/* Turning the car: the view brought to the middle fades in. */
+.bp-turn {
+  animation: bp-turn 0.24s ease-out;
+}
+
+@keyframes bp-turn {
+  from {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .bp-cable-flow {
+  .bp-cable-flow,
+  .bp-turn {
     animation: none;
   }
 }
 
-html[data-eink] .bp-cable-flow {
+html[data-eink] .bp-cable-flow,
+html[data-eink] .bp-turn {
   animation: none;
 }
 
@@ -8516,6 +8534,13 @@ html[data-eink] :is(.bp-sheet text.is-soft, .bp-sheet tspan.is-soft, .bp-tire.is
   overflow: hidden;
 }
 
+/* The picture's own box, between the figures' gutters. */
+.car-photo-frame {
+  position: absolute;
+  top: 0;
+  overflow: hidden;
+}
+
 /* Placed inside the part's box, so only the part you chose shows. */
 .car-photo .car-photo-img {
   position: absolute;
@@ -8550,7 +8575,7 @@ html[data-eink] :is(.bp-sheet text.is-soft, .bp-sheet tspan.is-soft, .bp-tire.is
 
 /* Quiet marks over a picture: light figures, hairlines, a small dot. */
 .car-photo .car-num {
-  font-size: 4.6px;
+  font-size: 5.8px;
   font-weight: 400;
   paint-order: stroke;
   stroke: var(--raised);
@@ -8559,7 +8584,7 @@ html[data-eink] :is(.bp-sheet text.is-soft, .bp-sheet tspan.is-soft, .bp-tire.is
 }
 
 .car-photo :is(.car-pos, .car-unit) {
-  font-size: 2.6px;
+  font-size: 3.3px;
 }
 
 .car-photo .car-lead {

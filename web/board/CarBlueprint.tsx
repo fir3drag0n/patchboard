@@ -91,6 +91,7 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
   const pics = useJson<Record<string, CarPicture[]>>(`/api/car-pictures?r=${rev}`).data?.[sheet.vin] ?? [];
   const [editing, setEditing] = useState(false);
   const [detail, setDetail] = useState<Detail | null>(null);
+  const [big, setBig] = useState<CarView>('side');
   // Escape leaves a detail sheet, as Back does.
   useEffect(() => {
     if (!detail) return;
@@ -106,7 +107,7 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
         <DetailSheet sheet={sheet} detail={detail} onBack={() => setDetail(null)} />
       ) : (
         <>
-          <Sheet sheet={sheet} pics={pics} open={setDetail} />
+          <Sheet sheet={sheet} pics={pics} open={setDetail} big={big} turn={setBig} />
           {!sheet.ro && (
             <div className="car-views">
               <button type="button" className="text-button car-edit" onClick={() => setEditing(true)}>
@@ -225,11 +226,11 @@ function place(framed: Framed, slot: Box) {
 function ViewImage({ pic, framed, box, soft }: { pic: CarPicture | null; framed: Framed; box: Box; soft: Record<TirePos, boolean> }) {
   const { crop } = framed;
   return pic ? (
-    <svg x={box.x} y={box.y} width={box.w} height={box.h} viewBox={`${crop.x} ${crop.y} ${crop.w} ${crop.h}`} preserveAspectRatio="none">
+    <svg x={box.x} y={box.y} width={box.w} height={box.h} viewBox={`${crop.x} ${crop.y} ${crop.w} ${crop.h}`} preserveAspectRatio="none" className="bp-view">
       <image href={pic.src} x="0" y="0" width={framed.w} height={framed.h} className={`bp-img ${pic.drawing === false ? '' : 'is-drawing'}`} />
     </svg>
   ) : (
-    <svg x={box.x} y={box.y} width={box.w} height={box.h} viewBox={`${crop.x} ${crop.y} ${crop.w} ${crop.h}`} className="bp-drawn">
+    <svg x={box.x} y={box.y} width={box.w} height={box.h} viewBox={`${crop.x} ${crop.y} ${crop.w} ${crop.h}`} className="bp-view bp-drawn">
       <SideDrawing soft={soft} />
     </svg>
   );
@@ -289,7 +290,17 @@ const ICONS: Record<string, string> = {
 const W = 320;
 const H = 180;
 
-function Sheet({ sheet, pics, open }: { sheet: CarSheet; pics: CarPicture[]; open: (d: Detail) => void }) {
+/** One view of the car, ready to place: its picture (none for the drawn side), framing, tires and port. */
+interface View {
+  v: CarView;
+  pic: CarPicture | null;
+  framed: Framed | null;
+  at: CarPicture['at'];
+  port: [number, number] | null | undefined;
+  label: string;
+}
+
+function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPicture[]; open: (d: Detail) => void; big: CarView; turn: (v: CarView) => void }) {
   const id = useId().replace(/:/g, '');
   const byView = (v: CarView) => pics.find((p) => p.view === v) ?? null;
   const sidePic = byView('side') ?? pics.find((p) => !p.view) ?? null;
@@ -304,22 +315,30 @@ function Sheet({ sheet, pics, open }: { sheet: CarSheet; pics: CarPicture[]; ope
   const soft = Object.fromEntries(sheet.tires.map((t) => [t.pos, t.soft])) as Record<TirePos, boolean>;
   const tire = Object.fromEntries(sheet.tires.map((t) => [t.pos, t])) as Record<TirePos, TireReading>;
   const spec = specFor(sheet.model);
-  const hasTopRow = !!(frontPic || rearPic || topPic);
 
-  // The side view: large in the middle, higher up when there's no row of small views above it.
-  const sideSlot = hasTopRow ? { x: 108, y: 64, w: 176, h: 52 } : { x: 104, y: 30, w: 184, h: 84 };
-  const side = sideFramed ? place(sideFramed, sideSlot) : null;
-  const sideAt = sidePic ? sidePic.at : SIDE_TIRES;
-  const portXY = sidePic ? sidePic.port : SIDE_PORT;
-
-  // Small views across the top.
-  const smalls = [
-    ['front', frontPic, frontFramed, msg('Front view')],
-    ['rear', rearPic, rearFramed, msg('Rear view')],
-    ['top', topPic, topFramed, msg('Top view')],
-  ] as const;
-  const shown = smalls.filter(([, p]) => p);
+  // Every view there is. The side always is: your picture or the drawn one.
+  const views: View[] = [
+    { v: 'side', pic: sidePic, framed: sideFramed, at: sidePic ? sidePic.at : SIDE_TIRES, port: sidePic ? sidePic.port : SIDE_PORT, label: msg('Side view') },
+    ...(
+      [
+        ['front', frontPic, frontFramed, msg('Front view')],
+        ['rear', rearPic, rearFramed, msg('Rear view')],
+        ['top', topPic, topFramed, msg('Top view')],
+      ] as const
+    )
+      .filter(([, p]) => p)
+      .map(([v, p, framed, label]) => ({ v, pic: p, framed, at: p!.at, port: p!.port, label })),
+  ];
+  // The large view is the one you turned to, while it's there; the rest go across the top.
+  const large = views.find((x) => x.v === big) ?? views[0];
+  const shown = views.filter((x) => x !== large);
   const slotW = shown.length ? Math.min(66, 196 / shown.length) : 0;
+
+  // The large view: in the middle, higher up when there's no row of small views above it.
+  const mainSlot = shown.length ? { x: 108, y: 64, w: 176, h: 52 } : { x: 104, y: 30, w: 184, h: 84 };
+  const side = large.framed ? place(large.framed, mainSlot) : null;
+  const sideAt = large.at;
+  const portXY = large.port;
 
   const cols = 8;
   const rows = 6;
@@ -414,42 +433,61 @@ function Sheet({ sheet, pics, open }: { sheet: CarSheet; pics: CarPicture[]; ope
         );
       })}
 
-      {/* The small views across the top, each with its label; the top view carries the length. */}
-      {shown.map(([v, pic, framed, label], i) => {
-        if (!framed || !pic) return null;
+      {/* The small views across the top, each with its label; tap one to bring it to the middle.
+          A side or top view carries the length. */}
+      {shown.map(({ v, pic, framed, label }, i) => {
+        if (!framed) return null;
         const slot = { x: 104 + i * (slotW + 4), y: 18, w: slotW, h: 30 };
         const p = place(framed, slot);
         return (
           <g key={v}>
+            {/* The picture sits outside the button, so its uncropped edges don't count toward its size. */}
             <ViewImage pic={pic} framed={framed} box={p.box} soft={soft} />
-            {v === 'top' && spec && <Dimension x0={p.ink.x0} y0={14} x1={p.ink.x1} y1={14} text={dim(spec.length, locale())} />}
-            <text className="bp-label-u" x={p.box.x + p.box.w / 2} y="55" textAnchor="middle">
-              {tr(label)}
-            </text>
-            <line className="bp-rule" x1={p.box.x + p.box.w / 2 - 11} y1="56.4" x2={p.box.x + p.box.w / 2 + 11} y2="56.4" />
+            <Hit label={tr('Show the {view} large', { view: tr(label) })} onOpen={() => turn(v)}>
+              <rect className="bp-hit-area" x={slot.x} y={slot.y - 2} width={slot.w} height={slot.h + 12} />
+              {(v === 'top' || v === 'side') && spec && <Dimension x0={p.ink.x0} y0={14} x1={p.ink.x1} y1={14} text={dim(spec.length, locale())} />}
+              <text className="bp-label-u" x={p.box.x + p.box.w / 2} y="55" textAnchor="middle">
+                {tr(label)}
+              </text>
+              <line className="bp-rule" x1={p.box.x + p.box.w / 2 - 11} y1="56.4" x2={p.box.x + p.box.w / 2 + 11} y2="56.4" />
+            </Hit>
           </g>
         );
       })}
 
-      {/* The side view, dimensioned underneath and on its right. */}
-      {side && sideFramed && (
-        <>
-          <ViewImage pic={sidePic} framed={sideFramed} box={side.box} soft={soft} />
+      {/* The large view, dimensioned underneath and on its right: the side and top views along
+          their length, the side, front and rear views in height. */}
+      {side && large.framed && (
+        <g key={large.v} className="bp-turn">
+          <ViewImage pic={large.pic} framed={large.framed} box={side.box} soft={soft} />
           {spec &&
             (() => {
               const x0 = side.ink.x0;
               const x1 = side.ink.x1;
               const y = side.ink.y1 + 4.5;
               const len = x1 - x0;
-              const fl = sideAt.fl ? side.at(sideAt.fl)[0] : x0 + (len * (spec.front ?? spec.length * 0.18)) / spec.length;
-              const rl = sideAt.rl ? side.at(sideAt.rl)[0] : x0 + (len * ((spec.front ?? spec.length * 0.18) + spec.wheelbase)) / spec.length;
+              const along = large.v === 'side' || large.v === 'top';
+              const tall = large.v !== 'top';
+              const fx = sideAt.fl ?? sideAt.fr;
+              const rx = sideAt.rl ?? sideAt.rr;
+              const front = spec.front ?? spec.length * 0.18;
+              let fl = fx ? side.at(fx)[0] : x0 + (len * front) / spec.length;
+              let rl = rx ? side.at(rx)[0] : x0 + (len * (front + spec.wheelbase)) / spec.length;
+              // A picture drawn facing right: the rear overhang comes first.
+              const flipped = fl > rl;
+              if (flipped) [fl, rl] = [rl, fl];
+              const [first, last] = flipped ? [spec.rear, spec.front] : [spec.front, spec.rear];
               return (
                 <>
-                  {spec.front && <Dimension x0={x0} y0={y} x1={fl} y1={y} text={dim(spec.front, locale())} />}
-                  <Dimension x0={fl} y0={y} x1={rl} y1={y} text={dim(spec.wheelbase, locale())} />
-                  {spec.rear && <Dimension x0={rl} y0={y} x1={x1} y1={y} text={dim(spec.rear, locale())} />}
-                  <Dimension x0={x0} y0={y + 6} x1={x1} y1={y + 6} text={dim(spec.length, locale())} />
-                  <Dimension x0={x1 + 5} y0={side.ink.y0} x1={x1 + 5} y1={side.ink.y1} text={dim(spec.height, locale())} vertical />
+                  {along && (
+                    <>
+                      {first && <Dimension x0={x0} y0={y} x1={fl} y1={y} text={dim(first, locale())} />}
+                      <Dimension x0={fl} y0={y} x1={rl} y1={y} text={dim(spec.wheelbase, locale())} />
+                      {last && <Dimension x0={rl} y0={y} x1={x1} y1={y} text={dim(last, locale())} />}
+                      <Dimension x0={x0} y0={y + 6} x1={x1} y1={y + 6} text={dim(spec.length, locale())} />
+                    </>
+                  )}
+                  {tall && <Dimension x0={x1 + 5} y0={side.ink.y0} x1={x1 + 5} y1={side.ink.y1} text={dim(spec.height, locale())} vertical />}
                 </>
               );
             })()}
@@ -460,30 +498,32 @@ function Sheet({ sheet, pics, open }: { sheet: CarSheet; pics: CarPicture[]; ope
             const [cx, cy] = side.at(xy);
             return (
               <Hit key={t} label={`${tire[t].name} ${tire[t].value} ${sheet.unit}`} onOpen={() => open('tires')}>
-                <circle className={`bp-tire-ring ${tire[t].soft ? 'is-soft' : ''}`} cx={cx} cy={cy} r={side.box.h * 0.2} />
+                <circle className={`bp-tire-ring ${tire[t].soft ? 'is-soft' : ''}`} cx={cx} cy={cy} r={Math.min(side.box.h * 0.2, side.box.w * 0.06)} />
               </Hit>
             );
           })}
-          {/* The charge port, called out while it's plugged in. */}
+          {/* The charge port, called out while it's plugged in: the leader rises
+              up and back over the car, clear of the height dimension on the right. */}
           {sheet.plugged &&
             portXY &&
             (() => {
               const [cx, cy] = side.at(portXY);
-              const lx = Math.min(W - 40, cx + 10);
+              const ex = Math.max(side.box.x + 40, cx - 8);
               const ly = side.box.y - 1;
+              const sx = ex - 34;
               return (
                 <Hit label={`${tr('Charge port')}: ${tr(sheet.state)}${sheet.kw ? `, ${sheet.kw}` : ''}`} onOpen={() => open('charge')}>
                   <circle className="bp-dot" cx={cx} cy={cy} r="0.8" />
-                  <path className="bp-lead" d={`M${cx} ${cy} L${lx} ${ly} H${lx + 26}`} />
-                  {sheet.charging && <path className="bp-cable-flow" d={`M${lx + 26} ${ly} H${lx} L${cx} ${cy}`} />}
-                  <path className="bp-icon" d={ICONS.power} transform={`translate(${lx} ${ly - 7.4})`} />
-                  <text className="bp-small" x={lx + 6.5} y={ly - 2.6}>
+                  <path className="bp-lead" d={`M${cx} ${cy} L${ex} ${ly} H${sx}`} />
+                  {sheet.charging && <path className="bp-cable-flow" d={`M${sx} ${ly} H${ex} L${cx} ${cy}`} />}
+                  <path className="bp-icon" d={ICONS.power} transform={`translate(${ex - 6} ${ly - 7.4})`} />
+                  <text className="bp-small" x={ex - 7} y={ly - 2.6} textAnchor="end">
                     {sheet.charging && sheet.kw ? `${tr('Charging')} ${sheet.kw}` : tr('Plugged in')}
                   </text>
                 </Hit>
               );
             })()}
-        </>
+        </g>
       )}
 
       {/* The row of panels along the bottom. */}

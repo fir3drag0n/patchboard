@@ -38,8 +38,9 @@
 - **Your own pictures of your car:** Pictures on the car widget takes a
   picture or drawing of the side, top, front or rear. Box the part to use,
   so one sheet with several views works, then tap its tires and charge
-  port, and each pressure points at its tire. Add a few and swipe between
-  them to turn the car. A drawing turns to light lines in dark mode.
+  port, and each pressure points at its tire from beside the picture, never
+  on top of the car. Add a few and swipe between them to turn the car. A
+  drawing turns to light lines in dark mode.
 - **Your car as a live engineering drawing:** the car widget's Dashboard
   style turns the card into a drawing sheet for a wall screen or an e-ink
   reader. Front, rear and top views run across the top, the side view sits
@@ -47,7 +48,9 @@
   charge, range, power and temperatures fill a boxed list beside it.
   Panels below cover status, charging, range by charge and the four tires.
   Tap any of them, or a tire, for its detail with the week's or the day's
-  line. While it charges, a callout at the charge port gives the rate.
+  line. Tap the front, rear or top view to bring it to the middle with its
+  own dimensions. While it charges, a callout at the charge port gives the
+  rate.
   "Wall: car" sets up a board with it.
 - **A Blueprint theme:** drafting blue with white lines on a faint grid, or
   a pale whiteprint in light.

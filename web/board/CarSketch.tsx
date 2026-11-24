@@ -112,23 +112,29 @@ function PictureView({ pic: whole, tires, unit }: { pic: CarPicture; tires: Tire
   const aspect = (natural * cw) / ch;
   const h = 100 / aspect;
   const spots = labelSpots(pic.at, h);
+  // The picture is 100 wide, with a gutter each side for the figures and a
+  // strip under it for the unit, so no figure ever sits on the car.
+  const outW = 100 + 2 * GUTTER;
+  const outH = h + FOOT;
   return (
-    <div className={`car-photo ${pic.drawing === false ? '' : 'is-drawing'}`} style={{ aspectRatio: String(aspect) }}>
-      <img
-        src={pic.src}
-        alt=""
-        draggable={false}
-        className="car-photo-img"
-        style={{ width: `${(100 / cw) * 100}%`, left: `${(-cx / cw) * 100}%`, top: `${(-cy / ch) * 100}%` }}
-        onLoad={(e) => setNatural(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight || 4 / 3)}
-      />
-      <svg className="car-photo-marks" viewBox={`0 0 100 ${h}`}>
+    <div className={`car-photo ${pic.drawing === false ? '' : 'is-drawing'}`} style={{ aspectRatio: `${outW} / ${outH}` }}>
+      <div className="car-photo-frame" style={{ left: `${(GUTTER / outW) * 100}%`, width: `${(100 / outW) * 100}%`, height: `${(h / outH) * 100}%` }}>
+        <img
+          src={pic.src}
+          alt=""
+          draggable={false}
+          className="car-photo-img"
+          style={{ width: `${(100 / cw) * 100}%`, left: `${(-cx / cw) * 100}%`, top: `${(-cy / ch) * 100}%` }}
+          onLoad={(e) => setNatural(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight || 4 / 3)}
+        />
+      </div>
+      <svg className="car-photo-marks" viewBox={`${-GUTTER} 0 ${outW} ${outH}`}>
         {tires.map((t) => {
           const { left, y } = spots[t.pos];
-          const tx = left ? 2 : 98;
-          // The leader runs under the label, then bends once to the tire.
+          const tx = left ? 1 - GUTTER : 99 + GUTTER;
+          // The leader runs under the label to the picture's edge, then bends once to the tire.
           const ly = y + 2;
-          const reach = left ? 17 : 83;
+          const reach = left ? 0 : 100;
           const spot = pic.at[t.pos];
           return (
             <g key={t.pos} className={`car-callout ${t.soft ? 'is-soft' : ''}`}>
@@ -147,13 +153,17 @@ function PictureView({ pic: whole, tires, unit }: { pic: CarPicture; tires: Tire
             </g>
           );
         })}
-        <text className="car-unit" x="50" y={h - 2.2} textAnchor="middle">
+        <text className="car-unit" x="50" y={outH - 1.4} textAnchor="middle">
           {unit}
         </text>
       </svg>
     </div>
   );
 }
+
+/** Room beside a picture for the figures, and under it for the unit, in the picture's own units (it is 100 wide). */
+const GUTTER = 15;
+const FOOT = 5;
 
 const TIRE_WORDS: Record<TirePos, string> = { fl: msg('front left'), fr: msg('front right'), rl: msg('rear left'), rr: msg('rear right') };
 const VIEW_WORDS: Record<CarView, string> = { side: msg('Side'), top: msg('Top'), front: msg('Front'), rear: msg('Rear') };

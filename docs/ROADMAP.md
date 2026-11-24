@@ -17,7 +17,6 @@ The car widget's Dashboard style is a live drawing sheet you can open part
 by part. Next for it:
 
 - [ ] A specification table you fill in: trim, wheels, battery, paint
-- [ ] Turn the car: tap the front, rear or top view to bring it to the middle
 - [ ] Act from the drawing, held to confirm and hidden on household devices:
   lock and unlock, climate, start and stop charging, the charge limit, Sentry
 - [ ] Drives: where it's parked, the last trip and its efficiency
