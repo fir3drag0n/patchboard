@@ -30,7 +30,7 @@ import type {
 import { HealthStrip } from '../components/Squares.tsx';
 import { copyText } from '../lib/copy.ts';
 import { type Action, ContainerActions, IgnoreButton, VERB } from '../components/Actions.tsx';
-import { UpdateButton, UpdateNotice, UpdatePanel, UpdateUndo, useUpdateJob } from '../components/Updater.tsx';
+import { active, UpdateButton, UpdateNotice, UpdatePanel, UpdateUndo, useUpdateJob } from '../components/Updater.tsx';
 import { Spark } from '../components/Spark.tsx';
 import { Ago, Empty, Icon, Ident, Section } from '../components/ui.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
@@ -65,7 +65,7 @@ export function ContainerPage() {
   const svc = serviceFor(snap, name);
   const upd = useUpdateJob(name);
   // Refetched when Docker reports a new state or a job ends, so start and stop times stay true.
-  const jobEnd = upd.last && upd.last.status !== 'running' ? upd.last.id : '';
+  const jobEnd = upd.last && !active(upd.last) ? upd.last.id : '';
   const detail = useJson<ContainerDetail>(`/api/containers/${encodeURIComponent(name)}?s=${encodeURIComponent(ctr?.status ?? '')}&j=${jobEnd}`, 30_000);
   // Start, stop or restart sent: the state line says so until Docker reports it done.
   const [pending, setPending] = useState<{ action: Action; status: string; stuck: boolean } | null>(null);
@@ -105,7 +105,7 @@ export function ContainerPage() {
   }
 
   const state = ctrState(ctr, svc);
-  const jobRunning = upd.job?.status === 'running';
+  const jobRunning = active(upd.job);
   const problem = state === 'down' || state === 'warn';
   const d = detail.data;
   const live = stats?.containers[name];
@@ -247,7 +247,7 @@ export function ContainerPage() {
                 setPending({ action, status: ctr.status, stuck: false });
                 // The button you pressed is about to be swapped for another: hold focus on the state line.
                 document.getElementById('ctr-state')?.focus();
-              }} locked={upd.job?.status === 'running' || (!!pending && !pending.stuck)} />;
+              }} locked={jobRunning || (!!pending && !pending.stuck)} />;
             const ignore = !snap.readOnly && !running && !svc?.expectStopped && <IgnoreButton key="ignore" name={name} ignored={(snap.ignored ?? []).includes(name)} />;
             // In reading and tab order too: a stopped container leads with Start.
             return running ? [update, actions] : [actions, ignore, update];

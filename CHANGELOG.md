@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+- **Update several containers at once:** hold Update on one row after
+  another. They run one at a time, and each row says what it's doing
+  ("Pulling 0:42") or what it waits for ("Waiting for sonarr to finish"),
+  then starts on its own. When an update can't start, the row says why
+  instead of "Can't update here".
+- **Fewer false alarms:**
+  - **An integration that fails tries again** in 30 seconds, then a
+    minute, then two, instead of waiting out its whole interval, so one
+    hiccup from the weather service clears in seconds, not 15 minutes.
+  - **Weather, calendars, books, feeds and mail** no longer take over
+    Home's headline when they can't be reached. They stay a note in the
+    list, and the headline still says "All quiet".
+  - **Errors say why** when the app gives a reason, as in "HTTP 503:
+    Too many requests".
+- **Icons from an address,** such as an old Homepage's images folder on
+  your network, load through Patchboard, so they show on an HTTPS
+  address and over a tunnel.
+
 ## 1.18.0 (2026-11-23)
 
 - **Install it your platform's way:** paste examples/truenas.yml into

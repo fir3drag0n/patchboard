@@ -5,7 +5,7 @@ import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, test } from 'node:test';
-import { iconCache } from '../icon-cache.ts';
+import { iconCache, urlIconCache } from '../icon-cache.ts';
 
 // A fake dashboard-icons CDN that counts what it's asked for.
 const asked: string[] = [];
@@ -64,4 +64,15 @@ test('a month-old copy still shows and is refreshed behind it', async () => {
   assert.equal((await icons.get('png', 'plex.png'))?.body.toString(), 'PNG');
   for (let i = 0; i < 50 && asked.length === n; i++) await new Promise((r) => setTimeout(r, 10));
   assert.equal(asked.at(-1), '/png/plex.png');
+});
+
+test('an icon given as an address is fetched once and kept, and a page is never an icon', async () => {
+  const urls = urlIconCache(join(dir, 'url'));
+  const before = asked.filter((u) => u === '/png/plex.png').length;
+  const got = await Promise.all(Array.from({ length: 5 }, () => urls.get(`${base}/png/plex.png`)));
+  assert(got.every((g) => g?.body.toString() === 'PNG' && g.type === 'image/png'));
+  assert.equal(asked.filter((u) => u === '/png/plex.png').length, before + 1, 'five tiles, one request');
+  // After a restart, with the LAN host gone, the kept copy still serves.
+  assert.equal((await urlIconCache(join(dir, 'url')).get(`${base}/png/plex.png`))?.body.toString(), 'PNG');
+  assert.equal(await urls.get(`${base}/svg/page.svg`), null);
 });

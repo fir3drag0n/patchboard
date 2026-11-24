@@ -10,6 +10,9 @@ import { Link } from 'react-router-dom';
 import type { UpdateJob } from '../../shared/types.ts';
 import { agoLong, duration } from '../lib/format.ts';
 import { useNow, useStore } from '../lib/store.tsx';
+
+/** Running or waiting its turn: still to be followed, and nothing else should start. */
+export const active = (j: UpdateJob | null | undefined): boolean => j?.status === 'running' || j?.status === 'queued';
 import { Section } from './ui.tsx';
 import { msg, t as tr, tx } from '../lib/i18n.ts';
 
@@ -44,7 +47,7 @@ export function useUpdateJob(name: string) {
     es.onmessage = (m) => {
       const j = JSON.parse(m.data as string) as UpdateJob;
       setJob(j);
-      if (j.status !== 'running') es.close();
+      if (!active(j)) es.close();
     };
     es.onerror = () => es.close();
     return () => es.close();
@@ -58,7 +61,7 @@ export function useUpdateJob(name: string) {
       const j = (await (await fetch(`/api/containers/${encodeURIComponent(name)}/job`)).json()) as UpdateJob | null;
       if (!j) return;
       setJob(j);
-      if (j.status === 'running') stop = follow(j.id);
+      if (active(j)) stop = follow(j.id);
       else if (dismissedJobs().includes(j.id)) setHidden(true);
     })();
     return () => stop?.();
@@ -151,11 +154,35 @@ export function UpdateNotice({ name, stale, busy = false }: { name: string; stal
   );
 }
 
+/** Each step in a word or two, for a row with little room. */
+const SHORT: Record<string, string> = { pull: msg('Pulling'), recreate: msg('Recreating'), healthy: msg('Checking health'), tag: msg('Rolling back') };
+
+/** Where a job is, in words: what it waits for, or its step with a running clock. */
+export function JobProgress({ job }: { job: UpdateJob }) {
+  const now = useNow(1000);
+  if (job.status === 'queued') return <>{job.waitingFor ? tr('Waiting for {name} to finish', { name: job.waitingFor }) : tr('Waiting its turn')}</>;
+  const at = job.steps.findIndex((s) => s.status === 'running');
+  const step = job.steps[at];
+  const label = step ? tr(SHORT[step.key] ?? step.label) : tr('Updating');
+  const secs = Math.max(0, Math.floor((now - job.startedAt) / 1000));
+  return (
+    <>
+      <span title={step ? tr('{step}, {n} of {total}', { step: tr(step.label), n: at + 1, total: job.steps.length }) : undefined}>{label}</span>{' '}
+      <span className="mono">{`${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`}</span>
+    </>
+  );
+}
+
 /** Update from a list row: the button, then the step it's on, then how it ended. */
 export function RowUpdate({ name }: { name: string }) {
   const u = useUpdateJob(name);
   const j = u.job;
-  if (j?.status === 'running') return <span className="row-update-note">{j.steps.find((s) => s.status === 'running')?.label ?? tr('Updating')}...</span>;
+  if (j && active(j))
+    return (
+      <span className="row-update-note" role="status">
+        <JobProgress job={j} />
+      </span>
+    );
   if (j?.status === 'done') return <span className="row-update-note ok-text">{tr('Updated')}</span>;
   if (j?.status === 'failed')
     return (
@@ -165,9 +192,10 @@ export function RowUpdate({ name }: { name: string }) {
     );
   return (
     <>
+      {/* The reason in words, not a tooltip a phone never shows. */}
       {u.error && (
-        <Link to={`/c/${encodeURIComponent(name)}`} className="row-update-note crit-text" title={u.error}>
-          {tr('Can\'t update here')}
+        <Link to={`/c/${encodeURIComponent(name)}`} className="row-update-note crit-text" role="alert">
+          {u.error}
         </Link>
       )}
       <UpdateButton name={name} busy={false} waiting onStart={() => void u.start()} />
@@ -190,7 +218,9 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
   const took = job.finishedAt ? duration(job.finishedAt - job.startedAt) : '';
   const rollback = job.kind === 'rollback';
   const summary =
-    job.status === 'running'
+    job.status === 'queued'
+      ? `${job.waitingFor ? tr('Waiting for {name} to finish', { name: job.waitingFor }) : tr('Waiting its turn')}. ${tr('It starts on its own.')}`
+      : job.status === 'running'
       ? rollback
         ? tr('Rolling back...')
         : tr('Updating...')
@@ -238,7 +268,7 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
             {tr('Roll back to {image}', { image: job.from ?? '' })}
           </HoldButton>
         )}
-        {job.status !== 'running' && (
+        {!active(job) && (
           <button type="button" className="text-button" onClick={onDismiss}>
             {tr('Dismiss')}
           </button>
@@ -284,7 +314,7 @@ export function SelfUpdate({ name, waiting }: { name: string; waiting: boolean }
         )}
       </span>
     );
-  if (j?.status === 'running') return <span>{j.steps.find((s) => s.status === 'running')?.label ?? tr('Updating')}...</span>;
+  if (j && active(j)) return <span role="status"><JobProgress job={j} /></span>;
   if (j?.status === 'done' && j.to && j.from !== j.to) return <span>Updated.</span>;
   if (j?.status === 'failed') return <Link to={`/c/${encodeURIComponent(name)}`} className="crit-text">{tr('Update failed. Open it')}</Link>;
   if (j?.status === 'done' && j.steps.find((s) => s.key === 'pull')?.note === 'Already the newest image') return <span>{tr('Already the newest image.')}</span>;

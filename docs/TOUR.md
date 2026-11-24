@@ -134,6 +134,9 @@ memory. Each stack folds to its header with Hide, and Hide all or Show all
 folds or opens every one; on a phone the healthy ones start folded. Containers on your other machines, added under Other
 Docker hosts in Settings, show as their own stacks ("dns on pi") and are
 named like pihole@pi, with logs, history, start, stop and restart.
+With image updates showing, hold Update on as many rows as you like:
+one runs at a time, its row shows the step and a clock, and the rest say
+which update they wait for and start on their own.
 
 ![Stacks](screenshots/stacks.webp)
 

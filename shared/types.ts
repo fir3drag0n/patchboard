@@ -236,7 +236,10 @@ export interface UpdateJob {
   id: string;
   container: string;
   kind: 'update' | 'rollback';
-  status: 'running' | 'done' | 'failed';
+  /** `queued`: another update holds the slot; this one starts on its own when it ends. */
+  status: 'queued' | 'running' | 'done' | 'failed';
+  /** While queued: the container whose update runs first. */
+  waitingFor?: string;
   steps: UpdateStep[];
   log: string[];
   startedAt: number;

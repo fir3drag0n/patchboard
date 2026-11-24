@@ -474,7 +474,6 @@
  "Can't reach {name}": "{name} niet bereikbaar",
  "Can't reach it": "Niet bereikbaar",
  "Can't reach it: {error}": "Niet bereikbaar: {error}",
- "Can't update here": "Kan hier niet bijwerken",
  "Cancel": "Annuleren",
  "Catalog": "Catalogus",
  "Change password": "Wachtwoord wijzigen",
@@ -1254,5 +1253,13 @@
  "Selected: copy it": "Geselecteerd: kopieer het",
  "This browser didn’t copy. Try again from another browser.": "Deze browser kopieerde niet. Probeer het in een andere browser.",
  "Containers": "Containers",
- "This server": "Deze server"
+ "This server": "Deze server",
+ "{step}, {n} of {total}": "{step}, {n} van {total}",
+ "It starts on its own.": "Het start vanzelf.",
+ "Waiting for {name} to finish": "Wacht tot {name} klaar is",
+ "Waiting its turn": "Wacht op zijn beurt",
+ "Pulling": "Ophalen",
+ "Recreating": "Opnieuw maken",
+ "Checking health": "Gezondheid controleren",
+ "Rolling back": "Terugdraaien"
 }

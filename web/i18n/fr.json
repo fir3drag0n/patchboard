@@ -474,7 +474,6 @@
  "Can't reach {name}": "{name} injoignable",
  "Can't reach it": "Injoignable",
  "Can't reach it: {error}": "Injoignable : {error}",
- "Can't update here": "Mise à jour impossible ici",
  "Cancel": "Annuler",
  "Catalog": "Catalogue",
  "Change password": "Changer le mot de passe",
@@ -1254,5 +1253,13 @@
  "Selected: copy it": "Sélectionné : copiez-le",
  "This browser didn’t copy. Try again from another browser.": "Ce navigateur n’a pas copié. Réessayez depuis un autre navigateur.",
  "Containers": "Conteneurs",
- "This server": "Ce serveur"
+ "This server": "Ce serveur",
+ "{step}, {n} of {total}": "{step}, {n} sur {total}",
+ "It starts on its own.": "Elle démarre d’elle-même.",
+ "Waiting for {name} to finish": "En attente de la fin de {name}",
+ "Waiting its turn": "En attente de son tour",
+ "Pulling": "Téléchargement",
+ "Recreating": "Recréation",
+ "Checking health": "Vérification",
+ "Rolling back": "Retour arrière"
 }

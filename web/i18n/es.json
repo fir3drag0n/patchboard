@@ -474,7 +474,6 @@
  "Can't reach {name}": "No se puede conectar con {name}",
  "Can't reach it": "No se puede conectar",
  "Can't reach it: {error}": "No se puede conectar: {error}",
- "Can't update here": "No se puede actualizar aquí",
  "Cancel": "Cancelar",
  "Catalog": "Catálogo",
  "Change password": "Cambiar contraseña",
@@ -1254,5 +1253,13 @@
  "Selected: copy it": "Seleccionado: cópialo",
  "This browser didn’t copy. Try again from another browser.": "Este navegador no copió. Inténtalo desde otro navegador.",
  "Containers": "Contenedores",
- "This server": "Este servidor"
+ "This server": "Este servidor",
+ "{step}, {n} of {total}": "{step}, {n} de {total}",
+ "It starts on its own.": "Empieza solo.",
+ "Waiting for {name} to finish": "Esperando a que termine {name}",
+ "Waiting its turn": "Esperando su turno",
+ "Pulling": "Descargando",
+ "Recreating": "Recreando",
+ "Checking health": "Comprobando estado",
+ "Rolling back": "Revirtiendo"
 }

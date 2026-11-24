@@ -112,7 +112,7 @@ import { adoptYaml, type AppOrder, validateOrder } from '../shared/order.ts';
 import { fromHomepage } from './homepage.ts';
 import { redact } from './redact.ts';
 import { auditCatalog, draftYaml, visitorHost } from './catalog-audit.ts';
-import { iconCache } from './icon-cache.ts';
+import { iconCache, urlIconCache } from './icon-cache.ts';
 import { feedPicture } from './feed-images.ts';
 
 /** Pause and resume for each configured download client. */
@@ -2003,7 +2003,7 @@ app.get('/api/jobs/:id', (c) => {
     let finished = false;
     const stop = watchJob(id, (j) => {
       void stream.writeSSE({ data: JSON.stringify(j) });
-      if (j.status !== 'running') finished = true;
+      if (j.status === 'done' || j.status === 'failed') finished = true;
     });
     await new Promise<void>((resolve) => {
       const t = setInterval(() => finished && resolve(), 500);
@@ -2423,6 +2423,36 @@ app.get('/api/icon/:kind/:file', async (c) => {
   return c.body(got.body, 200, {
     'Content-Type': got.type,
     'Cache-Control': 'private, max-age=604800',
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+  });
+});
+
+// An icon given as a full address, fetched and served by Patchboard: a
+// plain-HTTP LAN image can't load into a page served over HTTPS, and the
+// browser never calls another site. Only addresses an app, link or hidden
+// app in the catalog uses as its icon, so this can't fetch anything else.
+const urlIcons = urlIconCache(join(config.dataDir, 'icon-cache', 'url'));
+function catalogIconUrls(): Set<string> {
+  const out = new Set<string>();
+  const walk = (v: unknown): void => {
+    if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === 'object')
+      for (const [k, x] of Object.entries(v)) {
+        if (k === 'icon' && typeof x === 'string' && /^https?:\/\//.test(x)) out.add(x);
+        else walk(x);
+      }
+  };
+  walk(getCatalog());
+  return out;
+}
+app.get('/api/icon-url', async (c) => {
+  const url = c.req.query('u') ?? '';
+  if (!catalogIconUrls().has(url)) return c.json({ error: 'No such icon' }, 404);
+  const got = await urlIcons.get(url);
+  if (!got) return c.json({ error: 'No such icon' }, 404);
+  return c.body(got.body, 200, {
+    'Content-Type': got.type,
+    'Cache-Control': 'private, max-age=86400',
     'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
   });
 });

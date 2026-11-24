@@ -10625,19 +10625,24 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
 }
 
 /* Stacks, updates view: Update beside the row it belongs to. */
+/* A row with an update: its progress sits beside it, or under it when the
+   two don't fit, so the container's name is never squeezed to an ellipsis. */
 .stack-rows li.has-act {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  column-gap: 12px;
 }
 
 .stack-rows li.has-act > .srow {
-  flex: 1 1 auto;
+  flex: 1 1 260px;
   min-width: 0;
 }
 
 .srow-act {
-  flex: none;
+  flex: 0 1 auto;
+  margin-left: auto;
+  justify-content: flex-end;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -10646,6 +10651,14 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
 .row-update-note {
   font-size: 13px;
   white-space: nowrap;
+}
+
+/* On a wide screen every row's action takes the same room, so CPU and
+   memory stay in one column whatever the row is doing. */
+@media (min-width: 720px) {
+  .srow-act {
+    width: 15em;
+  }
 }
 
 /* Downloads: a line per client, then one row per download. */
