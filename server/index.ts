@@ -1717,14 +1717,18 @@ app.post('/api/wake/:name', async (c) => {
 // Maintenance (fork): updates on the other machines through the n8n gate.
 app.get('/api/maintenance', (c) => c.json({ enabled: maintenanceEnabled(), targets: MAINT_TARGETS, actions: MAINT_ACTIONS, state: maintenanceState(), ctr: ctrJobs(), ctrSelf: CTR_SELF }));
 
-// Mark Patchboard's own (Unraid) containers that Unraid sees an update for,
-// so the marks don't depend on Diun having noticed in time.
+// Mark Patchboard's own (Unraid) containers that Unraid sees an update for, and
+// clear the rest, so the marks don't depend on Diun or on the image id changing.
 async function syncUnraidUpdates(): Promise<void> {
   try {
     const names = new Set(await unraidCtrUpdates());
-    let flagged = false;
-    for (const ctr of hub.containers()) if (!ctr.host && names.has(ctr.name) && flagUpdate(ctr)) flagged = true;
-    if (flagged) hub.emitUpdates();
+    let changed = false;
+    for (const ctr of hub.containers()) {
+      if (ctr.host) continue;
+      // Unraid's check is the word on its own containers: mark what it lists, clear what it no longer does.
+      if (names.has(ctr.name) ? flagUpdate(ctr) : clearUpdate(ctr.name)) changed = true;
+    }
+    if (changed) hub.emitUpdates();
   } catch (err) {
     console.warn(`[maintenance] Unraid container list: ${(err as Error).message}`);
   }
