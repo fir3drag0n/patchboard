@@ -543,8 +543,8 @@ const CTR_SHOWN = 20;
 function HostContainers({ host, containers, error }: { host?: string; containers: import('../../shared/types.ts').Container[]; error?: string }) {
   const { snap } = useStore();
   const running = containers.filter((c) => c.state === 'running').length;
-  // Patchboard's own host (Unraid): marked containers get the update button (fork).
-  const marked = (c: { name: string }) => !host && !!snap?.updates[c.name] && !snap?.readOnly;
+  // Marked containers get the update button, here and on the Oracles (fork).
+  const marked = (c: { name: string }) => !!snap?.updates[c.name] && !snap?.readOnly;
   const ctrUpd = useCtrUpdates(containers.some(marked));
   // Stopped on purpose (Ignore, or expectStopped in the catalog): gray and last, so trouble leads.
   const quiet = (c: { name: string; state: string }) => c.state !== 'running' && ((snap?.ignored ?? []).includes(c.name) || !!serviceFor(snap, c.name)?.expectStopped);

@@ -1311,5 +1311,6 @@
  "Updating all containers": "Alle Container werden aktualisiert",
  "Updating {name}": "{name} wird aktualisiert",
  "Update all containers (one after another)": "Alle Container aktualisieren (nacheinander)",
- "Update every Unraid container that has an update, one after another? Each stops for a few seconds; n8n is left out.": "Alle Unraid-Container mit Update nacheinander aktualisieren? Jeder ist dabei einige Sekunden aus; n8n bleibt außen vor."
+ "Update every Unraid container that has an update, one after another? Each stops for a few seconds; n8n is left out.": "Alle Unraid-Container mit Update nacheinander aktualisieren? Jeder ist dabei einige Sekunden aus; n8n bleibt außen vor.",
+ "Update every container on {name} that has an update, one after another? Each stops for a few seconds.": "Alle Container auf {name} mit Update nacheinander aktualisieren? Jeder ist dabei einige Sekunden aus (n8n auf Unraid zuletzt, im Hintergrund)."
 }

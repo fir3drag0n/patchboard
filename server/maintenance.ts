@@ -127,55 +127,59 @@ export function startAction(target: MaintTarget, action: string, done: () => voi
   return true;
 }
 
-// ---------- Container updates on Unraid ----------
-// The gate's "ctr" command: "list" gives the containers Unraid itself sees an
-// update for, "update" pulls and recreates them one at a time (a lock there
-// queues every caller, the Telegram buttons included). n8n runs the buttons,
-// so it can't update itself from here.
+// ---------- Container updates ----------
+// Every gate has a "ctr" command: "list" gives the containers with an update
+// waiting (Unraid's own check there, Watchtower's on the Oracles), "update"
+// recreates them one at a time (a lock there queues every caller, the Telegram
+// buttons included). On Unraid, n8n runs the buttons, so its gate updates n8n
+// last and on its own, after the answer is back.
 
 export const CTR_NAME = /^[A-Za-z0-9._-]{1,64}$/;
-export const CTR_SELF = ['n8n'];
 export type CtrJobs = Record<string, MaintJob>;
 const CTR_KEY = 'ctr-jobs';
+
+/** Patchboard's name for a container on a target: Unraid's own are bare, the others end in @host. */
+export const ctrKey = (target: MaintTarget, name: string): string => (target === 'unraid' ? name : `${name}@${target}`);
 
 export function ctrJobs(): CtrJobs {
   return kvGet<CtrJobs>(CTR_KEY) ?? {};
 }
-function setCtrJob(name: string, job: MaintJob): void {
+function setCtrJob(key: string, job: MaintJob): void {
   const all = ctrJobs();
-  all[name] = job;
+  all[key] = job;
   // Keep a day of finished jobs; older ones are history, not state.
   for (const [k, j] of Object.entries(all)) if (j.finishedAt && Date.now() - j.finishedAt > 86_400_000) delete all[k];
   kvSet(CTR_KEY, all);
 }
 
-/** Unraid containers with an update waiting, per Unraid's own check (takes a minute or two). */
-export async function unraidCtrUpdates(): Promise<string[]> {
-  const r = await call('unraid', 'ctr-list', 10 * 60_000);
+/** Containers on a target with an update waiting, by their name there (Unraid's check takes a minute or two). */
+export async function ctrUpdates(target: MaintTarget): Promise<string[]> {
+  const r = await call(target, 'ctr-list', 10 * 60_000);
   if (!r.ok) throw new Error(r.stderr || r.stdout || 'ctr list failed');
   return r.stdout.split(/\s+/).filter((n) => CTR_NAME.test(n));
 }
 
 /** Update one container, or "*" for all with an update. False if that one is already queued. */
-export function startCtrUpdate(name: string, done: () => void): boolean {
-  if (busy.has(`ctr:${name}`)) return false;
-  busy.add(`ctr:${name}`);
-  const job: MaintJob = { action: `ctr:${name}`, startedAt: Date.now() };
-  setCtrJob(name, job);
+export function startCtrUpdate(target: MaintTarget, name: string, done: () => void): boolean {
+  const key = ctrKey(target, name);
+  if (busy.has(`ctr:${key}`)) return false;
+  busy.add(`ctr:${key}`);
+  const job: MaintJob = { action: `ctr:${key}`, startedAt: Date.now() };
+  setCtrJob(key, job);
   done();
   void (async () => {
     let ok = false;
     let output = '';
     try {
       // Waits its turn behind other updates in the gate, then pulls; "*" can take long.
-      const r = await call('unraid', `ctr:${name}`, 120 * 60_000);
+      const r = await call(target, `ctr:${name}`, 120 * 60_000);
       ok = r.ok;
       output = (r.stdout || r.stderr).trim();
     } catch (err) {
       output = (err as Error).message;
     }
-    setCtrJob(name, { ...job, finishedAt: Date.now(), ok, output: output.slice(0, 4000) });
-    busy.delete(`ctr:${name}`);
+    setCtrJob(key, { ...job, finishedAt: Date.now(), ok, output: output.slice(0, 4000) });
+    busy.delete(`ctr:${key}`);
     done();
   })();
   return true;

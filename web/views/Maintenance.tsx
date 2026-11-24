@@ -41,7 +41,10 @@ const JOB_WORDS: Record<string, () => string> = {
   os: () => t('Updating Unraid OS'),
   reboot: () => t('Restarting'),
 };
-const jobWords = (a: string) => (a === 'ctr:*' ? t('Updating all containers') : a.startsWith('ctr:') ? t('Updating {name}', { name: a.slice(4) }) : (JOB_WORDS[a]?.() ?? a));
+const jobWords = (a: string) => (/^ctr:\*(@|$)/.test(a) ? t('Updating all containers') : a.startsWith('ctr:') ? t('Updating {name}', { name: a.slice(4).split('@')[0] }) : (JOB_WORDS[a]?.() ?? a));
+/** Which machine a container job belongs to: "x" is Unraid's, "x@oracle" the Oracle's. */
+const ctrTarget = (key: string) => key.split('@')[1] ?? 'unraid';
+const ctrAllKey = (tg: string) => (tg === 'unraid' ? '*' : `*@${tg}`);
 
 async function post(url: string): Promise<void> {
   const res = await fetch(url, { method: 'POST', headers: { 'X-Patchboard': 'action' } });
@@ -74,14 +77,14 @@ export function Maintenance() {
     }
   }
 
-  async function runCtrAll() {
-    if (!window.confirm(t('Update every Unraid container that has an update, one after another? Each stops for a few seconds; n8n is left out.'))) return;
-    setBusy('ctr:*');
+  async function runCtrAll(tg: string) {
+    if (!window.confirm(t('Update every container on {name} that has an update, one after another? Each stops for a few seconds.', { name: NAMES[tg] ?? tg }))) return;
+    setBusy(`ctr:${tg}`);
     setFail(null);
     try {
-      await post('/api/maintenance/unraid/container/*');
+      await post(`/api/maintenance/${tg}/container/*`);
     } catch (err) {
-      setFail(`Unraid: ${(err as Error).message}`);
+      setFail(`${NAMES[tg] ?? tg}: ${(err as Error).message}`);
     } finally {
       setBusy(null);
       setTick((n) => n + 1);
@@ -161,7 +164,7 @@ export function Maintenance() {
                   {e.job.output && <pre className="maint-out">{e.job.output}</pre>}
                 </div>
               )}
-              {tg === 'unraid' && Object.entries(data.ctr ?? {}).map(([name, j]) => (
+              {Object.entries(data.ctr ?? {}).filter(([name]) => ctrTarget(name) === tg).map(([name, j]) => (
                 <div key={name} className={`maint-job ${!j.finishedAt ? 'is-running' : j.ok ? 'is-ok' : 'is-fail'}`}>
                   <strong>{!j.finishedAt ? `⏳ ${jobWords(j.action)} …` : `${j.ok ? '✅' : '❌'} ${jobWords(j.action)}`}</strong>{' '}
                   <span className="maint-meta">{agoLong(j.finishedAt ?? j.startedAt)}</span>
@@ -190,16 +193,14 @@ export function Maintenance() {
                     </button>
                   );
                 })}
-                {tg === 'unraid' && (
-                  <button
-                    type="button"
-                    className="button"
-                    disabled={!!busy || (!!data.ctr?.['*'] && !data.ctr['*'].finishedAt)}
-                    onClick={() => void runCtrAll()}
-                  >
-                    {busy === 'ctr:*' ? '…' : t('Update all containers (one after another)')}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="button"
+                  disabled={!!busy || (!!data.ctr?.[ctrAllKey(tg)] && !data.ctr[ctrAllKey(tg)].finishedAt)}
+                  onClick={() => void runCtrAll(tg)}
+                >
+                  {busy === `ctr:${tg}` ? '…' : t('Update all containers (one after another)')}
+                </button>
               </div>
             </div>
           </Section>

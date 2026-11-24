@@ -48,8 +48,8 @@ export function Stacks() {
     document.getElementById(`stack-${decodeURIComponent(hash.slice(1))}`)?.scrollIntoView({ block: 'start' });
   }, [hash, !!snap]);
 
-  // Unraid containers with a mark update through the maintenance gate (fork). Before the early return: it's a hook.
-  const ctrUpd = useCtrUpdates(!!snap && !snap.readOnly && Object.keys(snap.updates ?? {}).some((n) => !n.includes('@')));
+  // Marked containers (Unraid and the Oracles) update through the maintenance gates (fork). Before the early return: it's a hook.
+  const ctrUpd = useCtrUpdates(!!snap && !snap.readOnly && Object.keys(snap.updates ?? {}).length > 0);
 
   if (!snap) return null;
   const all = [...containerMap(snap).values()];
@@ -203,7 +203,7 @@ export function Stacks() {
                 const load = s[c.name];
                 // Updating from the row, where the update is the reason the row is here.
                 const act = onlyUpdates && hasUpdate(c) && !snap.readOnly && !!snap.features?.includes('updates');
-                const unraidAct = !act && !c.host && !!snap.updates[c.name] && !snap.readOnly && ctrUpd.enabled;
+                const unraidAct = !act && !!snap.updates[c.name] && !snap.readOnly && ctrUpd.enabled;
                 return (
                   <li key={c.name} className={act || unraidAct ? 'has-act' : undefined}>
                     <Link to={`/c/${c.name}`} className="srow" data-state={st}>

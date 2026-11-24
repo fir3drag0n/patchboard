@@ -57,7 +57,7 @@ import { prowlarrControl } from './adapters/indexers.ts';
 import { bazarrControl } from './adapters/subtitles.ts';
 import { adguardClient, cleanDomain, type DnsControl, type DnsDomains, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
-import { checkAll, checkTarget, CTR_NAME, CTR_SELF, ctrJobs, MAINT_ACTIONS, MAINT_TARGETS, type MaintTarget, maintenanceEnabled, maintenanceState, startAction, startCtrUpdate, unraidCtrUpdates } from './maintenance.ts';
+import { checkAll, checkTarget, CTR_NAME, ctrJobs, ctrKey, ctrUpdates, MAINT_ACTIONS, MAINT_TARGETS, type MaintTarget, maintenanceEnabled, maintenanceState, startAction, startCtrUpdate } from './maintenance.ts';
 import { adoptEnvironment, candidate, checkThresholds, describeThresholds, saveThresholds, savedThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { authLocked, authProblem, envHas, withConfig } from './config.ts';
 import { type HaAction, haActionFor, haAllows, pinnedEntities } from '../shared/ha.ts';
@@ -1715,37 +1715,42 @@ app.post('/api/wake/:name', async (c) => {
 });
 
 // Maintenance (fork): updates on the other machines through the n8n gate.
-app.get('/api/maintenance', (c) => c.json({ enabled: maintenanceEnabled(), targets: MAINT_TARGETS, actions: MAINT_ACTIONS, state: maintenanceState(), ctr: ctrJobs(), ctrSelf: CTR_SELF }));
+app.get('/api/maintenance', (c) => c.json({ enabled: maintenanceEnabled(), targets: MAINT_TARGETS, actions: MAINT_ACTIONS, state: maintenanceState(), ctr: ctrJobs() }));
 
-// Mark Patchboard's own (Unraid) containers that Unraid sees an update for, and
-// clear the rest, so the marks don't depend on Diun or on the image id changing.
-async function syncUnraidUpdates(): Promise<void> {
+// Mark the containers a gate sees an update for (Unraid's own check, Watchtower's on
+// the Oracles) and clear the rest, so the marks don't depend on Diun or on the image id changing.
+async function syncCtrUpdates(target: MaintTarget): Promise<void> {
   try {
-    const names = new Set(await unraidCtrUpdates());
+    const names = new Set((await ctrUpdates(target)).map((n) => ctrKey(target, n)));
     let changed = false;
     for (const ctr of hub.containers()) {
-      if (ctr.host) continue;
-      // Unraid's check is the word on its own containers: mark what it lists, clear what it no longer does.
+      if ((ctr.host ?? 'unraid') !== target) continue;
+      // The gate is the word on its machine's containers: mark what it lists, clear what it no longer does.
       if (names.has(ctr.name) ? flagUpdate(ctr) : clearUpdate(ctr.name)) changed = true;
     }
     if (changed) hub.emitUpdates();
   } catch (err) {
-    console.warn(`[maintenance] Unraid container list: ${(err as Error).message}`);
+    console.warn(`[maintenance] ${target} container list: ${(err as Error).message}`);
   }
 }
+async function syncAllCtrUpdates(): Promise<void> {
+  for (const t of MAINT_TARGETS) await syncCtrUpdates(t);
+}
 
-app.post('/api/maintenance/unraid/container/:name', (c) => {
+app.post('/api/maintenance/:target/container/:name', (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   if (!maintenanceEnabled()) return c.json({ error: 'Maintenance is not set up (PB_WARTUNG_URL, PB_WARTUNG_TOKEN)' }, 400);
+  const target = c.req.param('target') as MaintTarget;
+  if (!MAINT_TARGETS.includes(target)) return c.json({ error: 'Not allowed' }, 400);
   const name = c.req.param('name');
-  if (name !== '*' && (!CTR_NAME.test(name) || !hub.containers().some((x) => !x.host && x.name === name))) return c.json({ error: 'No such container here' }, 400);
-  if (CTR_SELF.includes(name)) return c.json({ error: 'n8n runs this button; update it in Unraid' }, 400);
-  recordAudit(who(c), 'maintenance.container-update', name);
+  const key = ctrKey(target, name);
+  if (name !== '*' && (!CTR_NAME.test(name) || !hub.containers().some((x) => (x.host ?? 'unraid') === target && x.name === key))) return c.json({ error: 'No such container there' }, 400);
+  recordAudit(who(c), 'maintenance.container-update', key);
   const done = () => hub.refreshAlerts();
-  if (!startCtrUpdate(name, () => {
+  if (!startCtrUpdate(target, name, () => {
     done();
     // Once it's through, the image id changes and the mark clears on the next look.
-    if (ctrJobs()[name]?.finishedAt) void syncUnraidUpdates();
+    if (ctrJobs()[key]?.finishedAt) void syncCtrUpdates(target);
   })) return c.json({ error: 'That one is already queued' }, 409);
   return c.json({ ok: true, ctr: ctrJobs() });
 });
@@ -1758,7 +1763,7 @@ app.post('/api/maintenance/:target/:action', async (c) => {
   recordAudit(who(c), `maintenance.${action}`, target);
   if (action === 'status') {
     await checkTarget(target);
-    if (target === 'unraid') void syncUnraidUpdates();
+    void syncCtrUpdates(target);
     hub.refreshAlerts();
     return c.json({ ok: true, state: maintenanceState() });
   }
@@ -1766,7 +1771,7 @@ app.post('/api/maintenance/:target/:action', async (c) => {
   return c.json({ ok: true, state: maintenanceState() });
 });
 if (maintenanceEnabled() && !config.demo) {
-  const sweep = () => void checkAll().then(() => hub.refreshAlerts()).then(syncUnraidUpdates);
+  const sweep = () => void checkAll().then(() => hub.refreshAlerts()).then(syncAllCtrUpdates);
   setTimeout(sweep, 60_000);
   setInterval(sweep, 6 * 60 * 60_000);
 }
