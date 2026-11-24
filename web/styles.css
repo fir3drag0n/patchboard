@@ -6669,6 +6669,24 @@ a.vw:hover {
   white-space: nowrap;
 }
 
+/* Fork: containers past the first 20 fold away, with a way to all stacks. */
+.host-ctrs-more {
+  margin-top: 8px;
+}
+
+.host-ctrs-more > summary {
+  cursor: pointer;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.host-ctrs-more > a {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
 /* Server: a tab per Docker host, this server first. */
 .server-hosts-bar {
   display: flex;

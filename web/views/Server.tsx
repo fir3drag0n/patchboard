@@ -19,19 +19,23 @@ import { useAppearance } from '../lib/appearance.ts';
 import { locale } from '../lib/region.ts';
 import { t } from '../lib/i18n.ts';
 import { tabKeys } from '../lib/tabs.ts';
+import { serviceFor } from '../lib/services.ts';
 
 const DAY = 86_400_000;
 
-const MAIN = ['storage', 'datasets', 'alerts', 'cloudsync', 'backups'];
-const SIDE = ['resources', 'cpu', 'busiest', 'disks'];
+// Fork: one order for every machine, this one and other Docker hosts; what a machine lacks drops out.
+const MAIN = ['storage', 'containers', 'datasets', 'alerts', 'cloudsync', 'backups'];
+const SIDE = ['resources', 'cpu', 'busiest', 'disks', 'links'];
 const SERVER_SECTIONS: SectionDef[] = [
   { id: 'storage', label: 'Storage', group: 'Storage and backups' },
   { id: 'datasets', label: 'Datasets', group: 'Storage and backups' },
   { id: 'backups', label: 'Backups', group: 'Storage and backups' },
+  { id: 'containers', label: 'Containers', group: 'The machine' },
   { id: 'resources', label: 'Resources', group: 'The machine' },
   { id: 'cpu', label: 'CPU by hour', group: 'The machine' },
   { id: 'busiest', label: 'Busiest containers', group: 'The machine' },
   { id: 'disks', label: 'Disks', group: 'The machine' },
+  { id: 'links', label: 'Links', group: 'The machine' },
   { id: 'alerts', label: 'TrueNAS alerts', group: 'Storage and backups' },
   { id: 'cloudsync', label: 'Cloud sync', group: 'Storage and backups' },
 ];
@@ -88,7 +92,7 @@ export function Server() {
       </div>
     </div>
   );
-  if (host) return <OtherServer host={host} picker={picker} docker={docker} now={now} />;
+  if (host) return <OtherServer host={host} picker={picker} docker={docker} now={now} page={page} glance={glance} />;
   // Arriving at a section you've hidden (the header's CPU graph, say): say so, instead of landing nowhere.
   const wanted = decodeURIComponent(hash.slice(1)).replace(/^storage-.*/, 'storage');
   const hiddenHere = (page.hidden ?? []).includes(wanted) ? SERVER_SECTIONS.find((x) => x.id === wanted)?.label : undefined;
@@ -103,6 +107,8 @@ export function Server() {
         ) : (
           <FallbackStorage sys={sys} configured={!!nasState} error={nasState?.error} />
         );
+      case 'containers':
+        return docker ? <HostContainers containers={docker.containers.filter((c) => !c.name.includes('@'))} /> : null;
       case 'datasets':
         return nas && nas.datasets.length > 0 ? <Datasets nas={nas} /> : null;
       case 'backups':
@@ -330,17 +336,67 @@ function VolumeBars({ volumes }: { volumes: { name: string; used: number; total:
 const sameHost = (a: string, b: string) => a.toLowerCase().replace(/[^a-z0-9]/g, '') === b.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 /** Another Docker host: its resources from Beszel, its containers, its backups and its links. */
-function OtherServer({ host, picker, docker, now }: { host: string; picker: React.ReactNode; docker: DockerData | null; now: number }) {
+function OtherServer({ host, picker, docker, now, page, glance }: { host: string; picker: React.ReactNode; docker: DockerData | null; now: number; page: ReturnType<typeof usePage>; glance: boolean }) {
   const { snap } = useStore();
   const { state: beszelState, data: beszel } = useSource<GlancesData>('beszel');
   const { data: backups } = useSource<BackupsData>('backups');
   const state = docker?.hosts?.find((h) => h.name === host);
   const box = beszel?.hosts.find((h) => sameHost(h.name, host));
+  const detail = useBeszelDetail(box ? host : null);
   const containers = (docker?.containers ?? []).filter((c) => c.name.endsWith(`@${host}`));
   const links = (snap?.catalog.groups ?? []).flatMap((g) => g.services).filter((s) => s.href && sameHost(s.name.split(' ').pop() ?? '', host));
   const pick = (runs: BackupRun[] | undefined) =>
     (runs ?? []).map((r) => ({ ...r, items: r.items.filter((i) => sameHost(i.label, host)) })).filter((r) => r.items.length);
   const facts = [box?.os, box?.uptime && `up ${box.uptime}`, box?.cores && `${box.cores} cores`].filter(Boolean);
+  // Same sections, same order as this server's page (MAIN, SIDE and Customize); what this host lacks is null.
+  const part = (id: string) => {
+    switch (id) {
+      case 'storage':
+        return (detail.data?.volumes.length ?? 0) > 0 ? (
+          <Section title="Storage" count="from Beszel" id="storage">
+            <VolumeBars volumes={detail.data!.volumes} />
+          </Section>
+        ) : null;
+      case 'containers':
+        return <HostContainers host={host} containers={containers} error={state && !state.ok ? state.error : undefined} />;
+      case 'backups':
+        // Backup jobs named after this host; none, no section.
+        return backups && (pick(backups.db).length > 0 || pick(backups.files).length > 0) ? (
+          <Section title="Backups" count="nightly" className="backups-sec" id="backups">
+            <BackupSet title="Databases" runs={pick(backups.db)} now={now} />
+            <BackupSet title="Files" runs={pick(backups.files)} now={now} />
+          </Section>
+        ) : null;
+      case 'resources':
+        return <HostResources box={box} configured={!!beszelState} error={beszelState?.error} />;
+      case 'cpu':
+        return box ? (
+          <Section title="CPU by hour" count="last 7 days, from Beszel" id="cpu">
+            {detail.error ? <Empty>{detail.error}.</Empty> : <HourHeatmap series={detail.data?.series} label={`CPU by hour on ${host} over the last seven days`} />}
+          </Section>
+        ) : null;
+      case 'busiest':
+        return (detail.data?.containers.length ?? 0) > 0 ? <HostBusiest host={host} list={detail.data!.containers} /> : null;
+      case 'links':
+        return links.length > 0 || box ? (
+          <Section title="Links" id="links">
+            <dl className="ledger">
+              {links.map((l) => (
+                <Row key={l.name} k={l.name}>
+                  <a href={l.href} target="_blank" rel="noreferrer">{l.href!.replace(/^https?:\/\//, '')}</a>
+                </Row>
+              ))}
+              {box && (
+                <Row k="Beszel">
+                  <a href={box.url} target="_blank" rel="noreferrer">System page</a>
+                </Row>
+              )}
+            </dl>
+          </Section>
+        ) : null;
+    }
+    return null;
+  };
   return (
     <div className="page server">
       <header className="detail-head">
@@ -348,38 +404,17 @@ function OtherServer({ host, picker, docker, now }: { host: string; picker: Reac
           <h1 className="page-title">Server</h1>
           <p className="detail-ident">{[host, ...facts].join(', ')}</p>
         </div>
+        <CustomizePage page="server" title="Server" sections={SERVER_SECTIONS} />
       </header>
       {picker}
       <div className="detail-grid">
-        <div className="detail-main">
-          <HostContainers host={host} containers={containers} error={state && !state.ok ? state.error : undefined} />
-          {/* Backup jobs named after this host; none, no section. */}
-          {backups && (pick(backups.db).length > 0 || pick(backups.files).length > 0) && (
-            <Section title="Backups" count="nightly" className="backups-sec" id="backups">
-              <BackupSet title="Databases" runs={pick(backups.db)} now={now} />
-              <BackupSet title="Files" runs={pick(backups.files)} now={now} />
-            </Section>
-          )}
-        </div>
+        <div className="detail-main">{arrange(MAIN, page).map((id) => <Fragment key={id}>{part(id)}</Fragment>)}</div>
         <aside className="detail-side">
-          <HostResources box={box} configured={!!beszelState} error={beszelState?.error} />
-          {box && <HostBeszel host={host} />}
-          {links.length > 0 && (
-            <Section title="Links" id="links">
-              <dl className="ledger">
-                {links.map((l) => (
-                  <Row key={l.name} k={l.name}>
-                    <a href={l.href} target="_blank" rel="noreferrer">{l.href!.replace(/^https?:\/\//, '')}</a>
-                  </Row>
-                ))}
-                {box && (
-                  <Row k="Beszel">
-                    <a href={box.url} target="_blank" rel="noreferrer">System page</a>
-                  </Row>
-                )}
-              </dl>
-            </Section>
-          )}
+          {arrange(SIDE, page)
+            .sort((a, b) => (glance ? Number(a === 'cpu') - Number(b === 'cpu') : 0))
+            .map((id) => (
+              <Fragment key={id}>{part(id)}</Fragment>
+            ))}
         </aside>
       </div>
     </div>
@@ -432,10 +467,16 @@ function HostResources({ box, configured, error }: { box: GlancesHost | undefine
 }
 
 /** CPU by hour and the busiest containers of another server, both from Beszel. */
-function HostBeszel({ host }: { host: string }) {
-  const [detail, setDetail] = useState<{ series: Series; containers: { name: string; cpu: number; memBytes: number }[]; volumes: { name: string; used: number; total: number }[] } | null>(null);
+type BeszelDetail = { series: Series; containers: { name: string; cpu: number; memBytes: number }[]; volumes: { name: string; used: number; total: number }[] };
+
+/** Beszel's history for another host (CPU by hour, busiest containers, storage), refreshed every minute; null host, nothing. */
+function useBeszelDetail(host: string | null): { data: BeszelDetail | null; error: string | null } {
+  const [data, setData] = useState<BeszelDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
+    setData(null);
+    setError(null);
+    if (!host) return;
     let gone = false;
     const load = () =>
       fetch(`/api/hosts/${encodeURIComponent(host)}/beszel`)
@@ -443,12 +484,11 @@ function HostBeszel({ host }: { host: string }) {
           const body = (await r.json().catch(() => ({}))) as { series?: Series; containers?: []; volumes?: []; error?: string };
           if (gone) return;
           if (r.ok && body.series) {
-            setDetail({ series: body.series, containers: body.containers ?? [], volumes: body.volumes ?? [] });
+            setData({ series: body.series, containers: body.containers ?? [], volumes: body.volumes ?? [] });
             setError(null);
           } else setError(body.error ?? `HTTP ${r.status}`);
         })
         .catch((e) => !gone && setError((e as Error).message));
-    setDetail(null);
     void load();
     const t = setInterval(load, 60_000);
     return () => {
@@ -456,77 +496,87 @@ function HostBeszel({ host }: { host: string }) {
       clearInterval(t);
     };
   }, [host]);
-  const list = detail?.containers ?? [];
+  return { data, error };
+}
+
+function HostBusiest({ host, list }: { host: string; list: BeszelDetail['containers'] }) {
   const byCpu = [...list].sort((a, b) => b.cpu - a.cpu).slice(0, 5);
   const byMem = [...list].sort((a, b) => b.memBytes - a.memBytes).slice(0, 5);
   const link = (n: string) => <Link to={`/c/${n}@${host}`} className="ident">{n}</Link>;
   return (
-    <>
-      {(detail?.volumes.length ?? 0) > 0 && (
-        <Section title="Storage" count="from Beszel" id="storage">
-          <VolumeBars volumes={detail!.volumes} />
-        </Section>
-      )}
-      <Section title="CPU by hour" count="last 7 days, from Beszel" id="cpu">
-        {error ? <Empty>{error}.</Empty> : <HourHeatmap series={detail?.series} label={`CPU by hour on ${host} over the last seven days`} />}
-      </Section>
-      {list.length > 0 && (
-        <Section title="Busiest containers" count="now, from Beszel" id="busiest">
-          <div className="busiest">
-            <div>
-              <h3>CPU</h3>
-              <ol>
-                {byCpu.map((c) => (
-                  <li key={c.name}>
-                    {link(c.name)}
-                    <span className="mono">{pct(c.cpu)}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-            <div>
-              <h3>Memory</h3>
-              <ol>
-                {byMem.map((c) => (
-                  <li key={c.name}>
-                    {link(c.name)}
-                    <span className="mono">{size(c.memBytes)}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-        </Section>
-      )}
-    </>
+    <Section title="Busiest containers" count="now, from Beszel" id="busiest">
+      <div className="busiest">
+        <div>
+          <h3>CPU</h3>
+          <ol>
+            {byCpu.map((c) => (
+              <li key={c.name}>
+                {link(c.name)}
+                <span className="mono">{pct(c.cpu)}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div>
+          <h3>Memory</h3>
+          <ol>
+            {byMem.map((c) => (
+              <li key={c.name}>
+                {link(c.name)}
+                <span className="mono">{size(c.memBytes)}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </Section>
   );
 }
 
 const STATE_ORDER: Record<string, number> = { restarting: 0, dead: 0, exited: 1, created: 2, paused: 2, running: 3 };
 
-function HostContainers({ host, containers, error }: { host: string; containers: import('../../shared/types.ts').Container[]; error?: string }) {
+/** Fork: how many containers show before the rest fold away. */
+const CTR_SHOWN = 20;
+
+function HostContainers({ host, containers, error }: { host?: string; containers: import('../../shared/types.ts').Container[]; error?: string }) {
+  const { snap } = useStore();
   const running = containers.filter((c) => c.state === 'running').length;
+  // Stopped on purpose (Ignore, or expectStopped in the catalog): gray and last, so trouble leads.
+  const quiet = (c: { name: string; state: string }) => c.state !== 'running' && ((snap?.ignored ?? []).includes(c.name) || !!serviceFor(snap, c.name)?.expectStopped);
   const sorted = [...containers].sort(
-    (a, b) => (STATE_ORDER[a.state] ?? 1) - (STATE_ORDER[b.state] ?? 1) || Number(b.health === 'unhealthy') - Number(a.health === 'unhealthy') || a.name.localeCompare(b.name),
+    (a, b) =>
+      Number(quiet(a)) - Number(quiet(b)) ||
+      (STATE_ORDER[a.state] ?? 1) - (STATE_ORDER[b.state] ?? 1) ||
+      Number(b.health === 'unhealthy') - Number(a.health === 'unhealthy') ||
+      a.name.localeCompare(b.name),
   );
+  const item = (c: (typeof containers)[number]) => {
+    const led = c.state !== 'running' ? (quiet(c) ? 'idle' : 'crit') : c.health === 'unhealthy' ? 'warn' : 'ok';
+    // One line each: "Up 3 days (healthy)" reads as "3 days", trouble keeps Docker's words.
+    const short = c.state === 'running' && c.health !== 'unhealthy' ? c.status.replace(/^Up\s+/, '').replace(/\s*\((healthy|health: starting)\)$/, '') : c.status;
+    return (
+      <li key={c.id} title={c.status}>
+        <Led state={led} label={c.state} />
+        <Link to={`/c/${c.name}`} className="ident">{host ? c.name.replace(`@${host}`, '') : c.name}</Link>
+        <span className={`ctr-status mono ${led === 'crit' ? 'crit-text' : led === 'warn' ? 'warn-text' : ''}`}>{short}</span>
+      </li>
+    );
+  };
+  const rest = sorted.slice(CTR_SHOWN);
   return (
     <Section title="Containers" count={`${running} of ${containers.length} running`} action={{ label: 'All stacks', to: '/stacks' }} id="containers">
       {error && <p className="crit-text">Can't reach {host}: {error}.</p>}
       {containers.length ? (
-        <ul className="host-ctrs">
-          {sorted.map((c) => {
-            const led = c.state !== 'running' ? 'crit' : c.health === 'unhealthy' ? 'warn' : 'ok';
-            // One line each: "Up 3 days (healthy)" reads as "3 days", trouble keeps Docker's words.
-            const short = c.state === 'running' && c.health !== 'unhealthy' ? c.status.replace(/^Up\s+/, '').replace(/\s*\((healthy|health: starting)\)$/, '') : c.status;
-            return (
-              <li key={c.id} title={c.status}>
-                <Led state={led} label={c.state} />
-                <Link to={`/c/${c.name}`} className="ident">{c.name.replace(`@${host}`, '')}</Link>
-                <span className={`ctr-status mono ${led === 'crit' ? 'crit-text' : led === 'warn' ? 'warn-text' : ''}`}>{short}</span>
-              </li>
-            );
-          })}
-        </ul>
+        <>
+          <ul className="host-ctrs">{sorted.slice(0, CTR_SHOWN).map(item)}</ul>
+          {rest.length > 0 && (
+            <details className="host-ctrs-more">
+              <summary>{t('Show {n} more', { n: rest.length })}</summary>
+              <ul className="host-ctrs">{rest.map(item)}</ul>
+              <Link to="/stacks">{t('All stacks')}</Link>
+            </details>
+          )}
+        </>
       ) : (
         !error && <Empty>No containers reported yet.</Empty>
       )}
