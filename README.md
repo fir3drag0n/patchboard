@@ -127,9 +127,12 @@ and add to, the thermostat with minus and plus, blinds and shades, who's
 home, and each room's last day of temperature as a strip. Chores counts the
 days since the plants were watered or the filter changed. The car shows its
 charge over the week, the cabin and outside temperatures, and the four tires
-with a soft one named. Miners covers BitAxe and other AxeOS miners. A
-kitchen tablet can tick the list and mark chores done; locks and garage
-doors stay read-only for everyone.
+with a soft one named; its Dashboard style is a live drawing sheet you can
+swipe to turn the car and tap part by part, holding to lock it, open the
+frunk or start charging. Miners covers BitAxe and other AxeOS miners. A
+kitchen tablet can tick the list and mark chores done; Home Assistant's
+locks and garage doors stay read-only for everyone, and the car's controls
+never reach a household device.
 
 ![Shopping list, thermostat, shades, people and chores on one board](docs/screenshots/family.webp)
 

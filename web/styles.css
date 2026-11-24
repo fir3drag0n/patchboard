@@ -8104,13 +8104,175 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
   gap: 6px;
 }
 
+/* The sheet's stage: always the sheet's own shape, and always the whole of
+   it on screen, so a wall tablet never scrolls to see it. What sits over
+   the sheet (the model, a part) is placed in its units, through --u. */
+.bp-stage {
+  position: relative;
+  width: min(100%, calc((100dvh / var(--zoom) - 200px) * 16 / 9));
+  aspect-ratio: 320 / 180;
+  margin-inline: auto;
+}
+
 .bp-sheet {
   display: block;
   width: 100%;
-  height: auto;
-  /* Always the whole sheet on screen: a wall tablet never scrolls to see it. */
-  max-height: calc(100dvh / var(--zoom) - 200px);
+  height: 100%;
   touch-action: pan-y;
+}
+
+/* A part, opened in the place of the live metrics: its state and what it can do. */
+.bp-part {
+  position: absolute;
+  display: grid;
+}
+
+.bp-part-in {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 2);
+  padding: calc(var(--u) * 2.4) calc(var(--u) * 3);
+  border: 1px solid var(--ink-2);
+  background: var(--raised);
+  font-family: 'Barlow', var(--f-body);
+  color: var(--head);
+  overflow: auto;
+  animation: bp-turn 0.2s ease-out;
+}
+
+.bp-part-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: calc(var(--u) * 1.4);
+  border-bottom: 1px solid var(--ink-2);
+  font-size: calc(var(--u) * 4);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bp-part-x {
+  min-width: calc(var(--u) * 7);
+  min-height: calc(var(--u) * 7);
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font-size: calc(var(--u) * 5);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bp-part-rows {
+  display: grid;
+  gap: calc(var(--u) * 1.2);
+  margin: 0;
+}
+
+.bp-part-rows div {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(var(--u) * 2);
+}
+
+.bp-part-rows dt {
+  font-size: calc(var(--u) * 2.6);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.bp-part-rows dd {
+  margin: 0;
+  font-size: calc(var(--u) * 3.2);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.bp-part-rows dd.is-soft,
+.bp-part-said.is-soft {
+  color: var(--warn);
+}
+
+.bp-part-limit {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+  font-size: calc(var(--u) * 2.8);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.bp-part-limit output {
+  min-width: 3.5ch;
+  text-align: center;
+  color: var(--head);
+  font-size: calc(var(--u) * 3.6);
+}
+
+.bp-part-step {
+  min-width: calc(var(--u) * 7);
+  min-height: calc(var(--u) * 7);
+  border: 1px solid var(--ink-3);
+  background: none;
+  color: var(--head);
+  font-size: calc(var(--u) * 3.6);
+  cursor: pointer;
+}
+
+.bp-part-acts {
+  display: grid;
+  gap: calc(var(--u) * 1.2);
+}
+
+.bp-part .bp-part-act {
+  position: relative;
+  overflow: hidden;
+  min-height: calc(var(--u) * 7.5);
+  padding: 0 calc(var(--u) * 2);
+  border: 1px solid var(--ink-2);
+  background: none;
+  color: var(--head);
+  font: 400 calc(var(--u) * 3) / 1 'Barlow', var(--f-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* A car control fills in ink as you hold it: it asks, it doesn't take anything down. */
+.bp-part .hold-fill {
+  background: color-mix(in srgb, var(--head) 16%, transparent);
+}
+
+.bp-part-limit .bp-part-act {
+  margin-left: auto;
+}
+
+.bp-part-said {
+  margin: 0;
+  font-size: calc(var(--u) * 2.8);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bp-part-more {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--ink-3);
+  background: none;
+  color: var(--ink-2);
+  font: 400 calc(var(--u) * 2.8) / 1.4 'Barlow', var(--f-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+:is(.bp-part-x, .bp-part-step, .bp-part-more, .bp-part .bp-part-act):focus-visible {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .bp-sheet text {
@@ -8449,26 +8611,174 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
   }
 }
 
-/* Turning the car: the view brought to the middle fades in. */
-.bp-turn {
-  animation: bp-turn 0.24s ease-out;
-}
-
+/* Turning the car: the view it turned from narrows away about its own
+   middle, as a car's outline does turning, and the new one widens in just
+   behind it, so the two barely overlap. A step to the side says which way. */
 @keyframes bp-turn {
   from {
     opacity: 0;
   }
 }
 
+.bp-enter,
+.bp-leave {
+  transform-box: view-box;
+}
+
+.bp-leave {
+  pointer-events: none;
+}
+
+.bp-enter.is-next {
+  animation: bp-in-next 0.26s cubic-bezier(0.2, 0.75, 0.25, 1) 0.1s both;
+}
+
+.bp-enter.is-back {
+  animation: bp-in-back 0.26s cubic-bezier(0.2, 0.75, 0.25, 1) 0.1s both;
+}
+
+.bp-leave.is-next {
+  animation: bp-out-next 0.16s cubic-bezier(0.5, 0, 0.9, 0.5) both;
+}
+
+.bp-leave.is-back {
+  animation: bp-out-back 0.16s cubic-bezier(0.5, 0, 0.9, 0.5) both;
+}
+
+@keyframes bp-in-next {
+  from {
+    opacity: 0;
+    transform: translateX(2.5%) scaleX(0.5);
+  }
+}
+
+@keyframes bp-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-2.5%) scaleX(0.5);
+  }
+}
+
+@keyframes bp-out-next {
+  to {
+    opacity: 0;
+    transform: translateX(-2.5%) scaleX(0.5);
+  }
+}
+
+@keyframes bp-out-back {
+  to {
+    opacity: 0;
+    transform: translateX(2.5%) scaleX(0.5);
+  }
+}
+
+/* The figures on a view, and the row of small views, settle in once the car has turned. */
+.bp-marks-in {
+  animation: bp-turn 0.2s ease-out 0.26s both;
+}
+
+.bp-row-in {
+  animation: bp-turn 0.24s ease-out 0.12s both;
+}
+
+/* A detail sheet opening: the same short settle. Never the drawing sheet itself,
+   whose drawings would lose their blend with the paper while it moved. */
+.bp-detail {
+  animation: bp-settle 0.22s ease-out;
+}
+
+@keyframes bp-settle {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* The turntable: swiped across, focused for the arrow keys. */
+.bp-turn-pad {
+  fill: transparent;
+}
+
+.bp-turntable {
+  cursor: grab;
+}
+
+.bp-turntable:focus {
+  outline: none;
+}
+
+.bp-turntable:focus-visible .bp-turn-pad {
+  stroke: var(--accent);
+  stroke-width: 0.4px;
+  stroke-dasharray: 2 1.5;
+}
+
+.bp-turn-mark {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 0.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* A part on the drawing: unmarked until you point at it, choose it, or it
+   stands open; then a dashed outline and its name, as a drawing marks a detail. */
+.bp-region-box {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 0.35px;
+  stroke-dasharray: 1.6 1.1;
+}
+
+.bp-region-tag {
+  font-size: 2.4px;
+  opacity: 0;
+  /* A paper halo, so the name reads over the drawing's lines. */
+  paint-order: stroke;
+  stroke: var(--raised);
+  stroke-width: 0.9px;
+  stroke-linejoin: round;
+  fill: var(--accent) !important;
+}
+
+.bp-region.is-on .bp-region-box,
+.bp-hit:focus-visible .bp-region-box {
+  stroke: var(--accent);
+}
+
+.bp-region.is-on .bp-region-tag,
+.bp-hit:focus-visible .bp-region-tag {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .bp-hit:hover .bp-region-box {
+    stroke: var(--accent);
+  }
+
+  .bp-hit:hover .bp-region-tag {
+    opacity: 1;
+  }
+}
+
+.bp-region.is-open .bp-region-box {
+  stroke: var(--warn);
+  opacity: 0.9;
+}
+
+.bp-region.is-open .bp-region-tag {
+  opacity: 1;
+  fill: var(--warn) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .bp-cable-flow,
-  .bp-turn {
+  :is(.bp-cable-flow, .bp-enter, .bp-leave, .bp-marks-in, .bp-row-in, .bp-detail, .bp-part-in) {
     animation: none;
   }
 }
 
-html[data-eink] .bp-cable-flow,
-html[data-eink] .bp-turn {
+html[data-eink] :is(.bp-cable-flow, .bp-enter, .bp-leave, .bp-marks-in, .bp-row-in, .bp-detail, .bp-part-in) {
   animation: none;
 }
 

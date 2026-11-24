@@ -7,7 +7,7 @@
 // wall tablet, in a dashboard card or on an e-ink reader. Too narrow to read,
 // it gives way to `fallback`.
 
-import { type KeyboardEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react';
+import { type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { type CarPicture, type CarView } from '../../shared/car-pictures.ts';
 import { dim, specFor } from '../../shared/car-specs.ts';
@@ -17,6 +17,11 @@ import { useJson } from '../lib/api.ts';
 import { msg, t as tr } from '../lib/i18n.ts';
 import { locale } from '../lib/region.ts';
 import { PictureEditor, SIDE_PORT, SIDE_TIRES, SideDrawing, type TireReading } from './CarSketch.tsx';
+import { type CarCommand, OPENS_CAR } from '../../shared/car-commands.ts';
+import { HoldButton } from '../components/Hold.tsx';
+
+/** A part of the car, as the sheet opens it: doors are one, tires are one. */
+type Pick = 'doors' | 'frunk' | 'trunk' | 'port' | 'glass' | 'body' | 'tires';
 
 /** An empty cell, as a drawing's table marks one. */
 const BLANK = '–';
@@ -70,6 +75,11 @@ export interface CarSheet {
   lastDrive?: string;
   weekDriven?: string;
   efficiency?: string;
+  /** What stands open, part by part, for the drawing and the controls. */
+  parts: Partial<Record<'fl' | 'fr' | 'rl' | 'rr' | 'frunk' | 'trunk', boolean>>;
+  portOpen?: boolean;
+  /** Controls hidden: a read-only server or a household device. */
+  noControls: boolean;
 }
 
 /** Below this width the sheet's lettering is too small to read. */
@@ -230,15 +240,39 @@ function place(framed: Framed, slot: Box) {
 }
 
 /** One view of the car: your picture, cropped to its part, or the drawn side view. */
-function ViewImage({ pic, framed, box, soft }: { pic: CarPicture | null; framed: Framed; box: Box; soft: Record<TirePos, boolean> }) {
+function ViewImage({ pic, framed, box, soft, motion = '' }: { pic: CarPicture | null; framed: Framed; box: Box; soft: Record<TirePos, boolean>; motion?: string }) {
   const { crop } = framed;
+  // The part you boxed, clipped on the image itself: it travels with the image as it turns, so nothing
+  // from beyond the box slides in, and the image keeps its blend with the paper.
+  const clip = `bp-crop-${useId().replace(/:/g, '')}`;
+  const clipDef = (
+    <defs>
+      <clipPath id={clip}>
+        <rect x={crop.x} y={crop.y} width={crop.w} height={crop.h} />
+      </clipPath>
+    </defs>
+  );
   return pic ? (
     <svg x={box.x} y={box.y} width={box.w} height={box.h} viewBox={`${crop.x} ${crop.y} ${crop.w} ${crop.h}`} preserveAspectRatio="none" className="bp-view">
-      <image href={pic.src} x="0" y="0" width={framed.w} height={framed.h} className={`bp-img ${pic.drawing === false ? '' : 'is-drawing'}`} />
+      {clipDef}
+      {/* Only the image moves when the car turns, about the middle of its own part: animating anything around it would cut its blend with the paper. */}
+      <image
+        href={pic.src}
+        x="0"
+        y="0"
+        width={framed.w}
+        height={framed.h}
+        className={`bp-img ${pic.drawing === false ? '' : 'is-drawing'} ${motion}`}
+        clipPath={`url(#${clip})`}
+        style={{ transformOrigin: `${crop.x + crop.w / 2}px ${crop.y + crop.h / 2}px` }}
+      />
     </svg>
   ) : (
     <svg x={box.x} y={box.y} width={box.w} height={box.h} viewBox={`${crop.x} ${crop.y} ${crop.w} ${crop.h}`} className="bp-view bp-drawn">
-      <SideDrawing soft={soft} />
+      {clipDef}
+      <g className={motion} clipPath={`url(#${clip})`} style={{ transformOrigin: `${crop.x + crop.w / 2}px ${crop.y + crop.h / 2}px` }}>
+        <SideDrawing soft={soft} />
+      </g>
     </svg>
   );
 }
@@ -307,13 +341,45 @@ interface View {
   label: string;
 }
 
-function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPicture[]; open: (d: Detail) => void; big: CarView; turn: (v: CarView) => void }) {
+function Sheet({
+  sheet,
+  pics,
+  open,
+  big,
+  turn,
+}: {
+  sheet: CarSheet;
+  pics: CarPicture[];
+  open: (d: Detail) => void;
+  big: CarView;
+  turn: (v: CarView) => void;
+}) {
+  const stage = useRef<HTMLDivElement>(null);
+  const [u, setU] = useState(3);
+  useEffect(() => {
+    const el = stage.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setU(e.contentRect.width / W));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const [pick, setPick] = useState<Pick | null>(null);
+  useEffect(() => {
+    if (!pick) return;
+    const key = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && setPick(null);
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [pick]);
   const id = useId().replace(/:/g, '');
   const byView = (v: CarView) => pics.find((p) => p.view === v) ?? null;
   const sidePic = byView('side') ?? pics.find((p) => !p.view) ?? null;
   const topPic = byView('top');
   const frontPic = byView('front');
   const rearPic = byView('rear');
+  const front34Pic = byView('front34');
+  const rear34Pic = byView('rear34');
+  const front34Framed = useFramed(front34Pic?.src ?? null, front34Pic?.crop);
+  const rear34Framed = useFramed(rear34Pic?.src ?? null, rear34Pic?.crop);
   const sideLoaded = useFramed(sidePic?.src ?? null, sidePic?.crop);
   const topFramed = useFramed(topPic?.src ?? null, topPic?.crop);
   const frontFramed = useFramed(frontPic?.src ?? null, frontPic?.crop);
@@ -322,28 +388,81 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
   const soft = Object.fromEntries(sheet.tires.map((t) => [t.pos, t.soft])) as Record<TirePos, boolean>;
   const tire = Object.fromEntries(sheet.tires.map((t) => [t.pos, t])) as Record<TirePos, TireReading>;
   const spec = specFor(sheet.model);
-
-  // Every view there is. The side always is: your picture or the drawn one.
-  const views: View[] = [
-    { v: 'side', pic: sidePic, framed: sideFramed, at: sidePic ? sidePic.at : SIDE_TIRES, port: sidePic ? sidePic.port : SIDE_PORT, label: msg('Side view') },
-    ...(
-      [
-        ['front', frontPic, frontFramed, msg('Front view')],
-        ['rear', rearPic, rearFramed, msg('Rear view')],
-        ['top', topPic, topFramed, msg('Top view')],
-      ] as const
-    )
-      .filter(([, p]) => p)
-      .map(([v, p, framed, label]) => ({ v, pic: p, framed, at: p!.at, port: p!.port, label })),
-  ];
+  // Every view there is, in the order the car turns through them. The side always is: your picture or the drawn one.
+  const sideView: View = { v: 'side', pic: sidePic, framed: sideFramed, at: sidePic ? sidePic.at : SIDE_TIRES, port: sidePic ? sidePic.port : SIDE_PORT, label: msg('Side view') };
+  const others = (
+    [
+      ['front', frontPic, frontFramed, msg('Front view')],
+      ['front34', front34Pic, front34Framed, msg('Front three-quarter')],
+      ['rear34', rear34Pic, rear34Framed, msg('Rear three-quarter')],
+      ['rear', rearPic, rearFramed, msg('Rear view')],
+      ['top', topPic, topFramed, msg('Top view')],
+    ] as const
+  )
+    .filter(([, p]) => p)
+    .map(([v, p, framed, label]): View => ({ v, pic: p, framed, at: p!.at, port: p!.port, label }));
+  const views: View[] = TURN.map((v) => (v === 'side' ? sideView : others.find((o) => o.v === v))).filter((x): x is View => !!x);
   // The large view is the one you turned to, while it's there; the rest go across the top.
-  const large = views.find((x) => x.v === big) ?? views[0];
+  const large = views.find((x) => x.v === big) ?? sideView;
+  const at = views.indexOf(large);
+  const step = (d: 1 | -1) => views.length > 1 && turn(views[(at + d + views.length) % views.length].v);
+  // The view it turned from leaves while the new one comes in, the way it turned.
+  // Which view it turned from, by name: its drawing is looked up now, so a picture that loaded since is the one that leaves.
+  const [leaving, setLeaving] = useState<{ v: CarView; dir: 1 | -1 } | null>(null);
+  const was = useRef(large.v);
+  useEffect(() => {
+    const prev = was.current;
+    was.current = large.v;
+    if (prev === large.v || matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.hasAttribute('data-eink')) return;
+    const i = views.findIndex((x) => x.v === prev);
+    const n = views.length;
+    const dir: 1 | -1 = i < 0 ? 1 : (at - i + n) % n <= n / 2 ? 1 : -1;
+    setLeaving({ v: prev, dir });
+    const t = window.setTimeout(() => setLeaving(null), 380);
+    return () => window.clearTimeout(t);
+  }, [large.v]);
+  // Swipe or drag across it to turn it; a drag never counts as a tap on a part.
+  const drag = useRef<{ x: number; moved: boolean } | null>(null);
+  const dragged = useRef(false);
+  // How far the car leans with a drag, in the sheet's units: a little, and less the further it goes.
+  const [lean, setLean] = useState(0);
+  const onDown = (e: PointerEvent<SVGGElement>) => {
+    drag.current = { x: e.clientX, moved: false };
+    dragged.current = false;
+  };
+  const onMove = (e: PointerEvent<SVGGElement>) => {
+    const d = drag.current;
+    if (!d || views.length < 2) return;
+    const dx = (e.clientX - d.x) / u;
+    setLean(Math.sign(dx) * Math.min(8, Math.sqrt(Math.abs(dx)) * 1.6));
+  };
+  const onUp = (e: PointerEvent<SVGGElement>) => {
+    const d = drag.current;
+    drag.current = null;
+    setLean(0);
+    if (!d) return;
+    const dx = e.clientX - d.x;
+    if (Math.abs(dx) > 28) {
+      dragged.current = true;
+      step(dx < 0 ? 1 : -1);
+    }
+  };
   const shown = views.filter((x) => x !== large);
   const slotW = shown.length ? Math.min(66, 196 / shown.length) : 0;
 
   // The large view: in the middle, higher up when there's no row of small views above it.
   const mainSlot = shown.length ? { x: 108, y: 64, w: 176, h: 52 } : { x: 104, y: 30, w: 184, h: 84 };
   const side = large.framed ? place(large.framed, mainSlot) : null;
+  const flippedOf = (view: View) => {
+    const f = view.at.fl ?? view.at.fr;
+    const r = view.at.rl ?? view.at.rr;
+    return !!(f && r && f[0] > r[0]);
+  };
+  const isOpen: Partial<Record<Pick, boolean>> = {
+    doors: !!(sheet.parts.fl || sheet.parts.fr || sheet.parts.rl || sheet.parts.rr),
+    frunk: !!sheet.parts.frunk,
+    trunk: !!sheet.parts.trunk,
+  };
   const sideAt = large.at;
   const portXY = large.port;
 
@@ -364,6 +483,7 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
   const px = (i: number) => 12 + i * (panels.w + panels.gap);
 
   return (
+    <div ref={stage} className="bp-stage" style={{ '--u': `${u}px` } as CSSProperties}>
     <svg className="bp-sheet" viewBox={`0 0 ${W} ${H}`} role="group" aria-label={`${sheet.model ?? sheet.name}: ${tr('engineering drawing')}`}>
       <defs>
         <pattern id={`${id}-hatch`} width="1.4" height="1.4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -449,7 +569,7 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
         return (
           <g key={v}>
             {/* The picture sits outside the button, so its uncropped edges don't count toward its size. */}
-            <ViewImage pic={pic} framed={framed} box={p.box} soft={soft} />
+            <ViewImage pic={pic} framed={framed} box={p.box} soft={soft} motion={leaving ? 'bp-row-in' : ''} />
             <Hit label={tr('Show the {view} large', { view: tr(label) })} onOpen={() => turn(v)}>
               <rect className="bp-hit-area" x={slot.x} y={slot.y - 2} width={slot.w} height={slot.h + 12} />
               {(v === 'top' || v === 'side') && spec && <Dimension x0={p.ink.x0} y0={14} x1={p.ink.x1} y1={14} text={dim(spec.length, locale())} />}
@@ -464,9 +584,50 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
 
       {/* The large view, dimensioned underneath and on its right: the side and top views along
           their length, the side, front and rear views in height. */}
+      {/* The large view, on a turntable: swipe across it, or press the arrow keys, to turn the car to the next view. */}
+      {(() => {
+        const gone = leaving && views.find((x) => x.v === leaving.v);
+        return (
+          gone?.framed && (
+            <g aria-hidden="true">
+              <ViewImage pic={gone.pic} framed={gone.framed} box={place(gone.framed, mainSlot).box} soft={soft} motion={`bp-leave ${leaving!.dir > 0 ? 'is-next' : 'is-back'}`} />
+            </g>
+          )
+        );
+      })()}
       {side && large.framed && (
-        <g key={large.v} className="bp-turn">
-          <ViewImage pic={large.pic} framed={large.framed} box={side.box} soft={soft} />
+        <g
+          key={large.v}
+          className="bp-turntable"
+          role="group"
+          tabIndex={views.length > 1 ? 0 : undefined}
+          aria-label={tr('{view}. Turn the car with the arrow keys or a swipe.', { view: tr(large.label) })}
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={() => {
+            drag.current = null;
+            setLean(0);
+          }}
+          onClickCapture={(e) => {
+            if (dragged.current) {
+              e.stopPropagation();
+              dragged.current = false;
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.target !== e.currentTarget) return;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+              e.preventDefault();
+              step(e.key === 'ArrowRight' ? 1 : -1);
+            }
+          }}
+        >
+          <rect className="bp-turn-pad" x={mainSlot.x - 4} y={mainSlot.y - 2} width={mainSlot.w + 8} height={mainSlot.h + 4} />
+          <g transform={lean ? `translate(${lean} 0)` : undefined}>
+            <ViewImage pic={large.pic} framed={large.framed} box={side.box} soft={soft} motion={leaving ? `bp-enter ${leaving.dir > 0 ? 'is-next' : 'is-back'}` : ''} />
+          </g>
+          <g className={leaving ? 'bp-marks-in' : undefined} opacity={lean ? 0.35 : undefined}>
           {spec &&
             (() => {
               const x0 = side.ink.x0;
@@ -474,7 +635,7 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
               const y = side.ink.y1 + 4.5;
               const len = x1 - x0;
               const along = large.v === 'side' || large.v === 'top';
-              const tall = large.v !== 'top';
+              const tall = large.v === 'side' || large.v === 'front' || large.v === 'rear';
               const fx = sideAt.fl ?? sideAt.fr;
               const rx = sideAt.rl ?? sideAt.rr;
               const front = spec.front ?? spec.length * 0.18;
@@ -498,13 +659,35 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
                 </>
               );
             })()}
-          {/* Tires on the side view: a tap target over each tire that shows. */}
+          {/* The parts on this view: tap one to open it. Each shows its outline, as a drawing marks a detail, when it's open or chosen. */}
+          {(REGIONS[large.v] ?? []).map(([part, fx0, fx1, fy0, fy1]) => {
+            const { x0, x1, y0, y1 } = side.ink;
+            const flip = flippedOf(large);
+            const ax = (f: number) => (flip ? x1 - f * (x1 - x0) : x0 + f * (x1 - x0));
+            const rx = Math.min(ax(fx0), ax(fx1));
+            const rw = Math.abs(ax(fx1) - ax(fx0));
+            const ry = y1 - fy1 * (y1 - y0);
+            const rh = (fy1 - fy0) * (y1 - y0);
+            const opened = isOpen[part];
+            const word = tr(PICK_WORDS[part]);
+            return (
+              <Hit key={part} label={`${word}${opened ? `: ${tr('Open')}` : ''}`} onOpen={() => setPick(part)}>
+                <g className={`bp-region ${opened ? 'is-open' : ''} ${pick === part ? 'is-on' : ''}`}>
+                  <rect className="bp-region-box" x={rx} y={ry} width={rw} height={rh} rx="1.2" fill={opened ? `url(#${id}-hatch)` : undefined} />
+                  <text className={`bp-region-tag ${opened ? 'is-soft' : ''}`} x={rx + 1} y={ry - 1}>
+                    {opened ? `${word} · ${tr('Open')}` : word}
+                  </text>
+                </g>
+              </Hit>
+            );
+          })}
+          {/* Tires on the view: a tap target over each tire that shows. */}
           {TIRES.map((t) => {
             const xy = sideAt[t];
             if (!xy) return null;
             const [cx, cy] = side.at(xy);
             return (
-              <Hit key={t} label={`${tire[t].name} ${tire[t].value} ${sheet.unit}`} onOpen={() => open('tires')}>
+              <Hit key={t} label={`${tire[t].name} ${tire[t].value} ${sheet.unit}`} onOpen={() => setPick('tires')}>
                 <circle className={`bp-tire-ring ${tire[t].soft ? 'is-soft' : ''}`} cx={cx} cy={cy} r={Math.min(side.box.h * 0.2, side.box.w * 0.06)} />
               </Hit>
             );
@@ -519,7 +702,7 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
               const ly = side.box.y - 1;
               const sx = ex - 34;
               return (
-                <Hit label={`${tr('Charge port')}: ${tr(sheet.state)}${sheet.kw ? `, ${sheet.kw}` : ''}`} onOpen={() => open('charge')}>
+                <Hit label={`${tr('Charge port')}: ${tr(sheet.state)}${sheet.kw ? `, ${sheet.kw}` : ''}`} onOpen={() => setPick('port')}>
                   <circle className="bp-dot" cx={cx} cy={cy} r="0.8" />
                   <path className="bp-lead" d={`M${cx} ${cy} L${ex} ${ly} H${sx}`} />
                   {sheet.charging && <path className="bp-cable-flow" d={`M${sx} ${ly} H${ex} L${cx} ${cy}`} />}
@@ -530,6 +713,20 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
                 </Hit>
               );
             })()}
+          </g>
+          {/* The way round, when there's more than one view: a quiet turn mark either side. */}
+          {views.length > 1 && (
+            <>
+              <Hit label={tr('Turn the car back')} onOpen={() => step(-1)}>
+                <path className="bp-turn-mark" d={`M${mainSlot.x - 1} ${mainSlot.y + mainSlot.h / 2 - 3} l-2.4 3 l2.4 3`} />
+                <rect className="bp-hit-area" x={mainSlot.x - 6} y={mainSlot.y + mainSlot.h / 2 - 6} width="8" height="12" />
+              </Hit>
+              <Hit label={tr('Turn the car on')} onOpen={() => step(1)}>
+                <path className="bp-turn-mark" d={`M${mainSlot.x + mainSlot.w + 1} ${mainSlot.y + mainSlot.h / 2 - 3} l2.4 3 l-2.4 3`} />
+                <rect className="bp-hit-area" x={mainSlot.x + mainSlot.w - 2} y={mainSlot.y + mainSlot.h / 2 - 6} width="8" height="12" />
+              </Hit>
+            </>
+          )}
         </g>
       )}
 
@@ -542,7 +739,7 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
         <line className="bp-rule" x1={px(0)} y1={panels.y + 8} x2={px(0) + panels.w} y2={panels.y + 8} />
         {(
           [
-            [tr('Doors'), sheet.open.length ? sheet.open.join(', ') : sheet.locked ? tr('Locked') : tr('Unlocked'), sheet.open.length > 0 || !sheet.locked],
+            sheet.open.length ? [tr('Open'), sheet.open.join(', '), true] : [tr('Doors'), sheet.locked ? tr('Locked') : tr('Unlocked'), !sheet.locked],
             [tr('Sentry'), sheet.sentry ? tr('On') : tr('Off')],
             sheet.parked ? [tr('Parked'), sheet.parked] : [tr('Odometer'), sheet.odometer],
             [sheet.asleep ? tr('Asleep, read') : tr('Read'), sheet.read],
@@ -666,7 +863,206 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
         </text>
       )}
     </svg>
+      {pick && (
+        <div className="bp-part" style={boxStyle({ x: 12, y: 36, w: 82, h: 88 })}>
+          <PartPanel sheet={sheet} pick={pick} onClose={() => setPick(null)} onDetail={open} />
+        </div>
+      )}
+    </div>
   );
+}
+
+/** The order the car turns through its views. */
+const TURN: CarView[] = ['front', 'front34', 'side', 'rear34', 'rear', 'top'];
+
+/**
+ * Where each part sits on a view, as fractions of the car's own outline:
+ * along it from the front (0) to the back (1), and up from the ground (0) to
+ * the roof (1); on the top view, across it. From Tesla's figures for a
+ * Model 3, close enough on any car to tap.
+ */
+const REGIONS: Partial<Record<CarView, [Pick, number, number, number, number][]>> = {
+  side: [
+    ['doors', 0.29, 0.72, 0.1, 0.65],
+    ['glass', 0.27, 0.84, 0.67, 0.97],
+    ['frunk', 0.04, 0.24, 0.44, 0.68],
+    ['trunk', 0.87, 0.99, 0.56, 0.76],
+  ],
+  front: [
+    ['frunk', 0.26, 0.74, 0.42, 0.62],
+    ['glass', 0.26, 0.74, 0.65, 0.95],
+  ],
+  rear: [
+    ['trunk', 0.26, 0.74, 0.45, 0.68],
+    ['glass', 0.26, 0.74, 0.71, 0.95],
+  ],
+  top: [
+    ['frunk', 0.03, 0.24, 0.2, 0.8],
+    ['glass', 0.26, 0.86, 0.2, 0.8],
+    ['trunk', 0.87, 0.98, 0.2, 0.8],
+  ],
+};
+
+const PICK_WORDS: Record<Pick, string> = {
+  doors: msg('Doors and locks'),
+  frunk: msg('Frunk'),
+  trunk: msg('Trunk'),
+  port: msg('Charge port'),
+  glass: msg('Cabin and climate'),
+  body: msg('Status'),
+  tires: msg('Tires'),
+};
+const PICK_DETAIL: Partial<Record<Pick, Detail>> = { doors: 'status', body: 'status', port: 'charge', glass: 'climate', tires: 'tires' };
+
+/**
+ * One part of the car, in the place of the live metrics: its state, and what
+ * it can be asked to do. Each command is held to confirm, as the server's are.
+ */
+function PartPanel({ sheet, pick, onClose, onDetail }: { sheet: CarSheet; pick: Pick; onClose: () => void; onDetail: (d: Detail) => void }) {
+  const [busy, setBusy] = useState<CarCommand | null>(null);
+  const [said, setSaid] = useState<{ ok: boolean; text: string } | null>(null);
+  const [limit, setLimit] = useState(sheet.limit);
+  // Without sign-in, nothing that lets someone into the car is offered.
+  const signIn = useJson<{ auth?: string }>('/api/session').data?.auth;
+  const guarded = signIn === 'none';
+  const close = useRef<HTMLButtonElement>(null);
+  useEffect(() => close.current?.focus(), [pick]);
+  useEffect(() => setSaid(null), [pick]);
+  const send = async (cmd: CarCommand, percent?: number) => {
+    setBusy(cmd);
+    setSaid(null);
+    try {
+      const res = await fetch(`/api/car/${encodeURIComponent(sheet.vin)}/command/${cmd}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-patchboard': 'action' },
+        body: JSON.stringify(percent != null ? { percent } : {}),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
+      setSaid({ ok: true, text: tr('Done') });
+    } catch (err) {
+      setSaid({ ok: false, text: (err as Error).message });
+    } finally {
+      setBusy(null);
+    }
+  };
+  const open = (k: 'frunk' | 'trunk') => !!sheet.parts[k];
+  const rows: [string, string, boolean?][] =
+    pick === 'doors'
+      ? [
+          [tr('Doors'), sheet.locked ? tr('Locked') : tr('Unlocked'), !sheet.locked],
+          [tr('Open'), sheet.open.length ? sheet.open.join(', ') : tr('Nothing'), sheet.open.length > 0],
+        ]
+      : pick === 'frunk' || pick === 'trunk'
+        ? [[tr(PICK_WORDS[pick]), open(pick) ? tr('Open') : tr('Closed'), open(pick)]]
+        : pick === 'port'
+          ? [
+              [tr('State'), tr(sheet.state)],
+              [tr('Rate'), sheet.charging && sheet.kw ? sheet.kw : BLANK],
+              [tr('Charge'), `${sheet.battery}%`],
+              [tr('Limit'), `${sheet.limit}%`],
+            ]
+          : pick === 'glass'
+            ? [
+                [tr('Cabin'), sheet.inside ?? BLANK],
+                [tr('Outside'), sheet.outside ?? BLANK],
+                [tr('Climate'), sheet.climate ? tr('On') : tr('Off')],
+              ]
+            : pick === 'tires'
+              ? sheet.tires.map((t) => [t.name, `${t.value} ${sheet.unit}`, t.soft] as [string, string, boolean])
+              : [
+                  [tr('Sentry'), sheet.sentry ? tr('On') : tr('Off')],
+                  [tr('Odometer'), sheet.odometer],
+                  ...(sheet.parked ? ([[tr('Parked'), sheet.parked]] as [string, string][]) : []),
+                ];
+  // What this part can be asked to do: [command, the word on the button, the hint for a short tap].
+  const acts: [CarCommand, string, string][] = sheet.noControls
+    ? []
+    : pick === 'doors'
+      ? [sheet.locked ? ['unlock', tr('Unlock'), tr('Hold to unlock')] : ['lock', tr('Lock'), tr('Hold to lock')], ['flash', tr('Flash the lights'), tr('Hold to flash')], ['honk', tr('Honk'), tr('Hold to honk')]]
+      : pick === 'frunk'
+        ? open('frunk')
+          ? []
+          : [['frunk', tr('Open the frunk'), tr('Hold to open')]]
+        : pick === 'trunk'
+          ? [['trunk', open('trunk') ? tr('Close the trunk') : tr('Open the trunk'), open('trunk') ? tr('Hold to close') : tr('Hold to open')]]
+          : pick === 'port'
+            ? [
+                ...(sheet.charging
+                  ? ([['charge-stop', tr('Stop charging'), tr('Hold to stop')]] as [CarCommand, string, string][])
+                  : sheet.plugged
+                    ? ([['charge-start', tr('Start charging'), tr('Hold to start')]] as [CarCommand, string, string][])
+                    : []),
+                sheet.portOpen ? ['port-close', tr('Close the port'), tr('Hold to close')] : ['port-open', tr('Open the port'), tr('Hold to open')],
+              ]
+            : pick === 'glass'
+              ? [sheet.climate ? ['climate-off', tr('Turn climate off'), tr('Hold to turn off')] : ['climate-on', tr('Turn climate on'), tr('Hold to turn on')]]
+              : pick === 'body'
+                ? [sheet.sentry ? ['sentry-off', tr('Turn Sentry off'), tr('Hold to turn off')] : ['sentry-on', tr('Turn Sentry on'), tr('Hold to turn on')]]
+                : [];
+  const held = guarded ? acts.filter(([cmd]) => OPENS_CAR.includes(cmd)) : [];
+  const offered = acts.filter((a) => !held.includes(a));
+  const detail = PICK_DETAIL[pick];
+  return (
+    <section className="bp-part-in" aria-label={tr(PICK_WORDS[pick])}>
+      <header className="bp-part-head">
+        <span>{tr(PICK_WORDS[pick])}</span>
+        <button ref={close} type="button" className="bp-part-x" onClick={onClose} aria-label={tr('Close')}>
+          ×
+        </button>
+      </header>
+      <dl className="bp-part-rows">
+        {rows.map(([k, v, trouble]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd className={trouble ? 'is-soft' : ''}>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      {pick === 'port' && !sheet.noControls && (
+        <div className="bp-part-limit">
+          <span>{tr('Limit')}</span>
+          <button type="button" className="bp-part-step" aria-label={tr('Lower the limit')} onClick={() => setLimit((l) => Math.max(50, l - 5))}>
+            −
+          </button>
+          <output aria-live="polite">{limit}%</output>
+          <button type="button" className="bp-part-step" aria-label={tr('Raise the limit')} onClick={() => setLimit((l) => Math.min(100, l + 5))}>
+            +
+          </button>
+          {limit !== sheet.limit && (
+            <HoldButton className="bp-part-act" hint={tr('Hold to set')} disabled={!!busy} onConfirm={() => void send('limit', limit)}>
+              {tr('Set')}
+            </HoldButton>
+          )}
+        </div>
+      )}
+      {held.length > 0 && <p className="bp-part-said">{tr('Turn on sign-in to unlock or open the car from here.')}</p>}
+      {offered.length > 0 && (
+        <div className="bp-part-acts">
+          {offered.map(([cmd, word, hint]) => (
+            <HoldButton key={cmd} className="bp-part-act" hint={hint} disabled={!!busy} onConfirm={() => void send(cmd)}>
+              {busy === cmd ? tr('Sending...') : word}
+            </HoldButton>
+          ))}
+        </div>
+      )}
+      {said && (
+        <p className={`bp-part-said ${said.ok ? '' : 'is-soft'}`} role="status">
+          {said.text}
+        </p>
+      )}
+      {detail && (
+        <button type="button" className="bp-part-more" onClick={() => onDetail(detail)}>
+          {pick === 'tires' ? tr('Pressure history') : tr('More')}
+        </button>
+      )}
+    </section>
+  );
+}
+
+/** A box on the sheet, placed over it in the sheet's own units. */
+function boxStyle(b: { x: number; y: number; w: number; h: number }): CSSProperties {
+  return { left: `${(b.x / W) * 100}%`, top: `${(b.y / H) * 100}%`, width: `${(b.w / W) * 100}%`, height: `${(b.h / H) * 100}%` };
 }
 
 /** A part of the car opened up: its figures now, and what Patchboard has recorded of it. */

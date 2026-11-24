@@ -52,6 +52,21 @@
   own dimensions. While it charges, a callout at the charge port gives the
   rate.
   "Wall: car" sets up a board with it.
+- **Turn the car on its drawing:** swipe across the car in the middle of
+  the sheet, press an arrow key, or tap the marks either side, and it turns
+  to the next of your drawings: front, three-quarter, side, rear, top. Each
+  view is your own drawing, so every angle it rests on is exact. Pictures
+  takes front and rear three-quarter views as well now.
+- **Control the car from the drawing:** tap the doors, the glass, the
+  frunk, the trunk, a tire or the charge port on a view; point at one and
+  a dashed outline names it, as a drawing marks a detail, and one that
+  stands open stays marked. The part opens in the place of the live
+  metrics, with what it can do. Hold to lock or unlock, open the frunk
+  or trunk, open or close the port, start or stop charging, set the charge
+  limit, turn climate or Sentry on or off, flash the lights or honk. Each
+  command goes through Tessie and lands in the audit log; a household
+  device and a read-only server see the car but never command it, and
+  unlocking or opening it needs sign-in to be on.
 - **Where the car is and where it's been:** the car shows where it's
   parked, by your name for the place in Tessie, such as Home, or else just
   the town, never the street. Range's detail adds the last drive, the

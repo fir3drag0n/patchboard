@@ -18,9 +18,16 @@ it anywhere.
   a garage door, gate or door: the server checks the cover's class with
   Home Assistant first), add to or tick off a pinned to-do list, mark a
   chore done, wake a machine you listed,
-  pause Pi-hole or AdGuard Home for at most an hour, and approve or decline
-  a waiting Overseerr request. Each is a POST with the action header, and
-  each lands in the audit log.
+  pause Pi-hole or AdGuard Home for at most an hour, approve or decline
+  a waiting Overseerr request, and, through Tessie, lock or unlock the car,
+  open its frunk or trunk, open or close its charge port, start or stop
+  charging, set its charge limit, turn its climate or Sentry on or off,
+  flash its lights or honk. Each is a POST with the action header, and
+  each lands in the audit log. The car's commands are held to confirm,
+  only for a car Tessie listed, and never from a household device.
+  Unlocking it and opening its frunk or trunk also need sign-in: with
+  `AUTH=none` the server refuses them, so an address anyone can reach
+  never lets someone into the car.
 
 ## Three choices when you deploy
 

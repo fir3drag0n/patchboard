@@ -11,7 +11,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { type Context, Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import type { Adapter } from './adapters/adapter.ts';
-import type { ArrData, ContainerDetail, HaEntity, ProxmoxData, QbitData } from '../shared/types.ts';
+import type { ArrData, CarData, ContainerDetail, HaEntity, ProxmoxData, QbitData } from '../shared/types.ts';
 import { cleanBrand } from '../shared/brand.ts';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { appIconFor, clearAppIcon, saveAppIcon } from './appicon.ts';
@@ -27,7 +27,8 @@ import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/
 import { qbitClient } from './adapters/qbit.ts';
 import { haCall, haEntity, haEntityList, haHistory, haPrinterCover, haTodoChange, haTodoItems, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
 import { boardList, exportExtras, getBoard, importExtras, putBoard, removeBoard, saveExtras, saveHome, sealSavedBoards } from './boards.ts';
-import { tessieAdapter } from './adapters/tessie.ts';
+import { tessieAdapter, tessieCommand } from './adapters/tessie.ts';
+import { checkLimit, isCarCommand, OPENS_CAR } from '../shared/car-commands.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
 import { speedtestAdapter } from './adapters/speedtest.ts';
 import { immichAdapter } from './adapters/immich.ts';
@@ -77,7 +78,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction, demoHostDetail, DEMO_PRINT_SVG } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction, demoHostDetail, demoCarCommand, DEMO_PRINT_SVG } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
@@ -2385,6 +2386,36 @@ app.post('/api/icons', async (c) => {
   writeFileSync(join(iconDir, name), body);
   recordAudit(who(c), 'icon.upload', name);
   return c.json({ icon: `/api/icons/${name}` });
+});
+
+// Ask the car to do something: lock, open the frunk, start charging. Only a
+// car Tessie listed in its last poll, only from a full session (household
+// devices never reach here), and every command is audited.
+app.post('/api/car/:vin/command/:cmd', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.readOnly) return c.json({ error: 'Read-only' }, 403);
+  const vin = c.req.param('vin');
+  const cmd = c.req.param('cmd');
+  if (!isCarCommand(cmd)) return c.json({ error: 'Unknown command' }, 400);
+  // Unlocking or opening the car needs sign-in: an address anyone can reach never opens it.
+  if (OPENS_CAR.includes(cmd) && config.auth.mode === 'none') return c.json({ error: 'Turn on sign-in to unlock or open the car from here' }, 403);
+  const cars = (hub.snapshot().sources.tessie?.data as CarData | null)?.cars ?? [];
+  if (!cars.some((x) => x.vin === vin)) return c.json({ error: 'No such car' }, 404);
+  let percent: number | undefined;
+  if (cmd === 'limit') {
+    const body = (await c.req.json().catch(() => null)) as { percent?: unknown } | null;
+    const p = checkLimit(body?.percent);
+    if (p == null) return c.json({ error: 'A charge limit is 50 to 100%' }, 400);
+    percent = p;
+  }
+  try {
+    await (config.demo ? demoCarCommand(cmd, percent) : tessieCommand(vin, cmd, percent));
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), `car.${cmd}`, percent != null ? `${vin}: ${percent}%` : vin);
+  void hub.pollNow('tessie');
+  return c.json({ ok: true });
 });
 
 // Your own pictures of each car, with where its tires sit (shared/car-pictures.ts).

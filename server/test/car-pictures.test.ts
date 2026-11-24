@@ -37,3 +37,29 @@ test('a picture says which view it is and which part of it to show', () => {
   assert.equal(checkPictures([{ src, at: {}, view: 'underside' }]).ok, false);
   assert.equal(checkPictures([{ src, at: {}, crop: [60, 0, 50, 50] }]).ok, false, 'runs off the picture');
 });
+
+test('car commands: only the ones Tessie takes, and a charge limit Tesla accepts', async () => {
+  const { CAR_COMMANDS, checkLimit, isCarCommand } = await import('../../shared/car-commands.ts');
+  assert.equal(isCarCommand('unlock'), true);
+  assert.equal(isCarCommand('frunk'), true);
+  assert.equal(isCarCommand('toString'), false, 'not an inherited name');
+  assert.equal(isCarCommand('boost'), false);
+  assert.equal(CAR_COMMANDS.trunk, 'activate_rear_trunk');
+  assert.equal(checkLimit(90), 90);
+  assert.equal(checkLimit('80'), 80);
+  assert.equal(checkLimit(49), null);
+  assert.equal(checkLimit(101), null);
+  assert.equal(checkLimit('lots'), null);
+});
+
+test('car pictures: three-quarter views join the turntable; an unknown view does not', () => {
+  const at = { fl: null, fr: null, rl: null, rr: null };
+  assert.equal(checkPictures([{ src, at, view: 'front34' }]).ok, true);
+  assert.equal(checkPictures([{ src, at, view: 'rear34' }]).ok, true);
+  assert.equal(checkPictures([{ src, at, view: 'iso' }]).ok, false);
+});
+
+test('car commands: unlocking and opening are the ones that need sign-in', async () => {
+  const { OPENS_CAR } = await import('../../shared/car-commands.ts');
+  assert.deepEqual([...OPENS_CAR].sort(), ['frunk', 'trunk', 'unlock']);
+});

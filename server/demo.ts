@@ -54,6 +54,7 @@ import type {
   ChecksData,
   StatsData,
   SystemData,
+  Car,
   CarData,
   DownloadClientId,
   FeedsResponse,
@@ -68,6 +69,7 @@ import type {
   QueueItem,
   Printer,
 } from '../shared/types.ts';
+import { type CarCommand } from '../shared/car-commands.ts';
 import type { Adapter } from './adapters/adapter.ts';
 import type { DownloadManager } from './adapters/downloads.ts';
 import type { SeerrClient } from './adapters/seerr.ts';
@@ -876,9 +878,43 @@ export const DEMO_PRINT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="
   .map((i) => `<g transform="translate(${95 + i * 55} ${150 + i * 18})"><path d="M-22 10v-24a22 22 0 0 1 44 0v24h-11v-24a11 11 0 0 0-22 0v24Z" fill="#00ae42"/><path d="M-22 10h11v8h-11zM11 10h11v8h-11z" fill="#008a35"/></g>`)
   .join('')}</svg>`;
 
+/** What the demo car has been asked to do since the server started. */
+const demoCarNow: Partial<Car> = {};
+
+/** The demo car does as it's told, after a moment, as a real one would. */
+export async function demoCarCommand(cmd: CarCommand, percent?: number): Promise<void> {
+  await new Promise((r) => setTimeout(r, 1200));
+  const open = { fl: false, fr: false, rl: false, rr: false, frunk: false, trunk: false, ...demoCarNow.open };
+  const set: Partial<Car> = {
+    lock: { locked: true },
+    unlock: { locked: false },
+    frunk: { open: { ...open, frunk: true } },
+    trunk: { open: { ...open, trunk: !open.trunk } },
+    'port-open': { portOpen: true },
+    'port-close': { portOpen: false },
+    'charge-start': { charging: 'Charging' },
+    'charge-stop': { charging: 'Stopped' },
+    'climate-on': { climateOn: true },
+    'climate-off': { climateOn: false },
+    'sentry-on': { sentry: true },
+    'sentry-off': { sentry: false },
+    limit: percent != null ? { limit: percent } : {},
+    flash: {},
+    honk: {},
+  }[cmd];
+  Object.assign(demoCarNow, set);
+}
+
 function demoCar(): CarData {
-  return {
-    cars: [
+  const car = demoCarBase();
+  const now = { ...car, ...demoCarNow };
+  // Stopped charging: no power flowing, no time to full.
+  if (now.charging !== 'Charging') Object.assign(now, { chargeKw: undefined, volts: undefined, amps: undefined, minutesToFull: undefined });
+  return { cars: [now] };
+}
+
+function demoCarBase(): Car {
+  return (
       {
         vin: 'DEMO',
         name: 'Midnight',
@@ -922,9 +958,8 @@ function demoCar(): CarData {
             [122, 61.5, 15.1, 58],
           ] as const
         ).map(([h, mi, kwh, min]) => ({ start: Date.now() - h * 3_600_000 - min * 60_000, end: Date.now() - h * 3_600_000, mi, kwh })),
-      },
-    ],
-  };
+      }
+  );
 }
 
 /** Demo pause and resume: flips a flag the demo clients read. */

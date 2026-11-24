@@ -19,8 +19,9 @@ export interface CarPicture {
   crop?: [number, number, number, number];
 }
 
-export type CarView = 'side' | 'top' | 'front' | 'rear';
-export const CAR_VIEWS: CarView[] = ['side', 'top', 'front', 'rear'];
+/** Square-on views, and the two three-quarter views a turntable turns through between them. */
+export type CarView = 'side' | 'top' | 'front' | 'rear' | 'front34' | 'rear34';
+export const CAR_VIEWS: CarView[] = ['side', 'front34', 'front', 'rear34', 'rear', 'top'];
 
 export const MAX_PICTURES = 6;
 const SRC = /^\/api\/icons\/[a-f0-9]{16}\.(png|jpg|webp|gif)$/;
@@ -40,7 +41,7 @@ export function checkPictures(v: unknown): { ok: true; pictures: CarPicture[] } 
       else return { ok: false, error: 'A tire spot has to be inside the picture.' };
     }
     const view = p.view;
-    if (view != null && !CAR_VIEWS.includes(view)) return { ok: false, error: 'A picture is a side, top, front or rear view.' };
+    if (view != null && !CAR_VIEWS.includes(view)) return { ok: false, error: 'A picture is a side, front, rear, top or three-quarter view.' };
     const crop = p.crop;
     if (crop != null && !(Array.isArray(crop) && crop.length === 4 && crop.every((n) => typeof n === 'number' && n >= 0 && n <= 100) && crop[2] >= 2 && crop[3] >= 2 && crop[0] + crop[2] <= 100.01 && crop[1] + crop[3] <= 100.01)) return { ok: false, error: 'The part of the picture to show has to be inside it.' };
     const port = p.port;

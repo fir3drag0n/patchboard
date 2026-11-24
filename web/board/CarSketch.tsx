@@ -166,7 +166,7 @@ const GUTTER = 15;
 const FOOT = 5;
 
 const TIRE_WORDS: Record<TirePos, string> = { fl: msg('front left'), fr: msg('front right'), rl: msg('rear left'), rr: msg('rear right') };
-const VIEW_WORDS: Record<CarView, string> = { side: msg('Side'), top: msg('Top'), front: msg('Front'), rear: msg('Rear') };
+const VIEW_WORDS: Record<CarView, string> = { side: msg('Side'), top: msg('Top'), front: msg('Front'), rear: msg('Rear'), front34: msg('Front three-quarter'), rear34: msg('Rear three-quarter') };
 const empty = (): CarPicture['at'] => ({ fl: null, fr: null, rl: null, rr: null });
 type Crop = [number, number, number, number];
 const WHOLE: Crop = [0, 0, 100, 100];

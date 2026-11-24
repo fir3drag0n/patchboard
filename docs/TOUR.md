@@ -179,8 +179,13 @@ whole card a live engineering drawing for a wall screen or an e-ink
 reader: the front, rear and top views across the top, the side view
 dimensioned in millimetres, the live charge, range, power and
 temperatures, and panels for status, charging, range and tires. Tap any
-of them for its detail, with the week's or the day's line, or tap a small
-view to turn the car to it. Status says where it's parked, by your name
+of them for its detail, with the week's or the day's line. Swipe across
+the car in the middle, or press an arrow key, to turn it through your
+drawings: front, three-quarter, side, rear and top. Tap a door, the frunk,
+the trunk, the charge port, the glass or a tire, and that part opens beside
+it with what it can do, held to confirm: lock or unlock, open the frunk or
+trunk, start or stop charging, set the limit, climate, Sentry. A household
+device sees all of it but can't send a command. Status says where it's parked, by your name
 for the place or the town, and Range adds the last drive, the week's
 distance and the energy per mile. Settings,
 Alerts sets when a tire counts as soft, or turns the warning off. Patchboard records each reading Tessie

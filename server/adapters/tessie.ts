@@ -4,7 +4,8 @@
 
 import { type Car, type CarData, type Drive, TIRES } from '../../shared/types.ts';
 import { config } from '../config.ts';
-import { getJson } from '../http.ts';
+import { CAR_COMMANDS, type CarCommand } from '../../shared/car-commands.ts';
+import { getJson, request } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
 
 interface Vehicle {
@@ -105,6 +106,19 @@ function tiresOf(v: NonNullable<Vehicle['last_state']>['vehicle_state']): Car['t
   const p = TIRES.map((t) => v?.[`tpms_pressure_${t}`]);
   if (p.some((x) => typeof x !== 'number' || !(x > 0))) return undefined;
   return { fl: p[0]!, fr: p[1]!, rl: p[2]!, rr: p[3]! };
+}
+
+/**
+ * Asks the car to do something. Tessie wakes it if it must and waits for it
+ * to finish, so this can take most of a minute on a sleeping car.
+ */
+export async function tessieCommand(vin: string, cmd: CarCommand, percent?: number): Promise<void> {
+  const { token } = config.tessie!;
+  const q = new URLSearchParams({ wait_for_completion: 'true' });
+  if (cmd === 'limit' && percent != null) q.set('percent', String(percent));
+  const res = await request(`https://api.tessie.com/${encodeURIComponent(vin)}/command/${CAR_COMMANDS[cmd]}?${q}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } }, 75_000);
+  const body = (await res.json().catch(() => ({}))) as { result?: boolean; reason?: string };
+  if (body.result !== true) throw new Error(body.reason || 'The car said no');
 }
 
 interface TessieDrive {
