@@ -17,10 +17,6 @@ The car widget's Dashboard style is a live drawing sheet you can open part
 by part. Next for it:
 
 - [ ] A specification table you fill in: trim, wheels, battery, paint
-- [ ] Your own 3D model: upload a .glb of your car, tag its doors, tires and
-  port once, and turn it freely in the sheet's hairlines
-- [ ] More stops on the turntable: a drawing every 45 degrees, from a set
-  you make once
 - [ ] The poster: the sheet as the 1-bit panel image, for a framed e-ink display
 - [ ] Every Tesla: overhangs for Model Y, S and X, Cybertruck's figures, and a
   drawn fallback for each
