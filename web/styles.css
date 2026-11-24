@@ -12296,6 +12296,12 @@ a.play:hover .play-title {
   text-decoration: none;
 }
 
+/* The camera a remote or keyboard has marked: a ring that reads across a room. */
+.cam:focus-visible {
+  outline: 4px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .cam img {
   width: 100%;
   height: 100%;
@@ -13508,9 +13514,17 @@ button.cam {
 }
 
 .cam-live h2 {
+  color: #f2f2f2;
   display: flex;
   align-items: baseline;
   gap: 10px;
+}
+
+.cam-live .cam-step {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 28px;
+  line-height: 1;
 }
 
 .cam-live-tag {

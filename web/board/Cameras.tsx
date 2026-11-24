@@ -108,10 +108,25 @@ function LiveFrame({ name }: { name: string }) {
  * is open and the tab is in front. Switching tabs, Escape or Close ends it,
  * and Patchboard holds no frames, so watching costs bandwidth, not memory.
  */
-function CameraLive({ name, web, onClose }: { name: string; web?: string; onClose: () => void }) {
+function CameraLive({ name, web, onClose, onStep }: { name: string; web?: string; onClose: () => void; onStep?: (by: 1 | -1) => void }) {
   const modal = useModal<HTMLDivElement>(onClose);
   const { snap } = useStore();
   const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [name]);
+  // A TV remote's arrows, or a keyboard's, move to the next camera here instead of turning the
+  // page. Taken ahead of a wall screen's page turning; fast-forward and rewind still turn it.
+  useEffect(() => {
+    if (!onStep) return;
+    const key = (e: KeyboardEvent) => {
+      const by = ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 } as Record<string, 1 | -1>)[e.key];
+      if (!by || e.altKey || e.ctrlKey || e.metaKey) return;
+      e.preventDefault();
+      e.stopPropagation();
+      onStep(by);
+    };
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
+  }, [onStep]);
   useEffect(() => {
     const away = () => {
       if (document.visibilityState !== 'visible') onClose();
@@ -127,6 +142,16 @@ function CameraLive({ name, web, onClose }: { name: string; web?: string; onClos
             {cameraName(name)} <span className="cam-live-tag">{snap?.demo ? 'Still' : 'Live'}</span>
           </h2>
           <span className="cam-live-actions">
+            {onStep && (
+              <>
+                <button type="button" className="text-button cam-step" aria-label="Previous camera" onClick={() => onStep(-1)}>
+                  ‹
+                </button>
+                <button type="button" className="text-button cam-step" aria-label="Next camera" onClick={() => onStep(1)}>
+                  ›
+                </button>
+              </>
+            )}
             {web && (
               <a className="text-button" href={`${web}/#${encodeURIComponent(name)}`} target="_blank" rel="noreferrer">
                 Open in Frigate
@@ -145,7 +170,7 @@ function CameraLive({ name, web, onClose }: { name: string; web?: string; onClos
         ) : failed ? (
           <p className="settings-note">Couldn't start the live view. Three can be open at once; close one elsewhere, or try again.</p>
         ) : (
-          <img className="cam-live-feed" src={`/api/live/frigate?camera=${encodeURIComponent(name)}`} alt={`${cameraName(name)}, live`} onError={() => setFailed(true)} onClick={onClose} />
+          <img key={name} className="cam-live-feed" src={`/api/live/frigate?camera=${encodeURIComponent(name)}`} alt={`${cameraName(name)}, live`} onError={() => setFailed(true)} onClick={onClose} />
         )}
       </div>
     </div>,
@@ -164,7 +189,59 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
   const { limit = 6, style } = useWidget();
   // Large frames: the pictures as big as the card allows, without today's list.
   const big = style === 'big';
-  const [watching, setWatching] = useState<string | null>(null);
+  const { snap } = useStore();
+  const grid = useRef<HTMLUListElement>(null);
+  // The camera open live is a step in the browser's history, so Back (a TV remote's, a phone's)
+  // closes it rather than leaving the page.
+  const [watching, setWatchingNow] = useState<string | null>(null);
+  useEffect(() => {
+    // A reload starts on the grid, never on a camera that was open before it.
+    if (history.state?.camLive) history.replaceState({ ...history.state, camLive: undefined }, '');
+    const pop = () => setWatchingNow(history.state?.camLive ?? null);
+    addEventListener('popstate', pop);
+    return () => removeEventListener('popstate', pop);
+  }, []);
+  const watch = (name: string | null) => {
+    const had = !!history.state?.camLive;
+    if (!name) {
+      if (had) history.back();
+      else setWatchingNow(null);
+      return;
+    }
+    if (had) history.replaceState({ ...history.state, camLive: name }, '');
+    else history.pushState({ ...history.state, camLive: name }, '');
+    setWatchingNow(name);
+  };
+  // On a wall screen, a TV remote moves between the cameras: up and down from the page, then the
+  // arrows go camera to camera and the centre button opens one live. Back lets go, and left and
+  // right turn the page again. Fast-forward and rewind always turn it.
+  const wall = !!snap?.household;
+  useEffect(() => {
+    if (!wall || watching) return;
+    const key = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+      const cams = [...(grid.current?.querySelectorAll<HTMLButtonElement>('button.cam') ?? [])];
+      if (!cams.length) return;
+      const on = document.activeElement;
+      const i = cams.indexOf(on as HTMLButtonElement);
+      if (i < 0 && on && on !== document.body) return;
+      if (i >= 0 && (e.key === 'Escape' || e.key === 'GoBack' || e.key === 'BrowserBack')) {
+        e.preventDefault();
+        cams[i].blur();
+        return;
+      }
+      // Cameras to a row, from where they sit, so up and down keep to a column.
+      const row = cams.filter((c) => c.offsetTop === cams[0].offsetTop).length;
+      const by = { ArrowDown: row, ArrowUp: -row, ...(i >= 0 ? { ArrowRight: 1, ArrowLeft: -1 } : {}) }[e.key];
+      if (!by) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const next = i < 0 ? (by > 0 ? 0 : cams.length - 1) : Math.max(0, Math.min(cams.length - 1, i + by));
+      cams[next].focus();
+    };
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
+  }, [wall, watching]);
   if (!state || !data) return null;
   const pick = (config?.cameras ?? '').split('\n').filter(Boolean);
   const cams = pick.length ? pick.map((n) => data.cameras.find((c) => c.name === n)).filter((c) => !!c) : data.cameras;
@@ -172,6 +249,12 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
   const events = (data.events ?? []).filter((e) => names.has(e.camera)).slice(0, limit);
   const detecting = cams.some((c) => c.detect);
   const web = data.webUrl && data.webUrl !== '#' ? data.webUrl : undefined;
+  // The cameras that are up, in the grid's order, for stepping from one live view to the next.
+  const live = cams.filter((c) => c.online).map((c) => c.name);
+  const step = (by: 1 | -1) => {
+    const i = live.indexOf(watching ?? '');
+    watch(live[(i + by + live.length) % live.length]);
+  };
   return (
     <Section title="Cameras" source={state} className={`cameras${big ? ' cameras-big' : ''}`} action={web ? { label: 'Open Frigate', href: web } : undefined}>
       {cams.length === 0 ? (
@@ -179,7 +262,7 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
           Frigate has none of the cameras this widget names. <SetupLink>Change cameras</SetupLink>
         </Empty>
       ) : (
-        <ul className="cam-grid">
+        <ul className="cam-grid" ref={grid}>
           {cams.map((c) => {
             const body = (
               <>
@@ -191,7 +274,7 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
               <li key={c.name} className={c.online ? undefined : 'is-off'}>
                 {/* A camera that's up opens live, here; an offline one has nothing to show. */}
                 {c.online ? (
-                  <button type="button" className="cam" aria-label={`${cameraName(c.name)}, watch live`} onClick={() => setWatching(c.name)}>
+                  <button type="button" className="cam" aria-label={`${cameraName(c.name)}, watch live`} onClick={() => watch(c.name)}>
                     {body}
                   </button>
                 ) : (
@@ -236,7 +319,7 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
           )}
         </>
       )}
-      {watching && <CameraLive name={watching} web={web} onClose={() => setWatching(null)} />}
+      {watching && <CameraLive name={watching} web={web} onClose={() => watch(null)} onStep={live.length > 1 ? step : undefined} />}
     </Section>
   );
 }

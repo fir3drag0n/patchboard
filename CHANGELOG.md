@@ -8,6 +8,10 @@
   sunrise and sunset marked, and the week with each day's low and high on
   one scale. Show it alone on a TV or wall tablet, or start a board from
   "Wall: weather".
+- **Cameras from a TV remote:** on a wall screen, up and down mark a
+  camera, the arrows move between them without turning the page, and the
+  centre button opens it live. In the live view, the arrows or the new
+  previous and next buttons go camera to camera, and Back closes it.
 
 ## 1.19.0 (2026-11-24)
 
