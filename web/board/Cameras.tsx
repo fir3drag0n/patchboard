@@ -213,8 +213,8 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
     setWatchingNow(name);
   };
   // On a wall screen, a TV remote moves between the cameras: up and down from the page, then the
-  // arrows go camera to camera and the centre button opens one live. Back lets go, and left and
-  // right turn the page again. Fast-forward and rewind always turn it.
+  // arrows go camera to camera and the centre button opens one live. Back, or an arrow past the
+  // edge, lets go, and left and right turn the page again. Fast-forward and rewind always turn it.
   const wall = !!snap?.household;
   useEffect(() => {
     if (!wall || watching) return;
@@ -234,9 +234,22 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
       const row = cams.filter((c) => c.offsetTop === cams[0].offsetTop).length;
       const by = { ArrowDown: row, ArrowUp: -row, ...(i >= 0 ? { ArrowRight: 1, ArrowLeft: -1 } : {}) }[e.key];
       if (!by) return;
+      if (i < 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        cams[by > 0 ? 0 : cams.length - 1].focus();
+        return;
+      }
+      // Past the edge lets go of the cameras: off the top or the bottom row it rests, and past the
+      // first or the last camera the page turns, as left and right do with nothing marked.
+      const next = i + by;
+      if (next < 0 || next >= cams.length) {
+        cams[i].blur();
+        if (Math.abs(by) === row && row > 1) e.preventDefault();
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
-      const next = i < 0 ? (by > 0 ? 0 : cams.length - 1) : Math.max(0, Math.min(cams.length - 1, i + by));
       cams[next].focus();
     };
     window.addEventListener('keydown', key, true);

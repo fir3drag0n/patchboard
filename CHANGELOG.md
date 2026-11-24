@@ -10,8 +10,10 @@
   "Wall: weather".
 - **Cameras from a TV remote:** on a wall screen, up and down mark a
   camera, the arrows move between them without turning the page, and the
-  centre button opens it live. In the live view, the arrows or the new
-  previous and next buttons go camera to camera, and Back closes it.
+  centre button opens it live. Back, or an arrow past the last camera,
+  lets go, so left and right turn the page again. In the live view, the
+  arrows or the new previous and next buttons go camera to camera, and
+  Back closes it.
 
 ## 1.19.0 (2026-11-24)
 
