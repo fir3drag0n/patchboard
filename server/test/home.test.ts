@@ -144,6 +144,7 @@ test('an edge or dev build carries its commit; a release is the plain version', 
   const { baseVersion, compareVersions, showVersion } = await import('../../shared/version.ts');
   assert.equal(buildSuffix('edge.4f2c1a9e0b77d1c2'), '+edge.4f2c1a9');
   assert.equal(buildSuffix('dev.abcdef1'), '+dev.abcdef1');
+  assert.equal(buildSuffix('fir3drag0n.0d046ea'), '+fir3drag0n.0d046ea', 'the fork build shows in Settings');
   assert.equal(buildSuffix(''), '');
   assert.equal(buildSuffix('latest; rm -rf /'), '', 'nothing odd gets into the version');
   assert.equal(showVersion('1.13.0+edge.4f2c1a9'), '1.13.0, edge 4f2c1a9');

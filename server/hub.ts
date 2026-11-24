@@ -46,9 +46,10 @@ export const APP_VERSION: string = (() => {
   return base + buildSuffix(process.env.PATCHBOARD_BUILD);
 })();
 
-/** "edge.4f2c1a9e…" from the image build becomes "+edge.4f2c1a9"; anything else, nothing. */
+/** "edge.4f2c1a9e…" from the image build becomes "+edge.4f2c1a9"; anything else, nothing.
+ * Fork: "fir3drag0n.0d046ea" (deploy.sh) becomes "+fir3drag0n.0d046ea", so Settings shows the fork build. */
 export function buildSuffix(build: string | undefined): string {
-  const m = /^(edge|dev)\.([0-9a-f]{7,40})$/.exec(build ?? '');
+  const m = /^(edge|dev|fir3drag0n)\.([0-9a-f]{7,40})$/.exec(build ?? '');
   return m ? `+${m[1]}.${m[2].slice(0, 7)}` : '';
 }
 let selfContainer: string | null = null;
