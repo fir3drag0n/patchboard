@@ -5800,8 +5800,8 @@ body.is-sorting * {
 }
 
 /* A row that scrolls sideways (apps with names on a phone, the next 24
-   hours) fades out at its edge while more waits past it; see edge-fade.ts. */
-:is(.bay-jacks, .hours)[data-more] {
+   hours, Reading's categories) fades out at its edge while more waits past it; see edge-fade.ts. */
+:is(.bay-jacks, .hours, .feeds-cats)[data-more] {
   mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
 }
 
@@ -12896,13 +12896,6 @@ a.req-come:hover .req-title {
 
   .header-board-vitals .vw:last-child:nth-child(odd) {
     grid-column: 1 / -1;
-  }
-}
-
-/* Phone Reading: the sort row lines up with the filters; categories fade at the edge they scroll. */
-@media (max-width: 760px) {
-  .feeds-cats {
-    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
   }
 }
 

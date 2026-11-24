@@ -15,6 +15,7 @@ import { Ago, Empty } from '../components/ui.tsx';
 import { count } from '../lib/format.ts';
 import { useNow, useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
+import { useEdgeFade } from '../lib/edge-fade.ts';
 import { locale } from '../lib/region.ts';
 
 type FeedSort = 'newest' | 'oldest' | 'quick';
@@ -62,6 +63,9 @@ export function Feeds() {
   // Read inside the stable markRead callback, so it follows the live value.
   const household = useRef(false);
   household.current = !!snap?.household;
+  // On a phone the categories scroll sideways and fade at the edge while more wait.
+  const catsRef = useRef<HTMLDivElement>(null);
+  useEdgeFade(catsRef);
   const now = useNow();
   const [params, setParams] = useSearchParams();
   const [data, setData] = useState<FeedsResponse | null>(null);
@@ -293,7 +297,7 @@ export function Feeds() {
         </header>
 
         {cats.length > 1 && (
-          <div className="feeds-cats" role="tablist" aria-label="Categories">
+          <div ref={catsRef} className="feeds-cats" role="tablist" aria-label="Categories">
             <button type="button" role="tab" aria-selected={category === 'All'} className="chip" onClick={() => setCategory('All')}>
               All
             </button>

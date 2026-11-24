@@ -23,9 +23,10 @@
   lets go, so left and right turn the page again. In the live view, the
   arrows or the new previous and next buttons go camera to camera, and
   Back closes it.
-- **Every app at full strength:** on a computer, the last app in a group
-  no longer fades as if the row scrolled on past it. Only a row that
-  really scrolls, as on a phone, fades at its edge.
+- **Fades only where there's more:** on a computer, the last app in a
+  group no longer fades as if the row scrolled on past it. On a phone, the
+  app rows and Reading's categories fade at their edge only while more
+  waits past it, and not once you've scrolled to the end.
 
 ## 1.19.0 (2026-11-24)
 
