@@ -32,7 +32,8 @@ export function WallPages() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const h = snap?.household;
-  const list = h?.opens ? [h.opens, ...(h.pages ?? [])] : [];
+  // The page it opens on, then its pages, each once: a page set as both is one page, not two.
+  const list = h?.opens ? [...new Set([h.opens, ...(h.pages ?? [])])] : [];
   const at = list.indexOf(pathname);
   const [lit, setLit] = useState(false);
 

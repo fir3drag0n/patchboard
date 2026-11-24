@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Home holds still on a smaller screen:** on a window where the board
+  had to trim its lists to fit, the lists and the footer flickered without
+  end as the scrollbar came and went. Fit now settles once.
+- **A wall screen's page dots count each page once,** when the page it
+  opens on is also one of its pages.
 - **Update several containers at once:** hold Update on one row after
   another. They run one at a time, and each row says what it's doing
   ("Pulling 0:42") or what it waits for ("Waiting for sonarr to finish"),
@@ -56,7 +61,8 @@
   read every line at one moment. Tap the front, rear or top view to bring it to the middle with its
   own dimensions. While it charges, a callout at the charge port gives the
   rate.
-  "Wall: car" sets up a board with it.
+  "Wall: car" sets up a board with it. Demo mode shows it on a Car board, the demo Tesla
+  drawn from every side.
 - **Turn the car on its drawing:** swipe across the car in the middle of
   the sheet, press an arrow key, or tap the marks either side, and it turns
   to the next of your drawings: front, three-quarter, side, rear, top. Each
@@ -77,8 +83,13 @@
   car widget alone, and its drawing sheet fills the screen edge to edge,
   from a 4K monitor to an e-ink frame. On a squarer screen, as most e-ink
   frames are, the sheet goes 4:3: a larger front and rear view and roomier
-  panels, nothing left blank.
-- **Where the car is and where it's been:** the car shows where it's
+  panels, nothing left blank. On a TV, the remote drives it: left and right turn the car,
+  up and down step through the metrics and panels, the centre button opens
+  one, and Back closes it. The sheet fits the screen exactly, with nothing
+  to scroll. Back closes a part or a detail on a phone too, instead of
+  leaving the page.
+- **Where the car is and where it's been:** the title block gives the
+  odometer under the car's name. The car shows where it's
   parked, by your name for the place in Tessie, such as Home, or else just
   the town, never the street. Range's detail adds the last drive, the
   distance driven this week and the energy it took per mile. Patchboard

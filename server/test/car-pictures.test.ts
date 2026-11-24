@@ -63,3 +63,17 @@ test('car commands: unlocking and opening are the ones that need sign-in', async
   const { OPENS_CAR } = await import('../../shared/car-commands.ts');
   assert.deepEqual([...OPENS_CAR].sort(), ['frunk', 'trunk', 'unlock']);
 });
+
+test('the demo car: its drawings pass as uploads, with a Car board, seeded once', async () => {
+  const { seedDemoCar } = await import('../demo-car.ts');
+  const { kvGet } = await import('../db.ts');
+  const { removeBoard, savedBoards } = await import('../boards.ts');
+  seedDemoCar();
+  const pics = kvGet<Record<string, unknown[]>>('car-pictures')?.DEMO;
+  assert.equal(pics?.length, 6);
+  assert.ok(checkPictures(pics).ok);
+  assert.ok(savedBoards().some((b) => b.id === 'car'));
+  removeBoard('car');
+  seedDemoCar();
+  assert.ok(!savedBoards().some((b) => b.id === 'car'), 'a deleted Car board stays deleted');
+});

@@ -90,6 +90,7 @@ export interface CarSheet {
 const MIN_WIDTH = 800;
 
 type Detail = 'tires' | 'charge' | 'range' | 'climate' | 'status';
+type Layer = { pick: Pick } | { detail: Detail };
 const DETAIL: Record<Detail, [string, string]> = {
   tires: ['A', msg('Tire pressure')],
   charge: ['B', msg('Charging')],
@@ -111,7 +112,32 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
   const [rev, setRev] = useState(0);
   const pics = useJson<Record<string, CarPicture[]>>(`/api/car-pictures?r=${rev}`).data?.[sheet.vin] ?? [];
   const [editing, setEditing] = useState(false);
-  const [detail, setDetail] = useState<Detail | null>(null);
+  // What's open over the sheet: a part beside it, or a detail in its place. Each is a step in the
+  // browser's history, so Back (a TV remote's, a phone's) closes it rather than leaving the page.
+  const [layer, setLayerNow] = useState<Layer | null>(null);
+  useEffect(() => {
+    // A reload starts on the whole car, never on whatever was open before it.
+    if (history.state?.bpLayer) history.replaceState({ ...history.state, bpLayer: undefined }, '');
+    const pop = () => setLayerNow(history.state?.bpLayer ?? null);
+    addEventListener('popstate', pop);
+    return () => removeEventListener('popstate', pop);
+  }, []);
+  const setLayer = (next: Layer | null) => {
+    const had = !!history.state?.bpLayer;
+    if (!next) {
+      if (had) history.back();
+      else setLayerNow(null);
+      return;
+    }
+    // A detail opened from a part takes the part's place: one Back returns to the car.
+    if (had) history.replaceState({ ...history.state, bpLayer: next }, '');
+    else history.pushState({ ...history.state, bpLayer: next }, '');
+    setLayerNow(next);
+  };
+  const detail = layer && 'detail' in layer ? layer.detail : null;
+  const pick = layer && 'pick' in layer ? layer.pick : null;
+  const setDetail = (d: Detail | null) => setLayer(d ? { detail: d } : null);
+  const setPick = (p: Pick | null) => setLayer(p ? { pick: p } : null);
   const [big, setBig] = useState<CarView>('side');
   // Alone on a screen (a poster) that's squarer than 16:9, the way most e-ink frames are, the sheet goes 4:3 and fills it.
   const [tall, setTall] = useState(false);
@@ -136,7 +162,7 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
         <DetailSheet sheet={sheet} detail={detail} onBack={() => setDetail(null)} tall={tall} />
       ) : (
         <>
-          <Sheet sheet={sheet} pics={pics} open={setDetail} big={big} turn={setBig} tall={tall} />
+          <Sheet sheet={sheet} pics={pics} open={setDetail} pick={pick} setPick={setPick} big={big} turn={setBig} tall={tall} />
           {!sheet.ro && (
             <div className="car-views">
               <button type="button" className="text-button car-edit" onClick={() => setEditing(true)}>
@@ -359,6 +385,8 @@ function Sheet({
   sheet,
   pics,
   open,
+  pick,
+  setPick,
   big,
   turn,
   tall,
@@ -366,6 +394,8 @@ function Sheet({
   sheet: CarSheet;
   pics: CarPicture[];
   open: (d: Detail) => void;
+  pick: Pick | null;
+  setPick: (p: Pick | null) => void;
   big: CarView;
   turn: (v: CarView) => void;
   tall: boolean;
@@ -383,7 +413,6 @@ function Sheet({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const [pick, setPick] = useState<Pick | null>(null);
   useEffect(() => {
     if (!pick) return;
     const key = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && setPick(null);
@@ -441,6 +470,29 @@ function Sheet({
     const t = window.setTimeout(() => setLeaving(null), 380);
     return () => window.clearTimeout(t);
   }, [large.v]);
+  // A poster on a TV, driven by its remote: left and right turn the car, up and down step through
+  // the metrics and panels (or an open part's buttons), and the centre button opens what's marked.
+  useEffect(() => {
+    if (!stage.current?.closest('.widget-page')) return;
+    const key = (e: globalThis.KeyboardEvent) => {
+      if (e.defaultPrevented) return;
+      const on = document.activeElement;
+      if (on && on !== document.body && !stage.current?.contains(on)) return;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        step(e.key === 'ArrowRight' ? 1 : -1);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        const stops = [...(stage.current?.querySelectorAll<HTMLElement | SVGElement>(pick ? '.bp-part button:not(:disabled)' : '.bp-stop') ?? [])];
+        if (!stops.length) return;
+        e.preventDefault();
+        const i = stops.indexOf(on as HTMLElement);
+        const down = e.key === 'ArrowDown';
+        stops[i < 0 ? (down ? 0 : stops.length - 1) : (i + (down ? 1 : -1) + stops.length) % stops.length].focus();
+      }
+    };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  });
   // Swipe or drag across it to turn it; a drag never counts as a tap on a part.
   const drag = useRef<{ x: number; moved: boolean } | null>(null);
   const dragged = useRef(false);
@@ -468,7 +520,8 @@ function Sheet({
     }
   };
   const shown = views.filter((x) => x !== large);
-  const slotW = shown.length ? Math.min(66, 196 / shown.length) : 0;
+  // The row of small views runs from 104 to 308, inside the zone border, gaps and all.
+  const slotW = shown.length ? Math.min(66, (204 - 4 * (shown.length - 1)) / shown.length) : 0;
 
   // The large view: in the middle, higher up when there's no row of small views above it.
   const mainSlot = tall
@@ -515,10 +568,11 @@ function Sheet({
         <title>{sheet.model ?? sheet.name}</title>
         {clip(sheet.model ?? sheet.name, 11)}
       </text>
+      {/* Under it, as a drawing's title block names what it shows: whose car, and how far it's gone. */}
       <text className="bp-small" x="13.4" y="28">
-        <title>{sheet.model ? `${sheet.name} · ${tr('Vehicle status')}` : tr('Vehicle status')}</title>
-        {sheet.model ? `${clip(sheet.name, Math.max(8, 33 - tr('Vehicle status').length - 3))} · ` : ''}
-        {tr('Vehicle status')}
+        <title>{`${sheet.model ? `${sheet.name} · ` : ''}${tr('Odometer')} ${sheet.odometer}`}</title>
+        {sheet.model ? `${clip(sheet.name, Math.max(8, 36 - tr('Odometer').length - sheet.odometer.length - 4))} · ` : ''}
+        {tr('Odometer')} {sheet.odometer}
       </text>
       <line className="bp-rule" x1="13" y1="31" x2="92" y2="31" />
 
@@ -531,7 +585,7 @@ function Sheet({
       {metrics.map(([icon, label, value, sub, d, trouble], i) => {
         const y = 47 + i * rowStep;
         return (
-          <Hit key={icon} label={`${label} ${value}${sub ? `, ${sub}` : ''}`} onOpen={() => open(d)}>
+          <Hit key={icon} label={`${label} ${value}${sub ? `, ${sub}` : ''}`} onOpen={() => open(d)} className="bp-stop">
             <rect className="bp-hit-area" x="12.5" y={y} width="81" height={rowStep - 0.4} />
             <path className="bp-icon" d={ICONS[icon]} transform={`translate(15 ${y + rowPad + 4.4})`} />
             <text className="bp-row" x="24" y={y + rowPad + 8.8}>
@@ -744,7 +798,7 @@ function Sheet({
       )}
 
       {/* The row of panels along the bottom. */}
-      <Hit label={`${tr('Status')}: ${sheet.locked ? tr('Locked') : tr('Unlocked')}`} onOpen={() => setPick('body')}>
+      <Hit label={`${tr('Status')}: ${sheet.locked ? tr('Locked') : tr('Unlocked')}`} onOpen={() => setPick('body')} className="bp-stop">
         <rect className="bp-box bp-hit-area" x={px(0)} y={panels.y} width={panels.w} height={panels.h} />
         <text className="bp-row" x={px(0) + 3} y={panels.y + 6}>
           {tr('Status')}
@@ -769,7 +823,7 @@ function Sheet({
         ))}
       </Hit>
 
-      <Hit label={`${tr('Charging')}: ${tr(sheet.state)}`} onOpen={() => setPick('port')}>
+      <Hit label={`${tr('Charging')}: ${tr(sheet.state)}`} onOpen={() => setPick('port')} className="bp-stop">
         <rect className="bp-box bp-hit-area" x={px(1)} y={panels.y} width={panels.w} height={panels.h} />
         <text className="bp-row" x={px(1) + 3} y={panels.y + 6}>
           {tr('Charging')}
@@ -795,7 +849,7 @@ function Sheet({
       </Hit>
 
       {/* Range at each charge level, from this car's own range and charge; the limit and now marked. */}
-      <Hit label={`${tr('Range')}: ${sheet.range}`} onOpen={() => open('range')}>
+      <Hit label={`${tr('Range')}: ${sheet.range}`} onOpen={() => open('range')} className="bp-stop">
         <rect className="bp-box bp-hit-area" x={px(2)} y={panels.y} width={panels.w} height={panels.h} />
         <text className="bp-row" x={px(2) + 3} y={panels.y + 6}>
           {tr('Range by charge')}
@@ -830,7 +884,7 @@ function Sheet({
       </Hit>
 
       {/* Tire pressure: the car from above, a pressure at each corner. */}
-      <Hit label={sheet.tires.length ? `${tr('Tire pressure')}: ${sheet.tires.map((t) => `${t.name} ${t.value}`).join(', ')} ${sheet.unit}` : `${tr('Tire pressure')}: ${tr('Not measured yet')}`} onOpen={() => open('tires')}>
+      <Hit label={sheet.tires.length ? `${tr('Tire pressure')}: ${sheet.tires.map((t) => `${t.name} ${t.value}`).join(', ')} ${sheet.unit}` : `${tr('Tire pressure')}: ${tr('Not measured yet')}`} onOpen={() => open('tires')} className="bp-stop">
         <rect className="bp-box bp-hit-area" x={px(3)} y={panels.y} width={panels.w} height={panels.h} />
         <text className="bp-row" x={px(3) + 3} y={panels.y + 6}>
           {tr('Tire pressure')}
@@ -1191,7 +1245,7 @@ function Plot({
   const [at, setAt] = useState<number | null>(null);
   const lines = traces.filter((t) => t.data && t.data.length > 1);
   const all = lines.flatMap((l) => l.data!);
-  const g = { x: box.x + 15, y: box.y + 10, w: box.w - 15 - 24, h: box.h - 10 - 7 };
+  const g = { x: box.x + 15, y: box.y + 13, w: box.w - 15 - 24, h: box.h - 13 - 7 };
   const head = (
     <>
       <text className="bp-row" x={box.x} y={box.y + 4}>
@@ -1269,6 +1323,7 @@ function Plot({
       onPointerMove={(e) => point(e.clientX)}
       onPointerDown={(e) => point(e.clientX)}
       onPointerLeave={(e) => e.pointerType === 'mouse' && setAt(null)}
+      onFocus={() => at == null && setAt(times[times.length - 1])}
       onBlur={() => setAt(null)}
       onKeyDown={(e) => {
         if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
@@ -1384,6 +1439,22 @@ function DetailSheet({ sheet, detail, onBack, tall }: { sheet: CarSheet; detail:
   const id = useId().replace(/:/g, '');
   const stage = useRef<HTMLDivElement>(null);
   useEffect(() => stage.current?.querySelector<SVGGElement>('.bp-back')?.focus(), []);
+  // A poster on a TV, driven by its remote: up and down move between Back and the history, left and
+  // right read along the history from the latest reading. The remote's own Back button closes it.
+  useEffect(() => {
+    if (!stage.current?.closest('.widget-page')) return;
+    const key = (e: globalThis.KeyboardEvent) => {
+      if (e.defaultPrevented || !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+      const plot = stage.current?.querySelector<SVGGElement>('.bp-plot');
+      const back = stage.current?.querySelector<SVGGElement>('.bp-back');
+      if (!plot || !back) return;
+      e.preventDefault();
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') (document.activeElement === plot ? back : plot).focus();
+      else plot.focus();
+    };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, []);
   const rows: [string, string, boolean?][] =
     detail === 'tires'
       ? sheet.tires.length

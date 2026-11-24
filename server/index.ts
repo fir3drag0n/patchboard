@@ -80,6 +80,7 @@ import { config } from './config.ts';
 import { series } from './db.ts';
 import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction, demoHostDetail, demoCarCommand, DEMO_PRINT_SVG } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
+import { seedDemoCar } from './demo-car.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -237,6 +238,7 @@ loadSavedSettings();
 if (config.demo) {
   seedDemoHistory();
   seedDemoSamples();
+  seedDemoCar();
 }
 const adapters = config.demo ? demoAdapters() : realAdapters();
 const hub = new Hub(adapters);

@@ -196,7 +196,11 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[], arran
     let room = '';
     const ro = new ResizeObserver(() => {
       const foot = el.parentElement?.querySelector<HTMLElement>('.board-foot');
-      const next = `${el.getBoundingClientRect().top + window.scrollY}:${el.clientWidth}:${foot?.getBoundingClientRect().height ?? 0}`;
+      // The width with the scrollbar's own counted back in: trimming that makes the page fit takes the
+      // scrollbar away, and a board 15px wider is the same room, not a reason to start over. Counting
+      // it as new room put the lists back, the scrollbar back, and Fit trimming again, forever.
+      const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+      const next = `${el.getBoundingClientRect().top + window.scrollY}:${el.clientWidth + scrollbar}:${foot?.getBoundingClientRect().height ?? 0}`;
       if (next === room) return;
       room = next;
       setTrim({});

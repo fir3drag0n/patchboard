@@ -15273,6 +15273,17 @@ html.wall-swipe .widget-page {
   align-self: center;
 }
 
+/* A poster is one screen exactly: a TV remote or an e-ink frame can't scroll. */
+.widget-page:has(.bp-stage) {
+  height: calc(100dvh / var(--zoom));
+  min-height: 0;
+  overflow: hidden;
+}
+
+.widget-page .widget-alone:has(.bp-stage) > .section {
+  margin: 0;
+}
+
 .widget-page .section:has(.bp-stage) .section-head:not(:has(.section-stale)),
 .widget-page .car-views {
   display: none;
