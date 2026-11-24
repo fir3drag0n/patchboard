@@ -16,6 +16,22 @@
     list, and the headline still says "All quiet".
   - **Errors say why** when the app gives a reason, as in "HTTP 503:
     Too many requests".
+- **Tighter on a phone and a tablet:**
+  - **App icons wrap** onto a second line on a phone instead of hiding
+    past the edge. Apps with names still swipe, and the row fades at its
+    edge while more apps wait past it. So does the next 24 hours on
+    Weather.
+  - **Downloads say what's downloading:** "iCarly S06", not the release's
+    whole name (still there on hover), and how far along when nothing
+    moves, not "0 KB/s". A torrent qBittorrent is checking shows its own
+    progress, not a total shared by every torrent being checked.
+  - **Right now keeps a long title readable:** who's watching and the time
+    left take at most 40% of the line.
+  - **Weather's high and low** break after a comma instead of leaving a
+    dot at the end of a line, and an hour with no rain chance shows an
+    empty track, not a gray bar.
+  - **The moon looks like the moon** on a light page and e-ink: the lit
+    part pale, the shadow dark.
 - **Icons from an address,** such as an old Homepage's images folder on
   your network, load through Patchboard, so they show on an HTTPS
   address and over a tunnel.

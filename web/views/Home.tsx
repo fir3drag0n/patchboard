@@ -191,7 +191,7 @@ function Masthead({ now, weatherOnBoard, attentionCard, attentionOff, slim }: { 
               <span className="weather-text">
                 <strong>{weather.label}</strong>
                 <span>{weatherText(weather.codeNow)}</span>
-                <small><span className="keep-together">High {deg(weather.days[0]?.high ?? weather.tempNow, unit)}°</span> · <span className="keep-together">Low {deg(weather.days[0]?.low ?? weather.tempNow, unit)}°</span></small>
+                <small><span className="keep-together">High {deg(weather.days[0]?.high ?? weather.tempNow, unit)}°,</span> <span className="keep-together">low {deg(weather.days[0]?.low ?? weather.tempNow, unit)}°</span></small>
                 {(weather.alerts ?? []).length > 0 && <span className="masthead-alert">{weather.alerts![0].event}</span>}
               </span>
             </div>

@@ -76,7 +76,9 @@ export function fromQbit(t: QbitFull): DownloadEntry {
     state,
     progress: t.progress,
     size: t.size,
-    done: t.completed,
+    // While qBittorrent checks a torrent its `completed` is one running total
+    // shared by every torrent being checked, so the share it has is read from progress.
+    done: state === 'checking' ? Math.round(t.progress * t.size) : t.completed,
     down: t.dlspeed,
     up: t.upspeed,
     etaSec: finished || t.eta >= 8_640_000 ? -1 : t.eta,

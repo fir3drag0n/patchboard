@@ -9,6 +9,7 @@ import type { ArrData, ArrQueueItem, QueueItem } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { type DownloadClient, PauseButton, useDownloadClients } from '../lib/downloads.tsx';
+import { releaseTitle } from '../../shared/release.ts';
 import { eta, speed } from '../lib/format.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { useWidget } from './widget-context.ts';
@@ -86,10 +87,12 @@ export function DownloadsWidget() {
         <ul className="dl-list">
           {rowsFor(c.id).map(({ item, canAct }) => (
             <li key={`${c.id}:${item.id}`} className={`dl-row is-${item.state}`}>
+              {/* "iCarly S06", not the whole release name; that stays on hover. */}
               <span className="dl-name" title={item.name}>
-                {breakable(item.name)}
+                {breakable(releaseTitle(item.name))}
               </span>
-              <span className="dl-status">{STATUS[item.state] || eta(item.etaSec) || speed(item.speed)}</span>
+              {/* Not moving: how far along says more than "0 KB/s". */}
+              <span className="dl-status">{STATUS[item.state] || eta(item.etaSec) || (item.speed > 0 ? speed(item.speed) : `${Math.round(item.progress * 100)}%`)}</span>
               {!ro && canAct && (
                 <span className="dl-actions">
                   {item.state === 'paused' || item.state === 'errored' ? (
@@ -120,7 +123,7 @@ export function DownloadsWidget() {
           {stuck.map((q: ArrQueueItem & { app: 'sonarr' | 'radarr' }) => (
             <li key={`${q.app}:${q.id}`} className={`dl-row is-${q.state}`}>
               <span className="dl-name" title={q.title}>
-                {breakable(q.title)}
+                {breakable(releaseTitle(q.title))}
               </span>
               <span className="dl-status">{q.app === 'sonarr' ? 'Sonarr' : 'Radarr'}</span>
               {!ro && (

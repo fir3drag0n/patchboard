@@ -1132,6 +1132,7 @@ a.jack:focus-visible {
 }
 
 .stream-title {
+  flex: 1 1 60%;
   min-width: 0;
 }
 
@@ -1147,8 +1148,12 @@ a.jack:focus-visible {
   color: var(--ink-2);
 }
 
+/* Who and how long: never more than 40% of the line, so a long title isn't
+   squeezed into a column a word wide. */
 .stream-user {
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  max-width: 40%;
+  text-align: right;
   color: var(--ink-3);
   font-size: 13.5px;
 }
@@ -5770,6 +5775,21 @@ body.is-sorting * {
     min-width: 48px;
     min-height: 0;
   }
+
+  /* Icons alone are small: a big group wraps onto a second line, so no app
+     sits out of sight past the edge. */
+  .patchrow.icons-only .bay-jacks {
+    flex-wrap: wrap;
+    row-gap: 10px;
+    overflow-x: visible;
+  }
+
+}
+
+/* A row that scrolls sideways (apps with names on a phone, the next 24
+   hours) fades out at its edge while more waits past it; see edge-fade.ts. */
+:is(.bay-jacks, .hours)[data-more] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
 }
 
 /* ---------- Live number setup ---------- */
@@ -6380,7 +6400,8 @@ a.vw:hover {
   width: 10px;
   height: 64px;
   border-radius: 3px;
-  background: var(--line-soft);
+  /* A ghost of a track: an hour with no rain reads as empty, not as a bar. */
+  background: color-mix(in srgb, var(--line-soft) 45%, transparent);
   overflow: hidden;
 }
 
@@ -13461,6 +13482,18 @@ html.wall-swipe body {
   fill: var(--head);
 }
 
+/* On a light page the moon is drawn the way it looks: the lit part pale with
+   a fine edge, the shadow gray. Ink for the lit part would read as a new moon. */
+:root[data-scheme='light'] .moon-dark {
+  fill: var(--ink-3);
+}
+
+:root[data-scheme='light'] .moon-lit {
+  fill: var(--bg);
+  stroke: var(--ink-3);
+  stroke-width: 0.04;
+}
+
 .sky-moon-name {
   color: var(--ink);
 }
@@ -13774,13 +13807,13 @@ html[data-eink] :is(.seg button[aria-pressed='true'], .seg button[aria-selected=
 
 /* The moon on e-ink: an outlined circle with its lit part in ink. */
 html[data-eink] .moon-dark {
-  fill: #fff;
-  stroke: #000;
-  stroke-width: 0.06;
+  fill: #000;
 }
 
 html[data-eink] .moon-lit {
-  fill: #000;
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 0.06;
 }
 
 /* A device's link as a code to scan: crisp squares, a little room around. */
