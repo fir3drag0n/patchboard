@@ -838,6 +838,21 @@ export interface Car {
   setC?: number;
   /** Tire pressures in bar, front left to rear right. */
   tires?: Record<TirePos, number>;
+  /** "Model 3", from the car's own configuration. */
+  model?: string;
+  /** Tesla's trim badge, e.g. "50" or "74d". */
+  trim?: string;
+  /** Charge that can be used now, which reads lower than `battery` in the cold. */
+  usable?: number;
+  /** This charging session: energy added, and the charger's volts and amps. */
+  addedKwh?: number;
+  volts?: number;
+  amps?: number;
+  /** A cable is in the port. */
+  cable?: boolean;
+  portOpen?: boolean;
+  /** What stands open: doors, the frunk and the trunk. */
+  open?: Partial<Record<'fl' | 'fr' | 'rl' | 'rr' | 'frunk' | 'trunk', boolean>>;
 }
 
 export type TirePos = 'fl' | 'fr' | 'rl' | 'rr';

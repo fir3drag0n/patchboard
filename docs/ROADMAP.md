@@ -11,6 +11,20 @@ What comes next. CHANGELOG.md has what has shipped.
 - [ ] Backrest
 - [ ] Kavita, Komga
 
+### The car as a live engineering drawing
+
+The car widget's Dashboard style is a live drawing sheet you can open part
+by part. Next for it:
+
+- [ ] A specification table you fill in: trim, wheels, battery, paint
+- [ ] Turn the car: tap the front, rear or top view to bring it to the middle
+- [ ] Act from the drawing, held to confirm and hidden on household devices:
+  lock and unlock, climate, start and stop charging, the charge limit, Sentry
+- [ ] Drives: where it's parked, the last trip and its efficiency
+- [ ] The poster: the sheet as the 1-bit panel image, for a framed e-ink display
+- [ ] Every Tesla: overhangs for Model Y, S and X, Cybertruck's figures, and a
+  drawn fallback for each
+
 ### Running it anywhere
 
 - [ ] Patchboard in the TrueNAS app catalog and Unraid's Community Applications

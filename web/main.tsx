@@ -13,6 +13,9 @@ import '@fontsource-variable/geist-mono';
 import '@fontsource-variable/dm-sans';
 import '@fontsource/dm-mono/400.css';
 import '@fontsource/dm-mono/500.css';
+// The car sheet's engineering lettering (CarBlueprint.tsx).
+import '@fontsource/barlow/300.css';
+import '@fontsource/barlow/400.css';
 import '@fontsource/dm-serif-display/400.css';
 import './styles.css';
 

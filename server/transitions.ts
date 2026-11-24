@@ -3,10 +3,13 @@
 // if the container is running again by then it becomes one "restarted" event
 // ("updated" when its image changed), and only a stop that lasts becomes
 // "stopped", dated from when it began. A restart loop is reported at once.
+// A failing health check is held the same way, for three minutes: a check
+// that fails once under load and passes again leaves no line at all.
 
 import type { ChangeEvent, Container } from '../shared/types.ts';
 
 export const STOP_GRACE_MS = 2 * 60_000;
+export const HEALTH_GRACE_MS = 3 * 60_000;
 
 export type Seen = 'running' | 'stopped' | 'unhealthy';
 
@@ -17,6 +20,8 @@ export interface Track {
   images: Record<string, string>;
   /** Stops not yet reported: when they began and Docker's status line. */
   pending: Record<string, { at: number; status: string }>;
+  /** Failing health checks not yet reported: when they began and Docker's status line. */
+  sick?: Record<string, { at: number; status: string }>;
 }
 
 export interface Event {
@@ -26,7 +31,7 @@ export interface Event {
   at: number;
 }
 
-export const emptyTrack = (): Track => ({ states: {}, images: {}, pending: {} });
+export const emptyTrack = (): Track => ({ states: {}, images: {}, pending: {}, sick: {} });
 
 /** The events this poll settles, and the state to keep for the next one. */
 export function settle(prev: Track, containers: Container[], now: number): { track: Track; events: Event[] } {
@@ -34,6 +39,7 @@ export function settle(prev: Track, containers: Container[], now: number): { tra
   const states: Record<string, Seen> = {};
   const images = { ...prev.images };
   const pending = { ...prev.pending };
+  const sick = { ...(prev.sick ?? {}) };
 
   for (const c of containers) {
     // "Created" is the moment between compose making a container and starting
@@ -64,7 +70,7 @@ export function settle(prev: Track, containers: Container[], now: number): { tra
     if (held) {
       delete pending[c.name];
       events.push({ kind: 'container.restarted', subject: c.name, detail: imageChanged ? 'updated' : 'restarted', at: now });
-      if (state === 'unhealthy') events.push({ kind: 'container.unhealthy', subject: c.name, detail: c.status, at: now });
+      if (state === 'unhealthy') sick[c.name] = { at: now, status: c.status };
       continue;
     }
     if (before === undefined) {
@@ -74,9 +80,22 @@ export function settle(prev: Track, containers: Container[], now: number): { tra
       continue;
     }
     if (before === state) continue;
-    if (state === 'unhealthy') events.push({ kind: 'container.unhealthy', subject: c.name, detail: c.status, at: now });
-    else if (before === 'unhealthy') events.push({ kind: 'container.recovered', subject: c.name, at: now });
-    else events.push({ kind: 'container.started', subject: c.name, detail: c.status, at: now });
+    if (state === 'unhealthy') sick[c.name] = { at: now, status: c.status };
+    else if (before === 'unhealthy') {
+      // Passing again: a blip still being held leaves nothing; one already
+      // reported gets its "recovered".
+      if (sick[c.name]) delete sick[c.name];
+      else events.push({ kind: 'container.recovered', subject: c.name, at: now });
+    } else events.push({ kind: 'container.started', subject: c.name, detail: c.status, at: now });
+  }
+
+  // Health checks still failing after the grace: report them, dated from when they began.
+  for (const [name, held] of Object.entries(sick)) {
+    if (states[name] !== 'unhealthy') delete sick[name];
+    else if (now - held.at >= HEALTH_GRACE_MS) {
+      events.push({ kind: 'container.unhealthy', subject: name, detail: held.status, at: held.at });
+      delete sick[name];
+    }
   }
 
   // Stops that lasted: report them, dated from when they began.
@@ -87,8 +106,11 @@ export function settle(prev: Track, containers: Container[], now: number): { tra
       delete pending[name];
     }
   }
-  return { track: { states, images, pending }, events };
+  return { track: { states, images, pending, sick }, events };
 }
+
+/** A health check that started failing moments ago, still inside its grace. */
+export const sickening = (t: Track | undefined, name: string): boolean => !!t?.sick?.[name];
 
 /** A container stopped moments ago, still inside the grace window. */
 export const settling = (t: Track, name: string, now: number): boolean => !!t.pending[name] && now - t.pending[name].at < STOP_GRACE_MS;

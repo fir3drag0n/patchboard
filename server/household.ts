@@ -214,6 +214,8 @@ const READS = new Set([
   '/api/history',
   // Warning and error lines only, masked: the Monitor page's feed.
   '/api/monitor/feed',
+  // Pictures of the car for the tire pressures.
+  '/api/car-pictures',
 ]);
 const READ_PREFIXES = ['/api/rss/', '/api/releases/', '/api/markets/', '/api/widgets/', '/api/feed-img/', '/api/boards/', '/api/art/', '/api/icons/', '/api/icon/', '/api/img/', '/api/live/'];
 // The changes it may make, all to what's pinned on a board: switching a

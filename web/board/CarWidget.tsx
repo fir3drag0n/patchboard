@@ -12,6 +12,9 @@ import { locale } from '../lib/region.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { type CarData, carKey, TIRES, type TirePos } from '../../shared/types.ts';
 import { PSI, softTires } from '../../shared/car.ts';
+import { CarTires } from './CarSketch.tsx';
+import { CarBlueprint, type CarSheet } from './CarBlueprint.tsx';
+import { useWidget } from './widget-context.ts';
 
 const CHARGE_WORDS: Record<string, string> = {
   Charging: 'Charging',
@@ -30,7 +33,10 @@ const TIRE_NAMES: Record<TirePos, string> = {
 };
 export function CarWidget() {
   const { state, data } = useSource<CarData>('tessie');
-  const limits = useStore().snap?.limits;
+  const { snap } = useStore();
+  const limits = snap?.limits;
+  const readOnly = snap?.readOnly;
+  const { style } = useWidget();
   const { temp: unit } = useAppearance();
   const cars = data?.cars ?? [];
   // A week of charge, a day of temperatures, for every car at once.
@@ -61,6 +67,110 @@ export function CarWidget() {
         const temps = [...(inside ?? []), ...(outside ?? [])].map((p) => p[1]);
         const lo = temps.length ? Math.min(...temps) - 1 : 0;
         const hi = temps.length ? Math.max(...temps) + 1 : 1;
+        const tireList = c.tires ? TIRES.map((p) => ({ pos: p, value: tire(c.tires![p]), name: TIRE_NAMES[p], soft: soft.includes(p) })) : [];
+        // Dashboard: the car large with its tires, and the numbers that matter beside it.
+        if (style === 'dashboard') {
+          const range = metric ? `${Math.round(c.rangeMi * 1.609)} km` : `${c.rangeMi} mi`;
+          const OPEN_WORDS: Record<string, string> = { fl: 'driver door', rl: 'driver rear door', fr: 'passenger door', rr: 'passenger rear door', frunk: 'frunk', trunk: 'trunk' };
+          const sheet: CarSheet = {
+            vin: c.vin,
+            name: c.name,
+            model: c.model,
+            ro: !!readOnly,
+            metric,
+            unit: metric ? 'bar' : 'psi',
+            tires: tireList,
+            battery: c.battery,
+            usable: c.usable,
+            limit: c.limit,
+            low,
+            range,
+            rangeMi: c.rangeMi,
+            state: c.charging === 'Charging' ? 'Charging' : c.cable || (c.charging && c.charging !== 'Disconnected') ? 'Plugged in' : 'Unplugged',
+            plugged: !!c.cable || (!!c.charging && c.charging !== 'Disconnected'),
+            charging: c.charging === 'Charging',
+            kw: c.chargeKw ? `${c.chargeKw} kW` : undefined,
+            volts: c.volts,
+            amps: c.amps,
+            added: c.addedKwh ? `${c.addedKwh.toFixed(1)} kWh` : undefined,
+            toFull: c.charging === 'Charging' && c.minutesToFull ? `${h ? `${h} h ` : ''}${m} min` : undefined,
+            inside: c.insideC != null ? `${deg(c.insideC, unit)}°` : undefined,
+            outside: c.outsideC != null ? `${deg(c.outsideC, unit)}°` : undefined,
+            climate: c.climateOn,
+            locked: c.locked,
+            open: Object.entries(c.open ?? {})
+              .filter(([, v]) => v)
+              .map(([k]) => OPEN_WORDS[k] ?? k),
+            sentry: c.sentry,
+            odometer: metric ? `${Math.round(c.odometerMi * 1.609).toLocaleString(locale())} km` : `${c.odometerMi.toLocaleString(locale())} mi`,
+            read: agoLong(c.updatedAt),
+            asleep: c.asleep,
+            note: soft.length ? `${soft.map((t) => TIRE_NAMES[t]).join(' and ')} ${soft.length === 1 ? 'tire is' : 'tires are'} low` : undefined,
+            week: { battery: week[carKey('battery', c.vin)], tires: Object.fromEntries(TIRES.map((t) => [t, week[carKey(`tire.${t}`, c.vin)]])) },
+            day: { inside, outside },
+            tireText: (v) => tire(v),
+            tempText: (v) => `${deg(v, unit)}°`,
+          };
+          return (
+            <CarBlueprint
+              key={c.vin}
+              sheet={sheet}
+              fallback={
+            <div className="car-dash">
+              <div className="car-dash-stage">{c.tires && <CarTires vin={c.vin} ro={!!readOnly} unit={metric ? 'bar' : 'psi'} tires={tireList} />}</div>
+              <div className="car-dash-side">
+                {cars.length > 1 && <h3 className="car-name">{c.name}</h3>}
+                <div className="car-dash-charge">
+                  <span className={`car-dash-num ${low ? 'warn-text' : ''}`}>{c.battery}%</span>
+                  <span className="car-dash-range">{metric ? `${Math.round(c.rangeMi * 1.609)} km` : `${c.rangeMi} mi`}</span>
+                </div>
+                <div className="car-bar">
+                  <Meter label={`${c.name} battery charge`} value={c.battery} level={low ? 'warn' : 'ok'} />
+                  <i className="car-limit" style={{ left: `${c.limit}%` }} title={`Charge limit ${c.limit}%`} />
+                </div>
+                <p className="car-line">
+                  {c.driving ? 'Driving' : words}
+                  {c.charging === 'Charging' && c.minutesToFull ? `, full in ${h ? `${h} h ` : ''}${m} min` : ''}
+                  {c.chargeKw ? ` at ${c.chargeKw} kW` : ''}.
+                </p>
+                <dl className="car-dash-facts">
+                  {c.insideC != null && (
+                    <div>
+                      <dt>Inside</dt>
+                      <dd>
+                        {deg(c.insideC, unit)}°{c.climateOn ? ', climate on' : ''}
+                      </dd>
+                    </div>
+                  )}
+                  {c.outsideC != null && (
+                    <div>
+                      <dt>Outside</dt>
+                      <dd>{deg(c.outsideC, unit)}°</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt>Doors</dt>
+                    <dd className={c.locked ? '' : 'warn-text'}>{c.locked ? 'Locked' : 'Unlocked'}</dd>
+                  </div>
+                  <div>
+                    <dt>Sentry</dt>
+                    <dd>{c.sentry ? 'On' : 'Off'}</dd>
+                  </div>
+                </dl>
+                {soft.length > 0 && (
+                  <p className="car-line warn-text">
+                    {soft.map((t) => TIRE_NAMES[t]).join(' and ')} {soft.length === 1 ? 'tire is' : 'tires are'} low.
+                  </p>
+                )}
+                <p className="car-seen">
+                  {c.asleep ? 'Asleep. ' : ''}Updated {agoLong(c.updatedAt)}.
+                </p>
+              </div>
+            </div>
+              }
+            />
+          );
+        }
         return (
           <div className="car-one" key={c.vin}>
             {cars.length > 1 && <h3 className="car-name">{c.name}</h3>}
@@ -113,16 +223,7 @@ export function CarWidget() {
                 )}
 
                 {c.tires && (
-                  <div className="car-tires" role="group" aria-label={`Tires, ${metric ? 'bar' : 'psi'}`}>
-                    {TIRES.map((t) => (
-                      <span key={t} className={`car-tire car-tire-${t} ${soft.includes(t) ? 'is-soft' : ''}`} title={TIRE_NAMES[t]}>
-                        <span className="car-tire-num">{tire(c.tires![t])}</span>
-                        <span className="car-tire-pos">{TIRE_NAMES[t]}</span>
-                      </span>
-                    ))}
-                    <span className="car-tires-body" aria-hidden="true" />
-                    <span className="car-tires-unit">{metric ? 'bar' : 'psi'}</span>
-                  </div>
+                  <CarTires vin={c.vin} ro={!!readOnly} unit={metric ? 'bar' : 'psi'} tires={tireList} />
                 )}
                 {c.tires && (
                   <div className="car-chart">

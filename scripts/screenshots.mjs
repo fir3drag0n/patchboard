@@ -408,6 +408,7 @@ try {
     ['forest', 'dark'],
     ['dusk', 'dark'],
     ['paper', 'light'],
+    ['blueprint', 'dark'],
   ];
   for (const [theme, scheme] of themes) {
     const ctx = await context(browser, { viewport: DESKTOP, colorScheme: scheme }, { theme, scheme });

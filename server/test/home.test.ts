@@ -153,3 +153,22 @@ test('an edge or dev build carries its commit; a release is the plain version', 
   assert.equal(compareVersions('1.13.0', '1.13.0+edge.4f2c1a9'), 0);
   assert.equal(compareVersions('1.14.0', '1.13.0+edge.4f2c1a9'), 1);
 });
+
+test('Tessie: the model, this session, the cable and what stands open', () => {
+  const car = toCar({
+    vin: 'V3',
+    last_state: {
+      state: 'online',
+      charge_state: { battery_level: 70, battery_range: 210, charging_state: 'Charging', charger_power: 11, usable_battery_level: 68, charge_energy_added: 12.4, charger_voltage: 240, charger_actual_current: 48, conn_charge_cable: 'SAE', charge_port_door_open: true, timestamp: 1 },
+      vehicle_state: { locked: true, df: 0, dr: 0, pf: 1, pr: 0, ft: 0, rt: 1 },
+      vehicle_config: { car_type: 'model3', trim_badging: '50' },
+    },
+  });
+  assert.equal(car!.model, 'Model 3');
+  assert.equal(car!.trim, '50');
+  assert.deepEqual([car!.usable, car!.addedKwh, car!.volts, car!.amps, car!.cable, car!.portOpen], [68, 12.4, 240, 48, true, true]);
+  assert.deepEqual(car!.open, { fl: false, rl: false, fr: true, rr: false, frunk: false, trunk: true });
+  const parked = toCar({ vin: 'V4', last_state: { charge_state: { battery_level: 50, conn_charge_cable: '<invalid>' } } });
+  assert.equal(parked!.cable, false);
+  assert.equal(parked!.open, undefined, 'unknown, not shut');
+});

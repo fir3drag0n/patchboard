@@ -31,7 +31,11 @@ function seasons(s: number[]): string {
 export function Requests() {
   const { snap } = useStore();
   const ro = !!snap?.readOnly;
-  const [view, setView] = useUrlChoice<View>('view', VIEWS.map((v) => v[0]), 'waiting');
+  // Opens on what needs you, or else on what's moving: an empty Waiting tab
+  // over 15 requests on the way says nothing.
+  const live = (snap?.sources.overseerr?.data as SeerrData | null | undefined) ?? null;
+  const start: View = !live?.pending && live?.processing ? 'coming' : 'waiting';
+  const [view, setView] = useUrlChoice<View>('view', VIEWS.map((v) => v[0]), start);
   const [said, setSaid] = useState('');
   const [err, setErr] = useState('');
 

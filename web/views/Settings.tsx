@@ -148,7 +148,7 @@ export function Settings() {
           </div>
         </div>
         {a.eink ? (
-          <p className="settings-note">{tr('For an e-ink reader or panel: no motion, and one redraw a minute. A wall device is set from Devices.')}</p>
+          <p className="settings-note">{tr('For an e-ink reader or panel: no motion, and one redraw a minute. Only this screen changes; a wall device is set from Devices.')}</p>
         ) : (
           <>
             <div className="theme-grid">

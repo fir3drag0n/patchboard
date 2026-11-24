@@ -113,6 +113,7 @@ import { fromHomepage } from './homepage.ts';
 import { redact } from './redact.ts';
 import { auditCatalog, draftYaml, visitorHost } from './catalog-audit.ts';
 import { iconCache, urlIconCache } from './icon-cache.ts';
+import { type CarPicture, checkPictures } from '../shared/car-pictures.ts';
 import { feedPicture } from './feed-images.ts';
 
 /** Pause and resume for each configured download client. */
@@ -2384,6 +2385,23 @@ app.post('/api/icons', async (c) => {
   writeFileSync(join(iconDir, name), body);
   recordAudit(who(c), 'icon.upload', name);
   return c.json({ icon: `/api/icons/${name}` });
+});
+
+// Your own pictures of each car, with where its tires sit (shared/car-pictures.ts).
+app.get('/api/car-pictures', (c) => c.json(kvGet<Record<string, CarPicture[]>>('car-pictures') ?? {}));
+app.put('/api/car-pictures/:vin', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.readOnly) return c.json({ error: 'Read-only' }, 403);
+  const vin = c.req.param('vin');
+  if (!/^[A-Za-z0-9-]{1,40}$/.test(vin)) return c.json({ error: 'Bad car' }, 400);
+  const checked = checkPictures(await c.req.json().catch(() => null));
+  if (!checked.ok) return c.json({ error: checked.error }, 400);
+  const all = kvGet<Record<string, CarPicture[]>>('car-pictures') ?? {};
+  if (checked.pictures.length) all[vin] = checked.pictures;
+  else delete all[vin];
+  kvSet('car-pictures', all);
+  recordAudit(who(c), 'car.pictures', `${vin}: ${checked.pictures.length}`);
+  return c.json({ ok: true, pictures: checked.pictures });
 });
 
 app.get('/api/icons/:file', (c) => {

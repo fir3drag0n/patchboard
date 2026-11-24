@@ -169,9 +169,18 @@ right there; Escape, Close or switching tabs ends it.
 
 **The car:** through Tessie, the charge and range with a line of the last
 week, what it's doing (charging, full in an hour, at 11 kW), the inside and
-outside temperatures with a line of the last day, and the four tires around
-the car, with a soft one named. Settings, Alerts sets when a tire counts as
-soft, or turns the warning off. Patchboard records each reading Tessie
+outside temperatures with a line of the last day, and the four tires on a
+blueprint of the car, from the side or from above (swipe to turn it), with
+a soft one marked on its tire. Pictures puts them on your own pictures of
+your car instead: add one, say which view it is, box the part to use (a
+sheet with several views works), then tap its tires and charge port. A
+drawing turns to light lines in dark mode. Its Dashboard style makes the
+whole card a live engineering drawing for a wall screen or an e-ink
+reader: the front, rear and top views across the top, the side view
+dimensioned in millimetres, the live charge, range, power and
+temperatures, and panels for status, charging, range and tires. Tap any
+of them for its detail, with the week's or the day's line. Settings,
+Alerts sets when a tire counts as soft, or turns the warning off. Patchboard records each reading Tessie
 has, without waking the car, so the lines fill in from the day you
 set it up. Set the widget to One number for the battery, the range or the
 lowest tire.
@@ -339,8 +348,9 @@ keep their full length, the page scrolls, and Arrange board reports how far
 it runs over. Fit recalculates when the window width or header height
 changes. New board, at the foot of any board, adds another with its own
 name, starting empty or from a layout; tabs over the board switch between
-them. Five layouts are made for a screen on the wall: clock and weather,
-markets, house, cameras, and media. A board set For a wall screen shows one
+them. Six layouts are made for a screen on the wall: clock and weather,
+markets, house, cameras, media, and the car, large with its tires beside
+its battery, range, charging and locks. A board set For a wall screen shows one
 status line instead of the header, and no tabs, and it stays off Home's
 tabs; Settings, Devices lists each one to edit.
 
@@ -412,10 +422,11 @@ with a warning and an alarm level for each, for every device at once.
 |---|---|
 | ![Graphite, light](screenshots/theme-graphite-light.webp) Graphite, light | ![Midnight](screenshots/theme-midnight-dark.webp) Midnight |
 | ![Forest](screenshots/theme-forest-dark.webp) Forest | ![Dusk](screenshots/theme-dusk-dark.webp) Dusk |
-| ![Paper](screenshots/theme-paper-light.webp) Paper | |
+| ![Paper](screenshots/theme-paper-light.webp) Paper | ![Blueprint](screenshots/theme-blueprint-dark.webp) Blueprint |
 
-Every theme comes in dark and light. A Custom theme starts from three
-colors.
+Every theme comes in dark and light. Blueprint is drafting blue with white
+lines on a faint grid, or a pale whiteprint in light. A Custom theme starts
+from three colors.
 
 ## On a phone
 

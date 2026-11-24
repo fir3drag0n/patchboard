@@ -20,6 +20,12 @@ interface Vehicle {
       charge_limit_soc?: number;
       charger_power?: number; // kW
       timestamp?: number;
+      usable_battery_level?: number;
+      charge_energy_added?: number; // kWh, this session
+      charger_voltage?: number;
+      charger_actual_current?: number;
+      conn_charge_cable?: string; // "<invalid>" with no cable in
+      charge_port_door_open?: boolean;
     };
     climate_state?: { inside_temp?: number; outside_temp?: number; is_climate_on?: boolean; driver_temp_setting?: number };
     vehicle_state?: {
@@ -32,7 +38,15 @@ interface Vehicle {
       tpms_pressure_fr?: number | null;
       tpms_pressure_rl?: number | null;
       tpms_pressure_rr?: number | null;
+      // 0 shut, anything else open: driver front, driver rear, passenger front, passenger rear, front and rear trunk.
+      df?: number;
+      dr?: number;
+      pf?: number;
+      pr?: number;
+      ft?: number;
+      rt?: number;
     };
+    vehicle_config?: { car_type?: string; trim_badging?: string };
     drive_state?: { shift_state?: string | null };
   };
 }
@@ -61,7 +75,29 @@ export function toCar(v: Vehicle): Car | null {
     updatedAt: c.timestamp ?? Date.now(),
     setC: s.climate_state?.driver_temp_setting,
     tires: tiresOf(s.vehicle_state),
+    model: modelName(s.vehicle_config?.car_type),
+    trim: s.vehicle_config?.trim_badging || undefined,
+    usable: c.usable_battery_level,
+    addedKwh: c.charge_energy_added,
+    volts: c.charging_state === 'Charging' ? c.charger_voltage : undefined,
+    amps: c.charging_state === 'Charging' ? c.charger_actual_current : undefined,
+    cable: c.conn_charge_cable == null ? undefined : c.conn_charge_cable !== '<invalid>' && c.conn_charge_cable !== '',
+    portOpen: c.charge_port_door_open,
+    open: openParts(s.vehicle_state),
   };
+}
+
+/** "model3" is "Model 3"; "cybertruck" is "Cybertruck". */
+export function modelName(t?: string): string | undefined {
+  if (!t) return undefined;
+  const m = /^model([a-z0-9])$/i.exec(t);
+  return m ? `Model ${m[1].toUpperCase()}` : t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+/** Doors and trunks that stand open, when the car says. Tesla's driver side is left. */
+function openParts(v: NonNullable<Vehicle['last_state']>['vehicle_state']): Car['open'] {
+  if (!v || v.df == null) return undefined;
+  return { fl: !!v.df, rl: !!v.dr, fr: !!v.pf, rr: !!v.pr, frunk: !!v.ft, trunk: !!v.rt };
 }
 
 /** All four pressures, or none: a car that has only some reports none yet. */

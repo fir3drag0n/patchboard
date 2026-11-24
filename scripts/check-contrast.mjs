@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 
 const PAGES = ['/', '/server', '/stacks', '/reading', '/upcoming', '/logs', '/apps', '/media', '/downloads', '/library', '/requests', '/blocking', '/settings', '/settings?tab=connections', '/c/plex', '/monitor', '/weather'];
-const THEMES = ['graphite', 'midnight', 'forest', 'dusk', 'paper'];
+const THEMES = ['graphite', 'midnight', 'forest', 'dusk', 'paper', 'blueprint'];
 const LOOKS = [
   ...THEMES.flatMap((theme) => ['dark', 'light'].map((scheme) => ({ name: `${theme} ${scheme}`, look: { theme, scheme } }))),
   { name: 'e-ink', look: { theme: 'graphite', scheme: 'light', eink: true } },

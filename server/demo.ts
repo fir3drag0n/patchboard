@@ -881,7 +881,7 @@ function demoCar(): CarData {
     cars: [
       {
         vin: 'DEMO',
-        name: 'Model Y',
+        name: 'Midnight',
         battery: Math.min(90, 72 + Math.floor((Date.now() / 600_000) % 18)),
         rangeMi: 231,
         charging: 'Charging',
@@ -899,6 +899,15 @@ function demoCar(): CarData {
         updatedAt: Date.now() - 4 * 60_000,
         setC: 21,
         tires: { fl: 2.9, fr: 2.9, rl: 2.86, rr: 2.62 },
+        model: 'Model 3',
+        trim: '50',
+        usable: 72,
+        addedKwh: 12.4,
+        volts: 240,
+        amps: 46,
+        cable: true,
+        portOpen: true,
+        open: { fl: false, fr: false, rl: false, rr: false, frunk: false, trunk: false },
       },
     ],
   };

@@ -30,8 +30,38 @@
   - **Weather's high and low** break after a comma instead of leaving a
     dot at the end of a line, and an hour with no rain chance shows an
     empty track, not a gray bar.
+  - **Upcoming's Search** sits under a poster's title instead of on top
+    of it.
+  - **Requests opens on what's moving** when nothing waits for approval.
   - **The moon looks like the moon** on a light page and e-ink: the lit
     part pale, the shadow dark.
+- **Your own pictures of your car:** Pictures on the car widget takes a
+  picture or drawing of the side, top, front or rear. Box the part to use,
+  so one sheet with several views works, then tap its tires and charge
+  port, and each pressure points at its tire. Add a few and swipe between
+  them to turn the car. A drawing turns to light lines in dark mode.
+- **Your car as a live engineering drawing:** the car widget's Dashboard
+  style turns the card into a drawing sheet for a wall screen or an e-ink
+  reader. Front, rear and top views run across the top, the side view sits
+  in the middle with its real dimensions in millimetres, and the live
+  charge, range, power and temperatures fill a boxed list beside it.
+  Panels below cover status, charging, range by charge and the four tires.
+  Tap any of them, or a tire, for its detail with the week's or the day's
+  line. While it charges, a callout at the charge port gives the rate.
+  "Wall: car" sets up a board with it.
+- **A Blueprint theme:** drafting blue with white lines on a faint grid, or
+  a pale whiteprint in light.
+- **Tires on a blueprint of the car:** the car widget draws the car in fine
+  drafting lines, from the side with the far tires dashed behind, or from
+  above. Each pressure sits on a leader to its tire, and a low tire is the
+  one thing in color. Swipe across it, or press Side or Above, to turn it.
+- **Quieter health checks:** a container has to fail its health check for
+  three minutes before it shows in Changes, the Monitor feed or Needs
+  attention. A check that fails once under load and passes again leaves no
+  "failing" and "recovered" pair behind.
+- **E-ink stays on the e-ink screen:** setting one browser to e-ink no
+  longer makes every new browser start as an e-ink screen. The rest of the
+  look still carries over.
 - **Icons from an address,** such as an old Homepage's images folder on
   your network, load through Patchboard, so they show on an HTTPS
   address and over a tunnel.
