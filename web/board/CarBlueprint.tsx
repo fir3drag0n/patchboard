@@ -159,7 +159,7 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
       {width < MIN_WIDTH ? (
         fallback
       ) : detail ? (
-        <DetailSheet sheet={sheet} detail={detail} onBack={() => setDetail(null)} tall={tall} />
+        <DetailSheet sheet={sheet} pics={pics} detail={detail} onBack={() => setDetail(null)} tall={tall} />
       ) : (
         <>
           <Sheet sheet={sheet} pics={pics} open={setDetail} pick={pick} setPick={setPick} big={big} turn={setBig} tall={tall} />
@@ -470,19 +470,21 @@ function Sheet({
     const t = window.setTimeout(() => setLeaving(null), 380);
     return () => window.clearTimeout(t);
   }, [large.v]);
-  // A poster on a TV, driven by its remote: left and right turn the car, up and down step through
-  // the metrics and panels (or an open part's buttons), and the centre button opens what's marked.
+  // A poster on a TV, driven by its remote: up and down step through the metrics, the car and the
+  // panels (or an open part's buttons), the centre button opens what's marked, and left and right
+  // turn the car: at once on a screen with one page, and once the car is marked on one with several.
   useEffect(() => {
     if (!stage.current?.closest('.widget-page')) return;
     const key = (e: globalThis.KeyboardEvent) => {
       if (e.defaultPrevented) return;
       const on = document.activeElement;
       if (on && on !== document.body && !stage.current?.contains(on)) return;
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      // With pages to turn, left and right are the pages'; the car turns once it's highlighted.
+      if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !document.documentElement.classList.contains('wall-swipe')) {
         e.preventDefault();
         step(e.key === 'ArrowRight' ? 1 : -1);
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        const stops = [...(stage.current?.querySelectorAll<HTMLElement | SVGElement>(pick ? '.bp-part button:not(:disabled)' : '.bp-stop') ?? [])];
+        const stops = [...(stage.current?.querySelectorAll<HTMLElement | SVGElement>(pick ? '.bp-part button:not(:disabled)' : '.bp-stop, .bp-turntable[tabindex]') ?? [])];
         if (!stops.length) return;
         e.preventDefault();
         const i = stops.indexOf(on as HTMLElement);
@@ -1433,8 +1435,22 @@ function Plan({ car }: { car: Box }) {
 const AXLES = { front: 0.19, rear: 0.8 };
 
 /** A part of the car opened up, as a sheet of its own: its figures, a drawing of it, and what Patchboard has recorded. */
-function DetailSheet({ sheet, detail, onBack, tall }: { sheet: CarSheet; detail: Detail; onBack: () => void; tall: boolean }) {
+function DetailSheet({ sheet, pics, detail, onBack, tall }: { sheet: CarSheet; pics: CarPicture[]; detail: Detail; onBack: () => void; tall: boolean }) {
   const H = tall ? TALL : WIDE;
+  // The car from above: your top-view drawing where you've added one, a drawn plan otherwise. Either
+  // way, nose to the left, and the outline of the car itself for the tires and doors to sit on.
+  const topPic = pics.find((p) => p.view === 'top') ?? null;
+  const topFramed = useFramed(topPic?.src ?? null, topPic?.crop);
+  const softTires = Object.fromEntries(sheet.tires.map((t) => [t.pos, t.soft])) as Record<TirePos, boolean>;
+  const above = (slot: Box): { car: Box; drawing: ReactNode; drawn: boolean } => {
+    if (topPic && topFramed) {
+      const p = place(topFramed, slot);
+      return { car: { x: p.ink.x0, y: p.ink.y0, w: p.ink.x1 - p.ink.x0, h: p.ink.y1 - p.ink.y0 }, drawing: <ViewImage pic={topPic} framed={topFramed} box={p.box} soft={softTires} />, drawn: false };
+    }
+    const ch = Math.min(slot.h, slot.w / 2.5);
+    const car = { x: slot.x + (slot.w - ch * 2.5) / 2, y: slot.y + (slot.h - ch) / 2, w: ch * 2.5, h: ch };
+    return { car, drawing: <Plan car={car} />, drawn: true };
+  };
   const [letter, title] = DETAIL[detail];
   const id = useId().replace(/:/g, '');
   const stage = useRef<HTMLDivElement>(null);
@@ -1452,8 +1468,9 @@ function DetailSheet({ sheet, detail, onBack, tall }: { sheet: CarSheet; detail:
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') (document.activeElement === plot ? back : plot).focus();
       else plot.focus();
     };
-    window.addEventListener('keydown', key);
-    return () => window.removeEventListener('keydown', key);
+    // Ahead of a wall screen's page turning, which would otherwise take left and right first.
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
   }, []);
   const rows: [string, string, boolean?][] =
     detail === 'tires'
@@ -1553,20 +1570,21 @@ function DetailSheet({ sheet, detail, onBack, tall }: { sheet: CarSheet; detail:
 
         {detail === 'tires' &&
           (() => {
-            const ch = Math.min(view.h * 0.42, (view.w - 112) / 2.5);
-            const car = { x: view.x + (view.w - ch * 2.5) / 2, y: view.y + (view.h - ch) / 2 + 2, w: ch * 2.5, h: ch };
+            const { car, drawing, drawn } = above({ x: view.x + 52, y: view.y + view.h * 0.22 + 2, w: view.w - 104, h: view.h * 0.54 });
+            // A drawing's outline takes in the mirrors: the tires sit a little inside it.
+            const edge = drawn ? 0 : car.h * 0.09;
             // Seen from above, nose to the left: the left side of the car is the bottom of the drawing.
             const at: Record<TirePos, [number, number]> = {
-              fl: [car.x + car.w * AXLES.front, car.y + car.h],
-              fr: [car.x + car.w * AXLES.front, car.y],
-              rl: [car.x + car.w * AXLES.rear, car.y + car.h],
-              rr: [car.x + car.w * AXLES.rear, car.y],
+              fl: [car.x + car.w * AXLES.front, car.y + car.h - edge],
+              fr: [car.x + car.w * AXLES.front, car.y + edge],
+              rl: [car.x + car.w * AXLES.rear, car.y + car.h - edge],
+              rr: [car.x + car.w * AXLES.rear, car.y + edge],
             };
             const tw = car.w * 0.13;
             const th = car.h * 0.16;
             return (
               <g>
-                <Plan car={car} />
+                {drawing}
                 {TIRES.map((t) => {
                   const [tx, ty] = at[t];
                   const r = tire[t];
@@ -1576,7 +1594,8 @@ function DetailSheet({ sheet, detail, onBack, tall }: { sheet: CarSheet; detail:
                   const ly = top ? car.y + 1 : car.y + car.h + 1;
                   return (
                     <g key={t} className={`bp-tire ${r?.soft ? 'is-soft' : ''}`}>
-                      <rect className="bp-tread" x={tx - tw / 2} y={top ? ty - th * 0.35 : ty - th * 0.65} width={tw} height={th} rx="0.6" />
+                      {/* On the plan, the tire itself; on your drawing, which already draws it, a mark around it. */}
+                      <rect className={drawn ? 'bp-tread' : 'bp-tire-mark'} x={tx - tw / 2} y={top ? ty - th * 0.35 : ty - th * 0.65} width={tw} height={th} rx="0.6" />
                       <path className="bp-lead" d={`M${tx} ${top ? ty - th * 0.35 : ty + th * 0.35} L${front ? lx + 7 : lx - 7} ${ly - 2} H${lx + (front ? 1 : -1)}`} />
                       <text className="bp-tiny" x={lx} y={ly - 6.4} textAnchor={front ? 'end' : 'start'}>
                         {r?.name ?? t.toUpperCase()}
@@ -1601,8 +1620,7 @@ function DetailSheet({ sheet, detail, onBack, tall }: { sheet: CarSheet; detail:
 
         {detail === 'status' &&
           (() => {
-            const ch = Math.min(view.h * 0.34, (view.w - 100) / 2.5);
-            const car = { x: view.x + (view.w - ch * 2.5) / 2, y: view.y + (view.h - ch) / 2, w: ch * 2.5, h: ch };
+            const { car, drawing } = above({ x: view.x + 50, y: view.y + view.h * 0.33, w: view.w - 100, h: view.h * 0.34 });
             const { x, y, w, h } = car;
             const band = h * 0.16;
             // Each opening on the plan, where it is, and which way its label goes.
@@ -1616,7 +1634,7 @@ function DetailSheet({ sheet, detail, onBack, tall }: { sheet: CarSheet; detail:
             ];
             return (
               <g>
-                <Plan car={car} />
+                {drawing}
                 {parts.map(([k, word, b, dir]) => {
                   const opened = !!sheet.parts[k];
                   const mx = b.x + b.w / 2;

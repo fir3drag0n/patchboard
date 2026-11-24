@@ -1,115 +1,76 @@
 # Changelog
 
-## Unreleased
+## 1.19.0 (2026-11-24)
 
-- **Home holds still on a smaller screen:** on a window where the board
-  had to trim its lists to fit, the lists and the footer flickered without
-  end as the scrollbar came and went. Fit now settles once.
-- **A wall screen's page dots count each page once,** when the page it
-  opens on is also one of its pages.
-- **Update several containers at once:** hold Update on one row after
-  another. They run one at a time, and each row says what it's doing
-  ("Pulling 0:42") or what it waits for ("Waiting for sonarr to finish"),
-  then starts on its own. When an update can't start, the row says why
-  instead of "Can't update here".
-- **Fewer false alarms:**
-  - **An integration that fails tries again** in 30 seconds, then a
-    minute, then two, instead of waiting out its whole interval, so one
-    hiccup from the weather service clears in seconds, not 15 minutes.
-  - **Weather, calendars, books, feeds and mail** no longer take over
-    Home's headline when they can't be reached. They stay a note in the
-    list, and the headline still says "All quiet".
-  - **Errors say why** when the app gives a reason, as in "HTTP 503:
-    Too many requests".
-- **Tighter on a phone and a tablet:**
-  - **App icons wrap** onto a second line on a phone instead of hiding
-    past the edge. Apps with names still swipe, and the row fades at its
-    edge while more apps wait past it. So does the next 24 hours on
-    Weather.
-  - **Downloads say what's downloading:** "iCarly S06", not the release's
-    whole name (still there on hover), and how far along when nothing
-    moves, not "0 KB/s". A torrent qBittorrent is checking shows its own
-    progress, not a total shared by every torrent being checked.
-  - **Right now keeps a long title readable:** who's watching and the time
-    left take at most 40% of the line.
-  - **Weather's high and low** break after a comma instead of leaving a
-    dot at the end of a line, and an hour with no rain chance shows an
-    empty track, not a gray bar.
-  - **Upcoming's Search** sits under a poster's title instead of on top
-    of it.
-  - **Requests opens on what's moving** when nothing waits for approval.
-  - **The moon looks like the moon** on a light page and e-ink: the lit
-    part pale, the shadow dark.
-- **Your own pictures of your car:** Pictures on the car widget takes a
-  picture or drawing of the side, top, front or rear. Box the part to use,
-  so one sheet with several views works, then tap its tires and charge
-  port, and each pressure points at its tire from beside the picture, never
-  on top of the car. Add a few and swipe between them to turn the car. A
-  drawing turns to light lines in dark mode.
 - **Your car as a live engineering drawing:** the car widget's Dashboard
-  style turns the card into a drawing sheet for a wall screen or an e-ink
-  reader. Front, rear and top views run across the top, the side view sits
-  in the middle with its real dimensions in millimetres, and the live
-  charge, range, power and temperatures fill a boxed list beside it.
-  Panels below cover status, charging, range by charge and the four tires.
-  Tap any of them, or a tire, for its detail: a drawing sheet of its own,
-  as large as the first. Tires get a plan of the car with each pressure on
-  its leader, charge a drawn pack hatched to its level, range a callout at
-  now, the limit and full, status every door, the frunk and the trunk, and
-  climate a thermometer scale. Below each sits the week's or the day's
-  history, plotted on ruled axes; drag along it, or use the arrow keys, to
-  read every line at one moment. Tap the front, rear or top view to bring it to the middle with its
-  own dimensions. While it charges, a callout at the charge port gives the
-  rate.
-  "Wall: car" sets up a board with it. Demo mode shows it on a Car board, the demo Tesla
-  drawn from every side.
-- **Turn the car on its drawing:** swipe across the car in the middle of
-  the sheet, press an arrow key, or tap the marks either side, and it turns
-  to the next of your drawings: front, three-quarter, side, rear, top. Each
-  view is your own drawing, so every angle it rests on is exact. Pictures
-  takes front and rear three-quarter views as well now.
-- **Control the car from the drawing:** tap the doors, the glass, the
-  frunk, the trunk, a tire or the charge port (or its "Charging" label) on
-  a view, or the Status and Charging panels below it; point at one and
-  a dashed outline names it, as a drawing marks a detail, and one that
-  stands open stays marked. The part opens in the place of the live
-  metrics, with what it can do. Hold to lock or unlock, open the frunk
-  or trunk, open or close the port, start or stop charging, set the charge
-  limit, turn climate or Sentry on or off, flash the lights or honk. Each
-  command goes through Tessie and lands in the audit log; a household
-  device and a read-only server see the car but never command it, and
-  unlocking or opening it needs sign-in to be on.
-- **Your car as a poster:** set a screen in Settings, Devices to show the
-  car widget alone, and its drawing sheet fills the screen edge to edge,
-  from a 4K monitor to an e-ink frame. On a squarer screen, as most e-ink
-  frames are, the sheet goes 4:3: a larger front and rear view and roomier
-  panels, nothing left blank. On a TV, the remote drives it: left and right turn the car,
-  up and down step through the metrics and panels, the centre button opens
-  one, and Back closes it. The sheet fits the screen exactly, with nothing
-  to scroll. Back closes a part or a detail on a phone too, instead of
-  leaving the page.
-- **Where the car is and where it's been:** the title block gives the
-  odometer under the car's name. The car shows where it's
-  parked, by your name for the place in Tessie, such as Home, or else just
-  the town, never the street. Range's detail adds the last drive, the
-  distance driven this week and the energy it took per mile. Patchboard
-  asks Tessie for these only after the car has moved.
+  style turns the card into a drawing sheet for a wall screen, a TV or an
+  e-ink frame.
+  - **The sheet:** front, rear and top views across the top, the side view
+    in the middle with its real dimensions in millimetres, live charge,
+    range, power and temperatures beside it, and panels for status,
+    charging, range by charge and the four tires. The title block gives the
+    odometer, and a callout at the charge port gives the rate while it
+    charges.
+  - **Turn it:** swipe across the car, press an arrow key or tap the marks
+    either side to step through your drawings: front, three-quarter, side,
+    rear and top.
+  - **Open any part:** each metric, panel and tire opens a detail sheet as
+    large as the first, with the part drawn and its week or day of history
+    on ruled axes. Drag along the history, or use the arrow keys, to read
+    every line at one moment.
+  - **Control the car:** tap a door, the frunk, the trunk, the glass, a tire
+    or the charge port, and hold to lock or unlock, open the frunk or
+    trunk, start or stop charging, set the limit, or switch climate or
+    Sentry. Each command goes through Tessie into the audit log. A
+    household device never commands the car, and unlocking or opening it
+    needs sign-in.
+  - **A poster for any screen:** show the car widget alone on a device and
+    the sheet fills the screen, 4:3 on a squarer e-ink frame. On a TV the
+    remote drives it: up and down move between the metrics, the car and
+    the panels, the centre button opens one, and Back closes it. Left and
+    right turn the car once it's marked.
+  - **Where it's been:** where the car is parked, by your name for the
+    place in Tessie or else the town, never the street; the last drive,
+    the week's distance and the energy per mile.
+  - **Your own drawings:** Pictures takes a side, front, rear, top or
+    three-quarter view. Box the part of a sheet to use and tap its tires
+    and charge port. "Wall: car" sets up a board, and demo mode shows a
+    Tesla drawn from every side.
+- **A TV remote turns a wall screen's pages:** left and right, or rewind
+  and fast-forward, move between a device's pages, so a Fire TV can show
+  the same car, Monitor, weather and cameras as a wall tablet.
 - **A Blueprint theme:** drafting blue with white lines on a faint grid, or
   a pale whiteprint in light.
-- **Tires on a blueprint of the car:** the car widget draws the car in fine
-  drafting lines, from the side with the far tires dashed behind, or from
-  above. Each pressure sits on a leader to its tire, and a low tire is the
-  one thing in color. Swipe across it, or press Side or Above, to turn it.
-- **Quieter health checks:** a container has to fail its health check for
-  three minutes before it shows in Changes, the Monitor feed or Needs
-  attention. A check that fails once under load and passes again leaves no
-  "failing" and "recovered" pair behind.
-- **E-ink stays on the e-ink screen:** setting one browser to e-ink no
-  longer makes every new browser start as an e-ink screen. The rest of the
-  look still carries over.
-- **Icons from an address,** such as an old Homepage's images folder on
-  your network, load through Patchboard, so they show on an HTTPS
-  address and over a tunnel.
+- **Update several containers at once:** hold Update on one row after
+  another. They run one at a time, and each row says what it's doing
+  ("Pulling 0:42") or what it waits for. When an update can't start, the
+  row says why.
+- **Fewer false alarms:**
+  - **A failed integration retries** in 30 seconds, then a minute, then
+    two, so one hiccup from the weather service clears in seconds instead
+    of 15 minutes.
+  - **Weather, calendars, books, feeds and mail** stay a note in the list
+    when they can't be reached, and Home's headline still says "All quiet".
+  - **A container must fail its health check for three minutes** before it
+    shows in Changes, the Monitor feed or Needs attention.
+  - **Errors give the app's reason** when it sends one, as in "HTTP 503:
+    Too many requests".
+- **Tighter on a phone and a tablet:**
+  - **App icons wrap** onto a second line on a phone, and Weather's next
+    24 hours and the rows of named apps fade at the edge while more wait
+    past it.
+  - **Downloads name what's downloading** ("iCarly S06") and show how far
+    along a stalled one is, not "0 KB/s".
+  - **Right now keeps a long title readable,** and Upcoming's Search sits
+    under a poster's title.
+  - **Requests opens on what's moving** when nothing waits for approval.
+- **Fixes:** Home stops flickering on a smaller screen where the board
+  trims its lists to fit. A wall screen's page dots count each page once.
+  Setting one browser to e-ink no longer makes new browsers start as e-ink.
+  Icons from an address on your network load over HTTPS and a tunnel. The
+  moon shows its lit side pale on a light page and e-ink. Weather's high
+  and low wrap after a comma, and an hour with no rain chance shows an
+  empty track.
 
 ## 1.18.0 (2026-11-23)
 

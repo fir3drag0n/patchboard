@@ -78,7 +78,7 @@ device in Settings, Devices and set it to open the Monitor: change that, the
 color, the night hours it dims through, or its theme, density, units and
 language from your desk, and the tablet follows within a second. A tap
 brightens a dimmed screen for two minutes. Give it more pages, the Monitor, wall boards,
-Server or Weather, and a swipe moves between them, with dots at the bottom
+Server or Weather, and a swipe or a TV remote's left and right moves between them, with dots at the bottom
 to show where it is; it can also turn them by itself every half minute to
 ten minutes, waiting three minutes after anyone touches it. Set its Screen
 to E-ink for an e-ink reader or panel: black on white, no motion, problems
@@ -169,35 +169,36 @@ right there; Escape, Close or switching tabs ends it.
 
 **The car:** through Tessie, the charge and range with a line of the last
 week, what it's doing (charging, full in an hour, at 11 kW), the inside and
-outside temperatures with a line of the last day, and the four tires on a
-blueprint of the car, from the side or from above (swipe to turn it), with
-a soft one marked on its tire. Pictures puts them on your own pictures of
-your car instead: add one, say which view it is, box the part to use (a
-sheet with several views works), then tap its tires and charge port. A
-drawing turns to light lines in dark mode. Its Dashboard style makes the
-whole card a live engineering drawing for a wall screen or an e-ink
-reader: the front, rear and top views across the top, the side view
-dimensioned in millimetres, the live charge, range, power and
-temperatures, and panels for status, charging, range and tires. Tap any
-of them for its detail, a full drawing sheet of its own: the part drawn
-large with its figures, and the week's or the day's history on ruled axes
-that you can drag along to read. Swipe across
-the car in the middle, or press an arrow key, to turn it through your
-drawings: front, three-quarter, side, rear and top. Tap a door, the frunk,
-the trunk, the charge port, the glass or a tire, and that part opens beside
-it with what it can do, held to confirm: lock or unlock, open the frunk or
-trunk, start or stop charging, set the limit, climate, Sentry. A household
-device sees all of it but can't send a command. Shown alone on a screen
-(Settings, Devices), the sheet becomes a poster that fills it, 4:3 on a
-squarer screen such as an e-ink frame. On a TV, the remote drives it:
-left and right turn the car, up and down step through the metrics and
-panels, the centre button opens one and Back closes it. Status says where it's parked, by your name
-for the place or the town, and Range adds the last drive, the week's
-distance and the energy per mile. Settings,
-Alerts sets when a tire counts as soft, or turns the warning off. Patchboard records each reading Tessie
-has, without waking the car, so the lines fill in from the day you
-set it up. Set the widget to One number for the battery, the range or the
-lowest tire.
+outside temperatures, and the four tires on a blueprint of the car with a
+soft one marked. Pictures puts the tires on your own drawings of your car:
+add a side, front, rear, top or three-quarter view, box the part of a sheet
+to use, and tap its tires and charge port.
+
+Its Dashboard style makes the card a live engineering drawing. The views
+run across the top, the side view sits in the middle dimensioned in
+millimetres, the live figures and the odometer sit beside it, and panels
+for status, charging, range and tires run along the bottom. Swipe across the
+car or press an arrow key to turn it through your drawings. Tap a metric, a
+panel or a tire for its detail, a sheet of its own with the part drawn and
+its history on ruled axes you can drag along. Tap a door, the frunk, the
+trunk, the glass or the charge port, and hold to lock or unlock, open it,
+start or stop charging, set the limit, or switch climate or Sentry. A
+household device sees all of it and sends no command.
+
+Shown alone on a screen (Settings, Devices), the sheet becomes a poster that
+fills it, 4:3 on a squarer e-ink frame. On a TV the remote drives it: up
+and down move between the metrics, the car and the panels, the centre
+button opens one and Back closes it. Left and right turn the car once it's
+marked, and otherwise turn the TV's pages, as rewind and fast-forward do. Status says where it's
+parked, by your name for the place or the town, and Range adds the last
+drive, the week's distance and the energy per mile. Settings, Alerts sets
+when a tire counts as soft. Patchboard records each reading Tessie has,
+without waking the car, so the lines fill in from the day you set it up.
+One number shows the battery, the range or the lowest tire.
+
+![The car as a live engineering drawing, alone on a TV](screenshots/car-sheet.webp)
+
+![The tire pressure detail: the car from above and a week of pressures](screenshots/car-detail.webp)
 
 ![Home Assistant, the car, Cameras and Wake on the board](screenshots/house.webp)
 

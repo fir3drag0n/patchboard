@@ -29,7 +29,7 @@ export function demoCarViews(sheet: string, front34: string, rear34: string): Ca
     { src: sheet, at: { fl: [35.5, 58.9], fr: null, rl: [75.7, 58.9], rr: null }, port: [84.5, 43.5], view: 'side', crop: [23, 30.5, 64.3, 34.5] },
     { src: sheet, at: none, view: 'front', crop: [25.5, 8.5, 15, 17.5] },
     { src: sheet, at: none, view: 'rear', crop: [45.8, 8.5, 14.6, 17.5] },
-    { src: sheet, at: none, view: 'top', crop: [66, 7.2, 25.7, 19.1] },
+    { src: sheet, at: none, view: 'top', crop: [66.22, 7.2, 25.18, 19.1] },
     { src: front34, at: { fl: [45.9, 67.4], fr: [14, 75.2], rl: [89, 61], rr: null }, view: 'front34' },
     { src: rear34, at: { fl: [10.4, 59.6], fr: null, rl: [46.9, 67.4], rr: [83, 74.2] }, port: [54.6, 40.8], view: 'rear34' },
   ];
