@@ -24,8 +24,9 @@ import { serviceFor } from '../lib/services.ts';
 const DAY = 86_400_000;
 
 // Fork: one order for every machine, this one and other Docker hosts; what a machine lacks drops out.
-const MAIN = ['storage', 'containers', 'datasets', 'alerts', 'cloudsync', 'backups'];
-const SIDE = ['resources', 'cpu', 'busiest', 'disks', 'links'];
+// Busiest sits right above Containers: the two belong together.
+const MAIN = ['storage', 'busiest', 'containers', 'datasets', 'alerts', 'cloudsync', 'backups'];
+const SIDE = ['resources', 'cpu', 'disks', 'links'];
 const SERVER_SECTIONS: SectionDef[] = [
   { id: 'storage', label: 'Storage', group: 'Storage and backups' },
   { id: 'datasets', label: 'Datasets', group: 'Storage and backups' },
