@@ -110,6 +110,8 @@ export function CarWidget() {
             toFull: c.charging === 'Charging' && c.minutesToFull ? minutes(c.minutesToFull * 60_000) : undefined,
             inside: c.insideC != null ? `${deg(c.insideC, unit)}°` : undefined,
             outside: c.outsideC != null ? `${deg(c.outsideC, unit)}°` : undefined,
+            insideC: c.insideC,
+            outsideC: c.outsideC,
             climate: c.climateOn,
             locked: c.locked,
             open: Object.entries(c.open ?? {})
@@ -124,6 +126,7 @@ export function CarWidget() {
             day: { inside, outside },
             tireText: (v) => tire(v),
             tempText: (v) => `${deg(v, unit)}°`,
+            toTemp: (v) => (unit === 'c' ? v : v * 1.8 + 32),
             dist: (mi) => dist(mi),
             parts: c.open ?? {},
             portOpen: c.portOpen,

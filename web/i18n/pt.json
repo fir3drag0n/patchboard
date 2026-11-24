@@ -1380,5 +1380,8 @@
  "Turn the car back": "Rodar o carro para trás",
  "Turn the car on": "Rodar o carro para a frente",
  "Turn on sign-in to unlock or open the car from here.": "Ative o início de sessão para destrancar ou abrir o carro a partir daqui.",
- "Not measured yet": "Ainda não medida"
+ "Not measured yet": "Ainda não medida",
+ "Figures": "Valores",
+ "Not enough history yet": "Ainda não há histórico suficiente",
+ "Range, last 7 days": "Autonomia, últimos 7 dias"
 }

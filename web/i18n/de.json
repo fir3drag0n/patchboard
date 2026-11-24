@@ -1380,5 +1380,8 @@
  "Turn the car back": "Auto zurückdrehen",
  "Turn the car on": "Auto weiterdrehen",
  "Turn on sign-in to unlock or open the car from here.": "Schalten Sie die Anmeldung ein, um das Auto von hier zu entriegeln oder zu öffnen.",
- "Not measured yet": "Noch nicht gemessen"
+ "Not measured yet": "Noch nicht gemessen",
+ "Figures": "Werte",
+ "Not enough history yet": "Noch nicht genug Verlauf",
+ "Range, last 7 days": "Reichweite, letzte 7 Tage"
 }

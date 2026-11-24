@@ -47,8 +47,13 @@
   in the middle with its real dimensions in millimetres, and the live
   charge, range, power and temperatures fill a boxed list beside it.
   Panels below cover status, charging, range by charge and the four tires.
-  Tap any of them, or a tire, for its detail with the week's or the day's
-  line. Tap the front, rear or top view to bring it to the middle with its
+  Tap any of them, or a tire, for its detail: a drawing sheet of its own,
+  as large as the first. Tires get a plan of the car with each pressure on
+  its leader, charge a drawn pack hatched to its level, range a callout at
+  now, the limit and full, status every door, the frunk and the trunk, and
+  climate a thermometer scale. Below each sits the week's or the day's
+  history, plotted on ruled axes; drag along it, or use the arrow keys, to
+  read every line at one moment. Tap the front, rear or top view to bring it to the middle with its
   own dimensions. While it charges, a callout at the charge port gives the
   rate.
   "Wall: car" sets up a board with it.

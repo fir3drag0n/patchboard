@@ -179,7 +179,9 @@ whole card a live engineering drawing for a wall screen or an e-ink
 reader: the front, rear and top views across the top, the side view
 dimensioned in millimetres, the live charge, range, power and
 temperatures, and panels for status, charging, range and tires. Tap any
-of them for its detail, with the week's or the day's line. Swipe across
+of them for its detail, a full drawing sheet of its own: the part drawn
+large with its figures, and the week's or the day's history on ruled axes
+that you can drag along to read. Swipe across
 the car in the middle, or press an arrow key, to turn it through your
 drawings: front, three-quarter, side, rear and top. Tap a door, the frunk,
 the trunk, the charge port, the glass or a tire, and that part opens beside

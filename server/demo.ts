@@ -917,7 +917,7 @@ function demoCarBase(): Car {
   return (
       {
         vin: 'DEMO',
-        name: 'Midnight',
+        name: 'sudo ./drive',
         battery: Math.min(90, 72 + Math.floor((Date.now() / 600_000) % 18)),
         rangeMi: 231,
         charging: 'Charging',

@@ -12,7 +12,6 @@ import { createPortal } from 'react-dom';
 import { type CarPicture, type CarView } from '../../shared/car-pictures.ts';
 import { dim, specFor } from '../../shared/car-specs.ts';
 import { type Series, TIRES, type TirePos } from '../../shared/types.ts';
-import { Lines, Spark } from '../components/Spark.tsx';
 import { useJson } from '../lib/api.ts';
 import { msg, t as tr } from '../lib/i18n.ts';
 import { locale } from '../lib/region.ts';
@@ -53,6 +52,9 @@ export interface CarSheet {
   toFull?: string;
   inside?: string;
   outside?: string;
+  /** The same, as numbers in Celsius, for the detail's scale. */
+  insideC?: number;
+  outsideC?: number;
   climate?: boolean;
   locked: boolean;
   /** Doors, frunk or trunk standing open, in words. */
@@ -68,6 +70,8 @@ export interface CarSheet {
   day: { inside?: Series; outside?: Series };
   tireText: (bar: number) => string;
   tempText: (c: number) => string;
+  /** Celsius in the unit you read temperatures in, unrounded, for a scale. */
+  toTemp: (c: number) => number;
   /** A distance in miles, in the car's own unit. */
   dist: (mi: number) => string;
   /** Your name for the place, or the town. */
@@ -129,7 +133,7 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
       {width < MIN_WIDTH ? (
         fallback
       ) : detail ? (
-        <DetailSheet sheet={sheet} detail={detail} onBack={() => setDetail(null)} />
+        <DetailSheet sheet={sheet} detail={detail} onBack={() => setDetail(null)} tall={tall} />
       ) : (
         <>
           <Sheet sheet={sheet} pics={pics} open={setDetail} big={big} turn={setBig} tall={tall} />
@@ -313,7 +317,7 @@ function Dimension({ x0, y0, x1, y1, text, vertical }: { x0: number; y0: number;
 }
 
 /** A tappable part of the sheet: a button for a pointer, the keyboard and a screen reader. */
-function Hit({ label, onOpen, children }: { label: string; onOpen: () => void; children: ReactNode }) {
+function Hit({ label, onOpen, children, className = '' }: { label: string; onOpen: () => void; children: ReactNode; className?: string }) {
   const key = (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -321,7 +325,7 @@ function Hit({ label, onOpen, children }: { label: string; onOpen: () => void; c
     }
   };
   return (
-    <g className="bp-hit" role="button" tabIndex={0} aria-label={label} onClick={onOpen} onKeyDown={key}>
+    <g className={`bp-hit ${className}`} role="button" tabIndex={0} aria-label={label} onClick={onOpen} onKeyDown={key}>
       {children}
     </g>
   );
@@ -488,11 +492,6 @@ function Sheet({
   const sideAt = large.at;
   const portXY = large.port;
 
-  const cols = 8;
-  const rows = 6;
-  const zone = { x: 8, y: 8, w: W - 16, h: H - 16 };
-  const cellW = zone.w / cols;
-  const cellH = zone.h / rows;
   const metrics: [keyof typeof ICONS, string, string, string | undefined, Detail, boolean?][] = [
     ['charge', tr('Charge'), `${sheet.battery}%`, sheet.usable != null && sheet.usable !== sheet.battery ? tr('{n}% usable', { n: sheet.usable }) : undefined, 'charge', sheet.low],
     ['range', tr('Range'), sheet.range, undefined, 'range'],
@@ -509,42 +508,7 @@ function Sheet({
   return (
     <div ref={stage} className="bp-stage" style={{ '--u': `${u}px`, '--ratio': W / H } as CSSProperties}>
     <svg className="bp-sheet" viewBox={`0 0 ${W} ${H}`} role="group" aria-label={`${sheet.model ?? sheet.name}: ${tr('engineering drawing')}`}>
-      <defs>
-        <pattern id={`${id}-hatch`} width="1.4" height="1.4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <line x1="0" y1="0" x2="0" y2="1.4" className="bp-hatch" />
-        </pattern>
-        <pattern id={`${id}-grid`} width="20" height="20" patternUnits="userSpaceOnUse">
-          <path d="M5 0 V20 M10 0 V20 M15 0 V20 M0 5 H20 M0 10 H20 M0 15 H20" className="bp-grid-minor" />
-          <path d="M0 0 H20 M0 0 V20" className="bp-grid-major" />
-        </pattern>
-      </defs>
-
-      {/* The sheet: a faint grid, the outer border, and the zone border numbered 1 to 8 and lettered A to F. */}
-      <rect x={zone.x} y={zone.y} width={zone.w} height={zone.h} fill={`url(#${id}-grid)`} />
-      <rect className="bp-frame" x="2" y="2" width={W - 4} height={H - 4} />
-      <rect className="bp-frame" x={zone.x} y={zone.y} width={zone.w} height={zone.h} />
-      {Array.from({ length: cols }, (_, i) => (
-        <g key={`c${i}`} className="bp-zone">
-          {i > 0 && <path d={`M${zone.x + cellW * i} 2 V${zone.y} M${zone.x + cellW * i} ${H - 2} V${H - zone.y}`} />}
-          <text x={zone.x + cellW * (i + 0.5)} y="6.6" textAnchor="middle">
-            {i + 1}
-          </text>
-          <text x={zone.x + cellW * (i + 0.5)} y={H - 3.4} textAnchor="middle">
-            {i + 1}
-          </text>
-        </g>
-      ))}
-      {Array.from({ length: rows }, (_, i) => (
-        <g key={`r${i}`} className="bp-zone">
-          {i > 0 && <path d={`M2 ${zone.y + cellH * i} H${zone.x} M${W - 2} ${zone.y + cellH * i} H${W - zone.x}`} />}
-          <text x="5" y={zone.y + cellH * (i + 0.5) + 1} textAnchor="middle">
-            {'ABCDEF'[i]}
-          </text>
-          <text x={W - 5} y={zone.y + cellH * (i + 0.5) + 1} textAnchor="middle">
-            {'ABCDEF'[i]}
-          </text>
-        </g>
-      ))}
+      <Frame id={id} H={H} />
 
       {/* Title, top left: shortened to the space the sheet gives it, the whole name kept for a reader and on hover. */}
       <text className="bp-title" x="13" y="22">
@@ -1122,15 +1086,304 @@ function PartPanel({ sheet, pick, onClose, onDetail }: { sheet: CarSheet; pick: 
 }
 
 /** A box on the sheet, placed over it in the sheet's own units. */
+/** The sheet itself: a faint grid, the outer border, and the zone border numbered 1 to 8 and lettered A to F. */
+function Frame({ id, H }: { id: string; H: number }) {
+  const cols = 8;
+  const rows = 6;
+  const zone = { x: 8, y: 8, w: W - 16, h: H - 16 };
+  const cellW = zone.w / cols;
+  const cellH = zone.h / rows;
+  return (
+    <>
+      <defs>
+        <pattern id={`${id}-hatch`} width="1.4" height="1.4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="1.4" className="bp-hatch" />
+        </pattern>
+        <pattern id={`${id}-grid`} width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M5 0 V20 M10 0 V20 M15 0 V20 M0 5 H20 M0 10 H20 M0 15 H20" className="bp-grid-minor" />
+          <path d="M0 0 H20 M0 0 V20" className="bp-grid-major" />
+        </pattern>
+      </defs>
+      <rect x={zone.x} y={zone.y} width={zone.w} height={zone.h} fill={`url(#${id}-grid)`} />
+      <rect className="bp-frame" x="2" y="2" width={W - 4} height={H - 4} />
+      <rect className="bp-frame" x={zone.x} y={zone.y} width={zone.w} height={zone.h} />
+      {Array.from({ length: cols }, (_, i) => (
+        <g key={`c${i}`} className="bp-zone">
+          {i > 0 && <path d={`M${zone.x + cellW * i} 2 V${zone.y} M${zone.x + cellW * i} ${H - 2} V${H - zone.y}`} />}
+          <text x={zone.x + cellW * (i + 0.5)} y="6.6" textAnchor="middle">
+            {i + 1}
+          </text>
+          <text x={zone.x + cellW * (i + 0.5)} y={H - 3.4} textAnchor="middle">
+            {i + 1}
+          </text>
+        </g>
+      ))}
+      {Array.from({ length: rows }, (_, i) => (
+        <g key={`r${i}`} className="bp-zone">
+          {i > 0 && <path d={`M2 ${zone.y + cellH * i} H${zone.x} M${W - 2} ${zone.y + cellH * i} H${W - zone.x}`} />}
+          <text x="5" y={zone.y + cellH * (i + 0.5) + 1} textAnchor="middle">
+            {'ABCDEF'[i]}
+          </text>
+          <text x={W - 5} y={zone.y + cellH * (i + 0.5) + 1} textAnchor="middle">
+            {'ABCDEF'[i]}
+          </text>
+        </g>
+      ))}
+    </>
+  );
+}
+
 function boxStyle(b: { x: number; y: number; w: number; h: number }, H: number): CSSProperties {
   return { left: `${(b.x / W) * 100}%`, top: `${(b.y / H) * 100}%`, width: `${(b.w / W) * 100}%`, height: `${(b.h / H) * 100}%` };
 }
 
-/** A part of the car opened up: its figures now, and what Patchboard has recorded of it. */
-function DetailSheet({ sheet, detail, onBack }: { sheet: CarSheet; detail: Detail; onBack: () => void }) {
+/** A round step for an axis: 1, 2, 2.5 or 5 times a power of ten, near a quarter of the span. */
+function niceStep(span: number) {
+  const raw = span / 4 || 1;
+  const p = 10 ** Math.floor(Math.log10(raw));
+  return [1, 2, 2.5, 5, 10].map((m) => m * p).find((s) => s >= raw) ?? raw;
+}
+
+/** Labels kept apart: each at least `gap` from the one before, in order down the sheet. */
+function spread<T extends { y: number }>(items: T[], gap: number, lo: number, hi: number): T[] {
+  const out = [...items].sort((a, b) => a.y - b.y).map((it) => ({ ...it }));
+  for (let i = 0; i < out.length; i++) out[i].y = Math.max(out[i].y, i ? out[i - 1].y + gap : lo);
+  for (let i = out.length - 1; i >= 0; i--) out[i].y = Math.min(out[i].y, i < out.length - 1 ? out[i + 1].y - gap : hi);
+  return out;
+}
+
+interface Trace {
+  data: Series | undefined;
+  label: string;
+  soft?: boolean;
+}
+
+/**
+ * A history plotted the way a drawing would: ruled axes, round ticks, days or
+ * hours along the bottom, each line named at its end. Point along it, drag a
+ * finger across it, or use the arrow keys, to read every line at one moment.
+ */
+function Plot({
+  box,
+  title,
+  traces,
+  format,
+  unit,
+  lo,
+  hi,
+  limit,
+  day,
+}: {
+  box: Box;
+  title: string;
+  traces: Trace[];
+  format: (v: number) => string;
+  /** The unit, over the scale. */
+  unit?: string;
+  lo?: number;
+  hi?: number;
+  /** A level marked across it, as the charge limit. */
+  limit?: { v: number; label: string };
+  /** Hours along the bottom, for a day; otherwise days, for a week. */
+  day?: boolean;
+}) {
+  const svg = useRef<SVGGElement>(null);
+  const [at, setAt] = useState<number | null>(null);
+  const lines = traces.filter((t) => t.data && t.data.length > 1);
+  const all = lines.flatMap((l) => l.data!);
+  const g = { x: box.x + 15, y: box.y + 10, w: box.w - 15 - 24, h: box.h - 10 - 7 };
+  const head = (
+    <>
+      <text className="bp-row" x={box.x} y={box.y + 4}>
+        {title}
+      </text>
+      <line className="bp-rule" x1={box.x} y1={box.y + 6} x2={box.x + box.w} y2={box.y + 6} />
+    </>
+  );
+  if (all.length < 2) {
+    return (
+      <g>
+        {head}
+        <rect className="bp-box bp-empty" x={g.x} y={g.y} width={g.w} height={g.h} />
+        <text className="bp-small" x={g.x + g.w / 2} y={g.y + g.h / 2 + 1} textAnchor="middle">
+          {tr('Not enough history yet')}
+        </text>
+      </g>
+    );
+  }
+  const t0 = Math.min(...all.map((p) => p[0]));
+  const t1 = Math.max(...all.map((p) => p[0]));
+  let vLo = lo ?? Math.min(...all.map((p) => p[1]), limit?.v ?? Infinity);
+  let vHi = hi ?? Math.max(...all.map((p) => p[1]), limit?.v ?? -Infinity);
+  if (lo == null || hi == null) {
+    const pad = (vHi - vLo) * 0.15 || Math.abs(vHi) * 0.05 || 1;
+    if (lo == null) vLo -= pad;
+    if (hi == null) vHi += pad;
+  }
+  const step = niceStep(vHi - vLo);
+  if (lo == null) vLo = Math.floor(vLo / step) * step;
+  if (hi == null) vHi = Math.ceil(vHi / step) * step;
+  const xOf = (t: number) => g.x + ((t - t0) / (t1 - t0 || 1)) * g.w;
+  const yOf = (v: number) => g.y + g.h - ((Math.min(vHi, Math.max(vLo, v)) - vLo) / (vHi - vLo || 1)) * g.h;
+  const ticks: number[] = [];
+  for (let i = Math.ceil(vLo / step - 1e-9); i * step <= vHi + 1e-9; i++) ticks.push(i * step || 0);
+  // Along the bottom: each midnight for a week, every six hours for a day.
+  const marks: number[] = [];
+  const d = new Date(t0);
+  d.setMinutes(0, 0, 0);
+  const every = day ? 6 : 24;
+  d.setHours(Math.ceil(d.getHours() / every) * every);
+  for (; d.getTime() <= t1; d.setHours(d.getHours() + every)) marks.push(d.getTime());
+  const loc = locale();
+  const dayName = new Intl.DateTimeFormat(loc, { weekday: 'short' });
+  const hour = new Intl.DateTimeFormat(loc, { hour: 'numeric' });
+  const when = new Intl.DateTimeFormat(loc, day ? { hour: 'numeric', minute: '2-digit' } : { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  const times = [...new Set(all.map((p) => p[0]))].sort((a, b) => a - b);
+  const nearest = (s: Series, t: number) => s.reduce((b, p) => (Math.abs(p[0] - t) < Math.abs(b[0] - t) ? p : b), s[0]);
+  const path = (s: Series) => s.map(([t, v], i) => `${i ? 'L' : 'M'}${xOf(t).toFixed(2)} ${yOf(v).toFixed(2)}`).join(' ');
+  const ends = spread(
+    lines.map((l) => ({ l, y: yOf(l.data![l.data!.length - 1][1]) + 1 })),
+    3.4,
+    g.y + 1,
+    g.y + g.h + 1,
+  );
+  const point = (clientX: number) => {
+    const m = svg.current?.ownerSVGElement?.getScreenCTM();
+    if (!m) return;
+    const x = (clientX - m.e) / m.a;
+    const t = t0 + ((x - g.x) / g.w) * (t1 - t0);
+    setAt(nearest(times.map((x) => [x, 0]), t)[0]);
+  };
+  const tAt = at ?? null;
+  const reads = tAt == null ? [] : lines.map((l) => ({ l, p: nearest(l.data!, tAt) }));
+  const cx = tAt == null ? 0 : xOf(tAt);
+  const flip = cx > g.x + g.w * 0.72;
+  const latest = lines.map((l) => `${l.label} ${format(l.data![l.data!.length - 1][1])}`).join(', ');
+  return (
+    <g
+      ref={svg}
+      className="bp-plot"
+      role="group"
+      tabIndex={0}
+      aria-label={`${title}. ${tr('Now')}: ${latest}`}
+      onPointerMove={(e) => point(e.clientX)}
+      onPointerDown={(e) => point(e.clientX)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && setAt(null)}
+      onBlur={() => setAt(null)}
+      onKeyDown={(e) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        const i = at == null ? times.length - 1 : times.indexOf(at);
+        setAt(times[Math.max(0, Math.min(times.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1)))]);
+      }}
+    >
+      {head}
+      {unit && (
+        <text className="bp-tiny" x={g.x - 1.4} y={g.y - 3.6} textAnchor="end">
+          {unit}
+        </text>
+      )}
+      {ticks.map((v) => (
+        <g key={v}>
+          <line className="bp-rule-soft" x1={g.x} y1={yOf(v)} x2={g.x + g.w} y2={yOf(v)} />
+          <text className="bp-tiny" x={g.x - 1.4} y={yOf(v) + 0.9} textAnchor="end">
+            {format(v)}
+          </text>
+        </g>
+      ))}
+      {marks.map((t) => (
+        <g key={t}>
+          <line className="bp-rule-soft" x1={xOf(t)} y1={g.y} x2={xOf(t)} y2={g.y + g.h + 1.2} />
+          {/* A week names each day across its middle; a day marks the hour at its line. */}
+          {day ? (
+            <text className="bp-tiny" x={xOf(t)} y={g.y + g.h + 4} textAnchor="middle">
+              {hour.format(t)}
+            </text>
+          ) : (
+            xOf(t + 43_200_000) < g.x + g.w && (
+              <text className="bp-tiny" x={xOf(t + 43_200_000)} y={g.y + g.h + 4} textAnchor="middle">
+                {dayName.format(t)}
+              </text>
+            )
+          )}
+        </g>
+      ))}
+      <path className="bp-axis" d={`M${g.x} ${g.y} V${g.y + g.h} H${g.x + g.w}`} />
+      {limit && (
+        <>
+          <line className="bp-limit" x1={g.x} y1={yOf(limit.v)} x2={g.x + g.w} y2={yOf(limit.v)} />
+          <text className="bp-tiny" x={g.x + 1.2} y={yOf(limit.v) - 1} >
+            {limit.label}
+          </text>
+        </>
+      )}
+      {lines.map((l) => (
+        <path key={l.label} className={`bp-trace ${l.soft ? 'is-soft' : ''}`} d={path(l.data!)} />
+      ))}
+      {ends.map(({ l, y }) => (
+        <text key={l.label} className={`bp-tiny ${l.soft ? 'is-soft' : ''}`} x={g.x + g.w + 1.6} y={y}>
+          {l.label}
+        </text>
+      ))}
+      {tAt != null && (
+        <g className="bp-cursor">
+          <line x1={cx} y1={g.y - 2} x2={cx} y2={g.y + g.h} />
+          {reads.map(({ l, p }) => (
+            <circle key={l.label} className={`bp-dot ${l.soft ? 'is-soft' : ''}`} cx={xOf(p[0])} cy={yOf(p[1])} r="0.9" />
+          ))}
+          {spread(
+            reads.map(({ l, p }) => ({ l, p, y: yOf(p[1]) + 1 })),
+            3.2,
+            g.y + 4,
+            g.y + g.h - 1,
+          ).map(({ l, p, y }) => (
+            <text key={l.label} className={`bp-cell-s ${l.soft ? 'is-soft' : ''}`} x={cx + (flip ? -1.8 : 1.8)} y={y} textAnchor={flip ? 'end' : 'start'}>
+              {lines.length > 1 ? `${l.label} ${format(p[1])}` : format(p[1])}
+            </text>
+          ))}
+          <text className="bp-tiny bp-cursor-when" x={cx} y={g.y - 2.8} textAnchor="middle">
+            {when.format(tAt)}
+          </text>
+        </g>
+      )}
+      {/* The whole plot answers a finger or a pointer, not only its lines. */}
+      <rect className="bp-hit-area bp-plot-pad" x={g.x} y={g.y} width={g.w} height={g.h} />
+    </g>
+  );
+}
+
+/** The car from above, nose to the left as the side view faces, in `car`: body, glass, mirrors and a centre line. */
+function Plan({ car }: { car: Box }) {
+  const { x, y, w, h } = car;
+  const r = h * 0.3;
+  const ws = x + w * 0.31;
+  const rw = x + w * 0.78;
+  return (
+    <g>
+      <path className="bp-center" d={`M${x - 5} ${y + h / 2} H${x + w + 5}`} />
+      <path
+        className="bp-plan"
+        d={`M${x + r} ${y} H${x + w - r * 0.6} Q${x + w} ${y} ${x + w} ${y + r * 0.6} V${y + h - r * 0.6} Q${x + w} ${y + h} ${x + w - r * 0.6} ${y + h} H${x + r} Q${x} ${y + h} ${x} ${y + h - r} V${y + r} Q${x} ${y} ${x + r} ${y} Z`}
+      />
+      <path
+        className="bp-plan"
+        d={`M${ws} ${y + h * 0.12} Q${ws - w * 0.06} ${y + h / 2} ${ws} ${y + h * 0.88} M${rw} ${y + h * 0.15} Q${rw + w * 0.035} ${y + h / 2} ${rw} ${y + h * 0.85} M${ws + 1.5} ${y + h * 0.16} H${rw - 1.5} M${ws + 1.5} ${y + h * 0.84} H${rw - 1.5}`}
+      />
+      <path className="bp-plan" d={`M${x + w * 0.3} ${y} l-1.2 -2.2 h3.4 l0.6 2.2 M${x + w * 0.3} ${y + h} l-1.2 2.2 h3.4 l0.6 -2.2`} />
+    </g>
+  );
+}
+
+/** Where the wheels sit along a plan: the front axle and the rear, as fractions of its length. */
+const AXLES = { front: 0.19, rear: 0.8 };
+
+/** A part of the car opened up, as a sheet of its own: its figures, a drawing of it, and what Patchboard has recorded. */
+function DetailSheet({ sheet, detail, onBack, tall }: { sheet: CarSheet; detail: Detail; onBack: () => void; tall: boolean }) {
+  const H = tall ? TALL : WIDE;
   const [letter, title] = DETAIL[detail];
-  const back = useRef<HTMLButtonElement>(null);
-  useEffect(() => back.current?.focus(), []);
+  const id = useId().replace(/:/g, '');
+  const stage = useRef<HTMLDivElement>(null);
+  useEffect(() => stage.current?.querySelector<SVGGElement>('.bp-back')?.focus(), []);
   const rows: [string, string, boolean?][] =
     detail === 'tires'
       ? sheet.tires.length
@@ -1138,7 +1391,7 @@ function DetailSheet({ sheet, detail, onBack }: { sheet: CarSheet; detail: Detai
         : [[tr('Tire pressure'), tr('Not measured yet')]]
       : detail === 'charge'
         ? [
-            [tr('Charge'), `${sheet.battery}%${sheet.usable != null ? `, ${tr('{n}% usable', { n: sheet.usable })}` : ''}`, sheet.low],
+            [tr('Charge'), `${sheet.battery}%${sheet.usable != null && sheet.usable !== sheet.battery ? `, ${tr('{n}% usable', { n: sheet.usable })}` : ''}`, sheet.low],
             [tr('State'), tr(sheet.state)],
             [tr('Rate'), sheet.charging && sheet.kw ? sheet.kw : BLANK],
             [tr('Voltage and current'), sheet.volts && sheet.amps ? `${sheet.volts} V, ${sheet.amps} A` : BLANK],
@@ -1169,57 +1422,354 @@ function DetailSheet({ sheet, detail, onBack }: { sheet: CarSheet; detail: Detai
                 [tr('Odometer'), sheet.odometer],
                 [sheet.asleep ? tr('Asleep, read') : tr('Read'), sheet.read],
               ];
+  // The figures down the left, as the live metrics sit on the main sheet: as roomy as the sheet allows.
+  const step = Math.min(tall ? 22 : 15.4, (H - 14 - 36 - 11) / rows.length);
+  const pad = Math.max(0, (step - 15.4) / 2);
+  // The drawing on the right: a view of the part above, its history below. Status is all view; it has no history.
+  const right = { x: 104, y: 16, w: 204, h: H - 30 };
+  const split = detail === 'status' ? right.h : tall ? 100 : 66;
+  const view: Box = { ...right, h: split };
+  const plotBox: Box = { x: right.x, y: right.y + split + 8, w: right.w, h: right.h - split - 8 };
+  const perPct = sheet.battery > 0 ? sheet.rangeMi / sheet.battery : 0;
+  const tire = Object.fromEntries(sheet.tires.map((t) => [t.pos, t])) as Partial<Record<TirePos, TireReading>>;
+
   return (
-    <section className="bp-detail" aria-label={tr(title)}>
-      <header className="bp-detail-head">
-        <span className="bp-detail-title">
-          {tr('Detail {letter}', { letter })} · {tr(title)}
-        </span>
-        <button ref={back} type="button" className="button button-quiet" onClick={onBack}>
-          {tr('Back')}
-        </button>
-      </header>
-      <dl className="bp-detail-rows">
-        {rows.map(([k, v, trouble]) => (
-          <div key={k}>
-            <dt>{k}</dt>
-            <dd className={trouble ? 'warn-text' : ''}>{v}</dd>
-          </div>
-        ))}
-      </dl>
-      <div className="bp-detail-chart">
+    <div ref={stage} className="bp-stage" style={{ '--ratio': W / H } as CSSProperties}>
+      <svg className="bp-sheet bp-detail-sheet" viewBox={`0 0 ${W} ${H}`} role="group" aria-label={`${tr('Detail {letter}', { letter })}: ${tr(title)}`}>
+        <Frame id={id} H={H} />
+
+        {/* Title, as on the main sheet: the detail's letter large, what it is and whose car under it. */}
+        <text className="bp-title" x="13" y="22">
+          {tr('Detail {letter}', { letter })}
+        </text>
+        <text className="bp-small" x="13.4" y="28">
+          <title>{`${tr(title)} · ${sheet.name}`}</title>
+          {clip(`${tr(title)} · ${sheet.name}`, 34)}
+        </text>
+        <line className="bp-rule" x1="13" y1="31" x2="92" y2="31" />
+
+        {/* The figures: each name small above its value. */}
+        <rect className="bp-box" x="12" y="36" width="82" height={10 + step * rows.length + 1} />
+        <text className="bp-row" x="16" y="42.5">
+          {tr('Figures')}
+        </text>
+        <line className="bp-rule" x1="12" y1="45" x2="94" y2="45" />
+        {rows.map(([k, v, trouble], i) => {
+          const y = 47 + i * step + pad;
+          const long = v.length > 15;
+          return (
+            <g key={k}>
+              <text className="bp-tiny" x="15" y={y + 4}>
+                {clip(k, 30)}
+              </text>
+              <text className={`${long ? 'bp-cell' : 'bp-metric'} ${trouble ? 'is-soft' : ''}`} x="15" y={y + (long ? 10.4 : 11.6)}>
+                {v.length > 26 && <title>{v}</title>}
+                {clip(v, 26)}
+              </text>
+              {i < rows.length - 1 && <line className="bp-rule-soft" x1="15" y1={y - pad + step - 0.2} x2="91" y2={y - pad + step - 0.2} />}
+            </g>
+          );
+        })}
+
+        {/* Back to the whole car, top right, where a drawing keeps its number. Escape does the same. */}
+        <Hit label={tr('Back')} onOpen={onBack} className="bp-back">
+          <rect className="bp-box bp-hit-area" x="270" y="12" width="38" height="11" />
+          <path className="bp-turn-mark" d="M276.4 15.2 l-2.4 2.3 l2.4 2.3" />
+          <text className="bp-row" x="291" y="19" textAnchor="middle">
+            {tr('Back')}
+          </text>
+        </Hit>
+
+        {detail === 'tires' &&
+          (() => {
+            const ch = Math.min(view.h * 0.42, (view.w - 112) / 2.5);
+            const car = { x: view.x + (view.w - ch * 2.5) / 2, y: view.y + (view.h - ch) / 2 + 2, w: ch * 2.5, h: ch };
+            // Seen from above, nose to the left: the left side of the car is the bottom of the drawing.
+            const at: Record<TirePos, [number, number]> = {
+              fl: [car.x + car.w * AXLES.front, car.y + car.h],
+              fr: [car.x + car.w * AXLES.front, car.y],
+              rl: [car.x + car.w * AXLES.rear, car.y + car.h],
+              rr: [car.x + car.w * AXLES.rear, car.y],
+            };
+            const tw = car.w * 0.13;
+            const th = car.h * 0.16;
+            return (
+              <g>
+                <Plan car={car} />
+                {TIRES.map((t) => {
+                  const [tx, ty] = at[t];
+                  const r = tire[t];
+                  const front = t[0] === 'f';
+                  const top = t[1] === 'r';
+                  const lx = front ? car.x - 9 : car.x + car.w + 9;
+                  const ly = top ? car.y + 1 : car.y + car.h + 1;
+                  return (
+                    <g key={t} className={`bp-tire ${r?.soft ? 'is-soft' : ''}`}>
+                      <rect className="bp-tread" x={tx - tw / 2} y={top ? ty - th * 0.35 : ty - th * 0.65} width={tw} height={th} rx="0.6" />
+                      <path className="bp-lead" d={`M${tx} ${top ? ty - th * 0.35 : ty + th * 0.35} L${front ? lx + 7 : lx - 7} ${ly - 2} H${lx + (front ? 1 : -1)}`} />
+                      <text className="bp-tiny" x={lx} y={ly - 6.4} textAnchor={front ? 'end' : 'start'}>
+                        {r?.name ?? t.toUpperCase()}
+                      </text>
+                      <text className={`bp-metric ${r?.soft ? 'is-soft' : ''}`} x={lx} y={ly} textAnchor={front ? 'end' : 'start'}>
+                        {r?.value ?? BLANK}
+                        <tspan className="bp-tiny" dx="1">
+                          {r ? sheet.unit : ''}
+                        </tspan>
+                      </text>
+                    </g>
+                  );
+                })}
+                {sheet.note && (
+                  <text className="bp-small is-soft" x={view.x + view.w / 2} y={view.y + view.h - 1} textAnchor="middle">
+                    {sheet.note}
+                  </text>
+                )}
+              </g>
+            );
+          })()}
+
+        {detail === 'status' &&
+          (() => {
+            const ch = Math.min(view.h * 0.34, (view.w - 100) / 2.5);
+            const car = { x: view.x + (view.w - ch * 2.5) / 2, y: view.y + (view.h - ch) / 2, w: ch * 2.5, h: ch };
+            const { x, y, w, h } = car;
+            const band = h * 0.16;
+            // Each opening on the plan, where it is, and which way its label goes.
+            const parts: [keyof CarSheet['parts'], string, Box, 'up' | 'down' | 'left' | 'right'][] = [
+              ['frunk', msg('Frunk'), { x: x + w * 0.04, y: y + h * 0.2, w: w * 0.2, h: h * 0.6 }, 'left'],
+              ['trunk', msg('Trunk'), { x: x + w * 0.83, y: y + h * 0.2, w: w * 0.14, h: h * 0.6 }, 'right'],
+              ['fr', msg('Front right'), { x: x + w * 0.31, y, w: w * 0.22, h: band }, 'up'],
+              ['rr', msg('Rear right'), { x: x + w * 0.53, y, w: w * 0.22, h: band }, 'up'],
+              ['fl', msg('Front left'), { x: x + w * 0.31, y: y + h - band, w: w * 0.22, h: band }, 'down'],
+              ['rl', msg('Rear left'), { x: x + w * 0.53, y: y + h - band, w: w * 0.22, h: band }, 'down'],
+            ];
+            return (
+              <g>
+                <Plan car={car} />
+                {parts.map(([k, word, b, dir]) => {
+                  const opened = !!sheet.parts[k];
+                  const mx = b.x + b.w / 2;
+                  const my = b.y + b.h / 2;
+                  const end: [number, number] =
+                    dir === 'up' ? [mx, y - 12] : dir === 'down' ? [mx, y + h + 12] : dir === 'left' ? [x - 12, my] : [x + w + 12, my];
+                  const anchor = dir === 'left' ? 'end' : dir === 'right' ? 'start' : 'middle';
+                  const tx = dir === 'left' ? end[0] - 1.5 : dir === 'right' ? end[0] + 1.5 : end[0];
+                  const ty = dir === 'up' ? end[1] - 5 : dir === 'down' ? end[1] + 4 : end[1] - 1.6;
+                  return (
+                    <g key={k} className={`bp-region ${opened ? 'is-open' : ''}`}>
+                      <rect className="bp-region-box is-shown" x={b.x} y={b.y} width={b.w} height={b.h} rx="1" fill={opened ? `url(#${id}-hatch)` : undefined} />
+                      <path className="bp-lead" d={`M${mx} ${my} L${end[0]} ${end[1]}`} />
+                      <circle className="bp-dot" cx={mx} cy={my} r="0.6" />
+                      <text className="bp-tiny" x={tx} y={ty} textAnchor={anchor}>
+                        {tr(word)}
+                      </text>
+                      <text className={`bp-cell-s ${opened ? 'is-soft' : ''}`} x={tx} y={ty + 4.2} textAnchor={anchor}>
+                        {opened ? tr('Open') : tr('Closed')}
+                      </text>
+                    </g>
+                  );
+                })}
+                <text className={`bp-row ${sheet.locked ? '' : 'is-soft'}`} x={x + w * 0.545} y={y + h / 2 - 0.6} textAnchor="middle">
+                  {sheet.locked ? tr('Locked') : tr('Unlocked')}
+                </text>
+                <text className="bp-tiny" x={x + w * 0.545} y={y + h / 2 + 3.6} textAnchor="middle">
+                  {tr('Sentry')} {sheet.sentry ? tr('On') : tr('Off')}
+                </text>
+              </g>
+            );
+          })()}
+
+        {detail === 'charge' &&
+          (() => {
+            const pw = view.w - 64;
+            const ph = Math.min(tall ? 34 : 22, view.h * 0.36);
+            const p = { x: view.x + 22, y: view.y + (view.h - ph) / 2 + 3, w: pw, h: ph };
+            const fill = (p.w * Math.max(0, Math.min(100, sheet.battery))) / 100;
+            const lim = p.x + (p.w * sheet.limit) / 100;
+            return (
+              <g>
+                <text className="bp-small" x={p.x} y={p.y - 8}>
+                  {tr(sheet.state)}
+                  {sheet.charging && sheet.kw ? ` · ${sheet.kw}` : ''}
+                  {sheet.toFull ? ` · ${tr('Full in')} ${sheet.toFull}` : ''}
+                </text>
+                {/* The pack: ten cells, hatched as far as it's charged, the terminal on the right. */}
+                <rect className={`bp-pack-fill ${sheet.low ? 'is-soft' : ''}`} x={p.x} y={p.y} width={fill} height={p.h} fill={`url(#${id}-hatch)`} />
+                <rect className="bp-plan" x={p.x} y={p.y} width={p.w} height={p.h} rx="1" />
+                {Array.from({ length: 9 }, (_, i) => (
+                  <line key={i} className="bp-rule-soft" x1={p.x + (p.w * (i + 1)) / 10} y1={p.y} x2={p.x + (p.w * (i + 1)) / 10} y2={p.y + p.h} />
+                ))}
+                <rect className="bp-plan" x={p.x + p.w} y={p.y + p.h * 0.3} width="2.6" height={p.h * 0.4} rx="0.5" />
+                {sheet.charging && <path className="bp-cable-flow" d={`M${p.x + p.w + 30} ${p.y + p.h / 2} H${p.x + p.w + 2.6}`} />}
+                {sheet.plugged && (
+                  <>
+                    <path className="bp-lead" d={`M${p.x + p.w + 2.6} ${p.y + p.h / 2} H${p.x + p.w + 30}`} />
+                    <path className="bp-icon" d={ICONS.power} transform={`translate(${p.x + p.w + 31} ${p.y + p.h / 2 - 3})`} />
+                  </>
+                )}
+                <line className="bp-limit" x1={lim} y1={p.y - 4} x2={lim} y2={p.y + p.h + 2} />
+                <text className="bp-tiny" x={lim} y={p.y - 5} textAnchor="middle">
+                  {tr('Limit')} {sheet.limit}%
+                </text>
+                {fill > 6 && <Dimension x0={p.x} y0={p.y + p.h + 6} x1={p.x + fill} y1={p.y + p.h + 6} text={`${sheet.battery}%`} />}
+                <text className="bp-tiny" x={p.x + p.w} y={p.y + p.h + 7.5} textAnchor="end">
+                  100%
+                </text>
+              </g>
+            );
+          })()}
+
+        {detail === 'range' &&
+          (() => {
+            const g = { x: view.x + 16, y: view.y + 12, w: view.w - 92, h: view.h - 19 };
+            const full = perPct * 100;
+            const at = (pct: number): [number, number] => [g.x + (g.w * pct) / 100, g.y + g.h - (g.h * pct) / 100];
+            const now = at(sheet.battery);
+            const lim = at(sheet.limit);
+            const top = at(100);
+            const callouts = spread(
+              [
+                { k: 'full', y: top[1], from: top, text: `${tr('Full')} · ${sheet.dist(full)}` },
+                { k: 'limit', y: lim[1], from: lim, text: `${tr('Limit')} ${sheet.limit}% · ${sheet.dist(perPct * sheet.limit)}` },
+                { k: 'now', y: now[1], from: now, text: `${tr('Now')} ${sheet.battery}% · ${sheet.range}` },
+              ],
+              6,
+              g.y + 2,
+              g.y + g.h,
+            );
+            return (
+              <g>
+                <text className="bp-tiny" x={g.x - 1.4} y={g.y - 3.6} textAnchor="end">
+                  {tr('Range')}
+                </text>
+                <path className="bp-axis" d={`M${g.x} ${g.y} V${g.y + g.h} H${g.x + g.w}`} />
+                {[25, 50, 75].map((p) => (
+                  <line key={p} className="bp-rule-soft" x1={at(p)[0]} y1={g.y} x2={at(p)[0]} y2={g.y + g.h} />
+                ))}
+                <line className="bp-trace" x1={g.x} y1={g.y + g.h} x2={top[0]} y2={top[1]} />
+                <line className="bp-limit" x1={lim[0]} y1={g.y} x2={lim[0]} y2={g.y + g.h} />
+                <path className="bp-limit" d={`M${g.x} ${now[1]} H${now[0]} V${g.y + g.h}`} />
+                <circle className={`bp-dot ${sheet.low ? 'is-soft' : ''}`} cx={now[0]} cy={now[1]} r="1.1" />
+                <circle className="bp-dot" cx={lim[0]} cy={lim[1]} r="0.8" />
+                <circle className="bp-dot" cx={top[0]} cy={top[1]} r="0.8" />
+                {callouts.map((c) => (
+                  <g key={c.k}>
+                    <path className="bp-lead" d={`M${c.from[0] + 1} ${c.from[1]} L${g.x + g.w + 4} ${c.y} H${g.x + g.w + 6}`} />
+                    <text className={`${c.k === 'now' ? 'bp-cell-s' : 'bp-tiny'} ${c.k === 'now' && sheet.low ? 'is-soft' : ''}`} x={g.x + g.w + 7} y={c.y + 1}>
+                      {c.text}
+                    </text>
+                  </g>
+                ))}
+                <text className="bp-tiny" x={g.x - 1.4} y={g.y + g.h + 0.9} textAnchor="end">
+                  0
+                </text>
+                <text className="bp-tiny" x={g.x - 1.4} y={top[1] + 0.9} textAnchor="end">
+                  {Math.round(full)}
+                </text>
+                {[0, 50, 100].map((p) => (
+                  <text key={p} className="bp-tiny" x={at(p)[0]} y={g.y + g.h + 4} textAnchor="middle">
+                    {p}%
+                  </text>
+                ))}
+              </g>
+            );
+          })()}
+
+        {detail === 'climate' &&
+          (() => {
+            const inside = sheet.insideC != null ? sheet.toTemp(sheet.insideC) : null;
+            const outside = sheet.outsideC != null ? sheet.toTemp(sheet.outsideC) : null;
+            const temps = [inside, outside].filter((v): v is number => v != null);
+            if (!temps.length)
+              return (
+                <text className="bp-small" x={view.x + view.w / 2} y={view.y + view.h / 2} textAnchor="middle">
+                  {tr('Not measured yet')}
+                </text>
+              );
+            // A thermometer scale, the way a drawing gives a range: cabin above it, outside below.
+            const lo = Math.floor((Math.min(...temps) - 4) / 5) * 5;
+            const hi = Math.ceil((Math.max(...temps) + 4) / 5) * 5;
+            const s = { x: view.x + 12, w: view.w - 24, y: view.y + view.h / 2 + 2 };
+            const xOf = (c: number) => s.x + ((c - lo) / (hi - lo)) * s.w;
+            const mark = (c: number, word: string, above: boolean, on?: boolean) => {
+              const mx = xOf(c);
+              const tip = above ? s.y - 1 : s.y + 1;
+              const ly = above ? s.y - 14 : s.y + 14;
+              return (
+                <g>
+                  <path className="bp-mark-fill" d={above ? `M${mx} ${tip} l-1.6 -2.6 h3.2 Z` : `M${mx} ${tip} l-1.6 2.6 h3.2 Z`} />
+                  <path className="bp-lead" d={`M${mx} ${above ? tip - 2.6 : tip + 2.6} V${ly + (above ? 2 : -6)}`} />
+                  <text className="bp-tiny" x={mx} y={above ? ly - 7 : ly + 1} textAnchor="middle">
+                    {word}
+                    {on ? ` · ${tr('Climate on')}` : ''}
+                  </text>
+                  <text className="bp-metric" x={mx} y={above ? ly : ly + 8} textAnchor="middle">
+                    {Math.round(c)}°
+                  </text>
+                </g>
+              );
+            };
+            return (
+              <g>
+                <line className="bp-rule" x1={s.x} y1={s.y} x2={s.x + s.w} y2={s.y} />
+                {Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).map((c) => (
+                  <line key={c} className={c % 5 ? 'bp-rule-soft' : 'bp-axis'} x1={xOf(c)} y1={s.y - (c % 5 ? 1 : 2)} x2={xOf(c)} y2={s.y + (c % 5 ? 1 : 2)} />
+                ))}
+                <text className="bp-tiny" x={s.x} y={s.y + 5.4} textAnchor="middle">
+                  {lo}°
+                </text>
+                <text className="bp-tiny" x={s.x + s.w} y={s.y + 5.4} textAnchor="middle">
+                  {hi}°
+                </text>
+                {inside != null && mark(inside, tr('Cabin'), true, sheet.climate)}
+                {outside != null && mark(outside, tr('Outside'), false)}
+              </g>
+            );
+          })()}
+
         {detail === 'tires' && (
-          <>
-            <Lines
-              height={90}
-              format={(v) => `${sheet.tireText(v)} ${sheet.unit}`}
-              label={tr('Tire pressures, last 7 days')}
-              lines={sheet.tires.map((t) => ({ data: sheet.week.tires[t.pos], label: t.name, className: t.soft ? 'is-soft' : undefined }))}
-            />
-            <span className="bp-detail-note">{tr('Tire pressures, last 7 days')}</span>
-          </>
+          <Plot
+            box={plotBox}
+            title={tr('Tire pressures, last 7 days')}
+            unit={sheet.unit}
+            format={(v) => sheet.tireText(v)}
+            traces={sheet.tires.map((t) => ({ data: sheet.week.tires[t.pos], label: t.pos.toUpperCase(), soft: t.soft }))}
+          />
         )}
-        {(detail === 'charge' || detail === 'range') && (
-          <>
-            <Spark data={sheet.week.battery} min={0} max={100} height={90} format={(v) => `${Math.round(v)}%`} label={tr('Charge, last 7 days')} />
-            <span className="bp-detail-note">{tr('Charge, last 7 days')}</span>
-          </>
+        {detail === 'charge' && (
+          <Plot
+            box={plotBox}
+            title={tr('Charge, last 7 days')}
+            unit="%"
+            lo={0}
+            hi={100}
+            format={(v) => `${Math.round(v)}`}
+            limit={{ v: sheet.limit, label: `${tr('Limit')} ${sheet.limit}%` }}
+            traces={[{ data: sheet.week.battery, label: `${sheet.battery}%`, soft: sheet.low }]}
+          />
+        )}
+        {detail === 'range' && (
+          <Plot
+            box={plotBox}
+            title={tr('Range, last 7 days')}
+            lo={0}
+            format={(v) => sheet.dist(v)}
+            traces={[{ data: perPct ? sheet.week.battery?.map(([t, v]) => [t, v * perPct] as [number, number]) : undefined, label: tr('Range') }]}
+          />
         )}
         {detail === 'climate' && (
-          <>
-            <Lines
-              height={90}
-              format={(v) => sheet.tempText(v)}
-              label={tr('Cabin and outside, last 24 hours')}
-              lines={[
-                { data: sheet.day.inside, label: tr('Cabin') },
-                { data: sheet.day.outside, label: tr('Outside') },
-              ]}
-            />
-            <span className="bp-detail-note">{tr('Cabin and outside, last 24 hours')}</span>
-          </>
+          <Plot
+            box={plotBox}
+            title={tr('Cabin and outside, last 24 hours')}
+            day
+            format={(v) => `${Math.round(v)}°`}
+            traces={[
+              { data: sheet.day.inside?.map(([t, v]) => [t, sheet.toTemp(v)] as [number, number]), label: tr('Cabin') },
+              { data: sheet.day.outside?.map(([t, v]) => [t, sheet.toTemp(v)] as [number, number]), label: tr('Outside') },
+            ]}
+          />
         )}
-      </div>
-    </section>
+      </svg>
+    </div>
   );
 }

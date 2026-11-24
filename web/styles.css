@@ -8467,6 +8467,7 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
 }
 
 .bp-limit {
+  fill: none;
   stroke: var(--ink-3);
   stroke-width: 0.8px;
   stroke-dasharray: 2 1.5;
@@ -8515,61 +8516,81 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
   stroke: var(--accent);
 }
 
-/* A part opened up: the same lettering, its figures and what's been recorded. */
-.bp-detail {
-  display: grid;
-  gap: 14px;
-  padding: 16px 18px;
-  border: 1px solid var(--ink-3);
-  font-family: 'Barlow', var(--f-body);
+/* A detail sheet's own marks: a plotted history, the plan's centre line, and the reading under a finger. */
+.bp-trace,
+.bp-center,
+.bp-cursor line,
+.bp-mark-fill {
+  fill: none;
+  stroke: var(--head);
+  stroke-width: 1.2px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
-.bp-detail-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid var(--ink-2);
-  padding-bottom: 8px;
+.bp-trace.is-soft {
+  stroke: var(--warn);
+  stroke-width: 1.6px;
 }
 
-.bp-detail-title {
-  font-size: 18px;
-  font-weight: 300;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--head);
+.bp-center {
+  stroke: var(--ink-3);
+  stroke-width: 0.6px;
+  stroke-dasharray: 6 1.5 1 1.5;
 }
 
-.bp-detail-rows {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 10px 24px;
-  margin: 0;
+.bp-cursor line {
+  stroke: var(--accent);
+  stroke-width: 0.8px;
 }
 
-.bp-detail-rows dt {
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+/* A reading stays legible over the lines it sits on. */
+.bp-cursor text {
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 2.4px;
+  stroke-linejoin: round;
 }
 
-.bp-detail-rows dd {
-  margin: 2px 0 0;
-  font-size: 22px;
-  font-weight: 300;
-  letter-spacing: 0.04em;
-  color: var(--head);
+.bp-cursor-when {
+  fill: var(--accent) !important;
 }
 
-.bp-detail-note {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+.bp-mark-fill {
+  fill: var(--head);
+  stroke: none;
+}
+
+.bp-pack-fill {
+  stroke: none;
+}
+
+.bp-empty {
+  stroke-dasharray: 2 1.5;
+}
+
+.bp-region-box.is-shown {
+  stroke: var(--ink-3);
+}
+
+.bp-region.is-open .bp-region-box.is-shown {
+  stroke: var(--warn);
+}
+
+.bp-plot {
+  outline: none;
+  cursor: crosshair;
+}
+
+.bp-plot-pad {
+  fill: transparent;
+}
+
+.bp-plot:focus-visible .bp-plot-pad {
+  stroke: var(--accent);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
 }
 
 /* A view is only looked at: taps go to the part drawn over it, and a
@@ -8682,9 +8703,9 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
   animation: bp-turn 0.24s ease-out 0.12s both;
 }
 
-/* A detail sheet opening: the same short settle. Never the drawing sheet itself,
-   whose drawings would lose their blend with the paper while it moved. */
-.bp-detail {
+/* A detail sheet opening: the same short settle. Never the main sheet,
+   whose pictures would lose their blend with the paper while it moved; a detail is all line work. */
+.bp-detail-sheet {
   animation: bp-settle 0.22s ease-out;
 }
 
@@ -8773,17 +8794,22 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :is(.bp-cable-flow, .bp-enter, .bp-leave, .bp-marks-in, .bp-row-in, .bp-detail, .bp-part-in) {
+  :is(.bp-cable-flow, .bp-enter, .bp-leave, .bp-marks-in, .bp-row-in, .bp-detail-sheet, .bp-part-in) {
     animation: none;
   }
 }
 
-html[data-eink] :is(.bp-cable-flow, .bp-enter, .bp-leave, .bp-marks-in, .bp-row-in, .bp-detail, .bp-part-in) {
+html[data-eink] :is(.bp-cable-flow, .bp-enter, .bp-leave, .bp-marks-in, .bp-row-in, .bp-detail-sheet, .bp-part-in) {
   animation: none;
 }
 
 /* E-ink has only black and one gray: the grid becomes a faint dotted
    lattice, so text never sits on a mesh. */
+html[data-eink] .bp-trace.is-soft {
+  stroke: var(--head);
+  stroke-width: 2.4px;
+}
+
 html[data-eink] .bp-grid-minor {
   display: none;
 }
