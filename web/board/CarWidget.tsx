@@ -25,6 +25,13 @@ const CHARGE_WORDS: Record<string, string> = {
   NoPower: 'Plugged in, no power',
 };
 
+/** "1 h 25 min", "24 min": a drive or a charge, never "m" beside miles. */
+function minutes(ms: number): string {
+  const all = Math.max(1, Math.round(ms / 60_000));
+  const h = Math.floor(all / 60);
+  return `${h ? `${h} h ` : ''}${all % 60} min`;
+}
+
 const TIRE_NAMES: Record<TirePos, string> = {
   fl: 'Front left',
   fr: 'Front right',
@@ -71,6 +78,13 @@ export function CarWidget() {
         // Dashboard: the car large with its tires, and the numbers that matter beside it.
         if (style === 'dashboard') {
           const range = metric ? `${Math.round(c.rangeMi * 1.609)} km` : `${c.rangeMi} mi`;
+          const dist = (mi: number, digits = 0) => `${(metric ? mi * 1.609 : mi).toLocaleString(locale(), { maximumFractionDigits: digits })} ${metric ? 'km' : 'mi'}`;
+          // The week's drives: the last one, how far in all, and the energy per distance where Tessie has it.
+          const drives = c.drives ?? [];
+          const last = drives[0];
+          const metered = drives.filter((d) => d.kwh);
+          const meteredMi = metered.reduce((n, d) => n + d.mi, 0);
+          const meteredWh = metered.reduce((n, d) => n + d.kwh! * 1000, 0);
           const OPEN_WORDS: Record<string, string> = { fl: 'driver door', rl: 'driver rear door', fr: 'passenger door', rr: 'passenger rear door', frunk: 'frunk', trunk: 'trunk' };
           const sheet: CarSheet = {
             vin: c.vin,
@@ -93,7 +107,7 @@ export function CarWidget() {
             volts: c.volts,
             amps: c.amps,
             added: c.addedKwh ? `${c.addedKwh.toFixed(1)} kWh` : undefined,
-            toFull: c.charging === 'Charging' && c.minutesToFull ? `${h ? `${h} h ` : ''}${m} min` : undefined,
+            toFull: c.charging === 'Charging' && c.minutesToFull ? minutes(c.minutesToFull * 60_000) : undefined,
             inside: c.insideC != null ? `${deg(c.insideC, unit)}°` : undefined,
             outside: c.outsideC != null ? `${deg(c.outsideC, unit)}°` : undefined,
             climate: c.climateOn,
@@ -110,6 +124,11 @@ export function CarWidget() {
             day: { inside, outside },
             tireText: (v) => tire(v),
             tempText: (v) => `${deg(v, unit)}°`,
+            dist: (mi) => dist(mi),
+            parked: c.parked,
+            lastDrive: last ? `${dist(last.mi, 1)} · ${minutes(last.end - last.start)}` : undefined,
+            weekDriven: drives.length ? dist(drives.reduce((n, d) => n + d.mi, 0)) : undefined,
+            efficiency: meteredMi >= 1 ? `${Math.round(meteredWh / (metric ? meteredMi * 1.609 : meteredMi))} ${metric ? 'Wh/km' : 'Wh/mi'}` : undefined,
           };
           return (
             <CarBlueprint

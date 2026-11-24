@@ -908,6 +908,20 @@ function demoCar(): CarData {
         cable: true,
         portOpen: true,
         open: { fl: false, fr: false, rl: false, rr: false, frunk: false, trunk: false },
+        parked: 'Home',
+        // A week of errands and a commute, newest first: hours ago, miles, kWh, minutes.
+        drives: (
+          [
+            [3, 12.4, 3.1, 24],
+            [7, 11.8, 2.9, 22],
+            [27, 4.2, 1.2, 11],
+            [31, 4.4, 1.1, 12],
+            [52, 23.6, 5.6, 34],
+            [75, 12.1, 3.0, 23],
+            [79, 12.3, 3.2, 25],
+            [122, 61.5, 15.1, 58],
+          ] as const
+        ).map(([h, mi, kwh, min]) => ({ start: Date.now() - h * 3_600_000 - min * 60_000, end: Date.now() - h * 3_600_000, mi, kwh })),
       },
     ],
   };

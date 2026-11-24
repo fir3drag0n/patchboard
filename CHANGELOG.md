@@ -52,6 +52,11 @@
   own dimensions. While it charges, a callout at the charge port gives the
   rate.
   "Wall: car" sets up a board with it.
+- **Where the car is and where it's been:** the car shows where it's
+  parked, by your name for the place in Tessie, such as Home, or else just
+  the town, never the street. Range's detail adds the last drive, the
+  distance driven this week and the energy it took per mile. Patchboard
+  asks Tessie for these only after the car has moved.
 - **A Blueprint theme:** drafting blue with white lines on a faint grid, or
   a pale whiteprint in light.
 - **Tires on a blueprint of the car:** the car widget draws the car in fine

@@ -180,7 +180,9 @@ reader: the front, rear and top views across the top, the side view
 dimensioned in millimetres, the live charge, range, power and
 temperatures, and panels for status, charging, range and tires. Tap any
 of them for its detail, with the week's or the day's line, or tap a small
-view to turn the car to it. Settings,
+view to turn the car to it. Status says where it's parked, by your name
+for the place or the town, and Range adds the last drive, the week's
+distance and the energy per mile. Settings,
 Alerts sets when a tire counts as soft, or turns the warning off. Patchboard records each reading Tessie
 has, without waking the car, so the lines fill in from the day you
 set it up. Set the widget to One number for the battery, the range or the

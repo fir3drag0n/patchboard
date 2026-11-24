@@ -397,7 +397,7 @@
  "A Books widget from your currently-reading shelf. It reads the shelf's public feed, so make the shelf visible to anyone.": "Um widget de Livros da sua estante de livros em leitura. O Goodreads encerrou sua API, então o widget usa o feed público da estante. Ela precisa estar visível para todos.",
  "A Books widget with what you are reading now, covers included.": "Um widget de Livros com o que você está lendo agora, com capas.",
  "A Calendar widget: the days ahead from every calendar you add, recurring events included. Google, iCloud, Outlook, Nextcloud, Proton and Fastmail all give an iCal address.": "Um widget de Agenda: os próximos dias de cada agenda que você adicionar, com eventos recorrentes. Google, iCloud, Outlook, Nextcloud, Proton e Fastmail fornecem um endereço iCal.",
- "A Car widget: battery and range with the last 7 days of charge, charging and time to full, inside and outside temperatures with the last day, the four tire pressures with a soft one marked, locks and the odometer. Reads Tessie’s cached state, so it never wakes the car.": "Um widget de Carro: bateria e autonomia com histórico de carga dos últimos 7 dias, carregamento e tempo até a carga completa, temperaturas interna e externa das últimas 24 horas, pressão dos quatro pneus com destaque para os que estiverem baixos, travas e hodômetro. Lê os dados em cache do Tessie sem acordar o carro.",
+ "A Car widget: battery and range with the last 7 days of charge, charging and time to full, inside and outside temperatures with the last day, the four tire pressures with a soft one marked, locks and the odometer, where it’s parked (your saved name for the place, or the town), and the week’s drives. Reads Tessie’s cached state, so it never wakes the car.": "Um widget de Carro: bateria e autonomia com histórico de carga dos últimos 7 dias, carregamento e tempo até a carga completa, temperaturas interna e externa das últimas 24 horas, pressão dos quatro pneus com destaque para os que estiverem baixos, travas e hodômetro, onde está estacionado (o seu nome para o lugar, ou a cidade) e as viagens da semana. Lê os dados em cache do Tessie sem acordar o carro.",
  "A custom theme turns light or dark with its background color.": "Um tema personalizado fica claro ou escuro conforme a cor de fundo.",
  "A device opens its link once. It sees the boards and switches lights, but can't touch containers or open Settings.": "Basta abrir o link uma vez no dispositivo. Ele pode ver os painéis e controlar as luzes, mas não pode alterar contêineres nem abrir Configurações.",
  "A Docker hosts widget for every environment Portainer manages: up or down, with running, stopped and unhealthy containers and stacks. An environment that goes down, or unhealthy containers on any host, show in Needs attention. Patchboard's own pages keep using its Docker socket.": "Um widget de Hosts Docker para cada ambiente que o Portainer gerencia: no ar ou fora, com contêineres e stacks rodando, parados e com problema. Um ambiente que cai, ou contêineres com problema em qualquer host, aparecem em Precisa de atenção. As páginas do próprio Patchboard continuam usando o socket do Docker que ele recebe.",
@@ -1333,5 +1333,9 @@
  "Which view is this?": "Que vista é esta?",
  "Your picture": "Sua imagem",
  "Show the {view} large": "Mostrar a {view} em grande",
- "Side view": "Vista lateral"
+ "Side view": "Vista lateral",
+ "Driven, last 7 days": "Percorrido, últimos 7 dias",
+ "Efficiency, last 7 days": "Consumo, últimos 7 dias",
+ "Last drive": "Última viagem",
+ "Parked": "Estacionado"
 }

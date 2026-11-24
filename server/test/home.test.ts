@@ -3,7 +3,7 @@ import { createSocket } from 'node:dgram';
 import { test } from 'node:test';
 import { validateBoard } from '../../shared/board.ts';
 import { haActionFor, haService, parseEntities, pinnedEntities } from '../../shared/ha.ts';
-import { toCar } from '../adapters/tessie.ts';
+import { placeName, toCar, toDrive } from '../adapters/tessie.ts';
 import { magicPacket, parseDevices, sendWake } from '../wake.ts';
 
 test('Home Assistant: lights toggle, scenes run, locks and garage doors never change', () => {
@@ -171,4 +171,15 @@ test('Tessie: the model, this session, the cable and what stands open', () => {
   const parked = toCar({ vin: 'V4', last_state: { charge_state: { battery_level: 50, conn_charge_cable: '<invalid>' } } });
   assert.equal(parked!.cable, false);
   assert.equal(parked!.open, undefined, 'unknown, not shut');
+});
+
+test('Tessie: drives in milliseconds and tenths, and a place fit for a wall', () => {
+  const d = toDrive({ started_at: 1628960959, ended_at: 1628970656, odometer_distance: 185.94, energy_used: 73.284, starting_battery: 97, ending_battery: 21 });
+  assert.deepEqual(d, { start: 1628960959000, end: 1628970656000, mi: 185.9, kwh: 73.28, battery: [97, 21] });
+  assert.equal(toDrive({ started_at: 1, ended_at: 2, odometer_distance: 0.04 }), null, 'a blip in the driveway');
+  assert.equal(toDrive({ started_at: 1, ended_at: 2, odometer_distance: 3, energy_used: 0 })!.kwh, undefined);
+  assert.equal(placeName({ saved_location: 'Home', address: '1 Main St, Springfield, Illinois 62701, United States' }), 'Home');
+  assert.equal(placeName({ saved_location: '', address: '8055 Dean Martin Drive, Las Vegas, Nevada 89139, United States' }), 'Las Vegas');
+  assert.equal(placeName({ address: 'Rue de Rivoli, Paris' }), 'Paris');
+  assert.equal(placeName({}), undefined);
 });

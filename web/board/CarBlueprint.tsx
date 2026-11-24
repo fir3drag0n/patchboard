@@ -63,6 +63,13 @@ export interface CarSheet {
   day: { inside?: Series; outside?: Series };
   tireText: (bar: number) => string;
   tempText: (c: number) => string;
+  /** A distance in miles, in the car's own unit. */
+  dist: (mi: number) => string;
+  /** Your name for the place, or the town. */
+  parked?: string;
+  lastDrive?: string;
+  weekDriven?: string;
+  efficiency?: string;
 }
 
 /** Below this width the sheet's lettering is too small to read. */
@@ -537,7 +544,7 @@ function Sheet({ sheet, pics, open, big, turn }: { sheet: CarSheet; pics: CarPic
           [
             [tr('Doors'), sheet.open.length ? sheet.open.join(', ') : sheet.locked ? tr('Locked') : tr('Unlocked'), sheet.open.length > 0 || !sheet.locked],
             [tr('Sentry'), sheet.sentry ? tr('On') : tr('Off')],
-            [tr('Odometer'), sheet.odometer],
+            sheet.parked ? [tr('Parked'), sheet.parked] : [tr('Odometer'), sheet.odometer],
             [sheet.asleep ? tr('Asleep, read') : tr('Read'), sheet.read],
           ] as [string, string, boolean?][]
         ).map(([k, v, trouble], i) => (
@@ -683,8 +690,11 @@ function DetailSheet({ sheet, detail, onBack }: { sheet: CarSheet; detail: Detai
         : detail === 'range'
           ? [
               [tr('Range now'), sheet.range],
-              [tr('At the limit'), sheet.battery > 0 ? `${Math.round((sheet.rangeMi / sheet.battery) * sheet.limit)} mi` : BLANK],
-              [tr('Full'), sheet.battery > 0 ? `${Math.round((sheet.rangeMi / sheet.battery) * 100)} mi` : BLANK],
+              [tr('At the limit'), sheet.battery > 0 ? sheet.dist((sheet.rangeMi / sheet.battery) * sheet.limit) : BLANK],
+              [tr('Full'), sheet.battery > 0 ? sheet.dist((sheet.rangeMi / sheet.battery) * 100) : BLANK],
+              ...(sheet.lastDrive ? ([[tr('Last drive'), sheet.lastDrive]] as [string, string][]) : []),
+              ...(sheet.weekDriven ? ([[tr('Driven, last 7 days'), sheet.weekDriven]] as [string, string][]) : []),
+              ...(sheet.efficiency ? ([[tr('Efficiency, last 7 days'), sheet.efficiency]] as [string, string][]) : []),
             ]
           : detail === 'climate'
             ? [
@@ -696,6 +706,7 @@ function DetailSheet({ sheet, detail, onBack }: { sheet: CarSheet; detail: Detai
                 [tr('Doors'), sheet.locked ? tr('Locked') : tr('Unlocked'), !sheet.locked],
                 [tr('Open'), sheet.open.length ? sheet.open.join(', ') : tr('Nothing'), sheet.open.length > 0],
                 [tr('Sentry'), sheet.sentry ? tr('On') : tr('Off')],
+                ...(sheet.parked ? ([[tr('Parked'), sheet.parked]] as [string, string][]) : []),
                 [tr('Odometer'), sheet.odometer],
                 [sheet.asleep ? tr('Asleep, read') : tr('Read'), sheet.read],
               ];

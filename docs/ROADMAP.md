@@ -19,7 +19,6 @@ by part. Next for it:
 - [ ] A specification table you fill in: trim, wheels, battery, paint
 - [ ] Act from the drawing, held to confirm and hidden on household devices:
   lock and unlock, climate, start and stop charging, the charge limit, Sentry
-- [ ] Drives: where it's parked, the last trip and its efficiency
 - [ ] The poster: the sheet as the 1-bit panel image, for a framed e-ink display
 - [ ] Every Tesla: overhangs for Model Y, S and X, Cybertruck's figures, and a
   drawn fallback for each

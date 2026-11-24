@@ -2,7 +2,7 @@
 // Tessie's cached state. Reading it never wakes the car, so polling costs
 // nothing in battery. https://developer.tessie.com
 
-import { type Car, type CarData, TIRES } from '../../shared/types.ts';
+import { type Car, type CarData, type Drive, TIRES } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { getJson } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
@@ -107,20 +107,88 @@ function tiresOf(v: NonNullable<Vehicle['last_state']>['vehicle_state']): Car['t
   return { fl: p[0]!, fr: p[1]!, rl: p[2]!, rr: p[3]! };
 }
 
+interface TessieDrive {
+  started_at?: number;
+  ended_at?: number;
+  odometer_distance?: number;
+  energy_used?: number;
+  starting_battery?: number;
+  ending_battery?: number;
+}
+
+/** A drive from Tessie (seconds, miles), or null for a blip under a tenth of a mile. */
+export function toDrive(d: TessieDrive): Drive | null {
+  if (!d.started_at || !d.ended_at || !(Number(d.odometer_distance) >= 0.1)) return null;
+  return {
+    start: d.started_at * 1000,
+    end: d.ended_at * 1000,
+    mi: Math.round(d.odometer_distance! * 10) / 10,
+    kwh: d.energy_used != null && d.energy_used > 0 ? Math.round(d.energy_used * 100) / 100 : undefined,
+    battery: d.starting_battery != null && d.ending_battery != null ? [d.starting_battery, d.ending_battery] : undefined,
+  };
+}
+
+/**
+ * Where the car is, fit for a wall: your saved name for the place, or the town
+ * from "street, town, state zip, country". Never the street.
+ */
+export function placeName(loc: { saved_location?: string | null; address?: string | null }): string | undefined {
+  const saved = loc.saved_location?.trim();
+  if (saved) return saved;
+  const parts = (loc.address ?? '').split(',').map((p) => p.trim()).filter(Boolean);
+  if (parts.length >= 4) return parts[parts.length - 3];
+  return parts.length >= 2 ? parts[1] : undefined;
+}
+
+/** Drives and place change only when the car moves: look again once the odometer has, or every half hour. */
+const EXTRA_EVERY = 30 * MINUTE;
+
 export function tessieAdapter(): Adapter<CarData> {
   const { token, vin } = config.tessie!;
+  const headers = { Authorization: `Bearer ${token}` };
+  const extra = new Map<string, { odo: number; at: number; parked?: string; drives?: Drive[] }>();
+  const more = async (car: Car) => {
+    const had = extra.get(car.vin);
+    // Mid-drive the odometer ticks every poll: wait for the drive to end.
+    if (had && (car.driving || (had.odo === car.odometerMi && Date.now() - had.at < EXTRA_EVERY))) return had;
+    const week = Math.floor((Date.now() - 7 * 24 * 60 * MINUTE) / 1000);
+    const base = `https://api.tessie.com/${encodeURIComponent(car.vin)}`;
+    // Either can fail on its own; the car still shows, with what was known before.
+    const [drives, loc] = await Promise.allSettled([
+      getJson<{ results: TessieDrive[] }>(`${base}/drives?distance_format=mi&from=${week}&limit=100`, { headers }),
+      getJson<{ saved_location?: string; address?: string }>(`${base}/location`, { headers }),
+    ]);
+    const next = {
+      odo: car.odometerMi,
+      at: Date.now(),
+      drives:
+        drives.status === 'fulfilled'
+          ? drives.value.results
+              .map(toDrive)
+              .filter((d): d is Drive => d !== null)
+              .sort((a, b) => b.end - a.end)
+          : had?.drives,
+      parked: loc.status === 'fulfilled' ? placeName(loc.value) : had?.parked,
+    };
+    extra.set(car.vin, next);
+    return next;
+  };
   return {
     id: 'tessie',
     label: 'Tesla',
     intervalMs: 2 * MINUTE,
     async fetch() {
-      const r = await getJson<{ results: Vehicle[] }>('https://api.tessie.com/vehicles?only_active=false', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const r = await getJson<{ results: Vehicle[] }>('https://api.tessie.com/vehicles?only_active=false', { headers });
       const cars = r.results
         .filter((v) => !vin || v.vin === vin)
         .map(toCar)
         .filter((c): c is Car => c !== null);
+      for (const car of cars) {
+        const x = await more(car);
+        car.drives = x.drives;
+        // A car on the move is parked nowhere.
+        car.parked = car.driving ? undefined : x.parked;
+      }
       return { cars };
     },
   };

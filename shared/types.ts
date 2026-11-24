@@ -853,6 +853,19 @@ export interface Car {
   portOpen?: boolean;
   /** What stands open: doors, the frunk and the trunk. */
   open?: Partial<Record<'fl' | 'fr' | 'rl' | 'rr' | 'frunk' | 'trunk', boolean>>;
+  /** Where it's parked: your saved name for the place, or the town. Never the street. */
+  parked?: string;
+  /** The last week's drives, newest first. */
+  drives?: Drive[];
+}
+
+/** One drive: when, how far (miles), the energy it took (kWh), and the charge before and after. */
+export interface Drive {
+  start: number;
+  end: number;
+  mi: number;
+  kwh?: number;
+  battery?: [number, number];
 }
 
 export type TirePos = 'fl' | 'fr' | 'rl' | 'rr';
