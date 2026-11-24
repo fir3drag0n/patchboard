@@ -5,7 +5,7 @@
 // Tailscale: the tailnet's machines, which are online, and keys about to
 // expire. An API access token from the admin console.
 
-import type { TailnetData, TailnetDevice, UnifiData, UnifiDevice } from '../../shared/types.ts';
+import type { TailnetData, TailnetDevice, UnifiData, UnifiDevice, UnifiHealth } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { fetchText, getJson } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
@@ -14,6 +14,32 @@ type Page<T> = { data?: T[]; totalCount?: number };
 
 export function toUnifiDevices(rows: { id?: string; name?: string; model?: string; state?: string; macAddress?: string }[], site: string): UnifiDevice[] {
   return rows.map((d) => ({ id: d.id ?? d.macAddress ?? d.name ?? '?', name: d.name || d.model || 'device', model: d.model, online: (d.state ?? 'ONLINE').toUpperCase() === 'ONLINE', site }));
+}
+
+type RawHealth = { subsystem?: string; status?: string; wan_ip?: string; isp_name?: string; latency?: number; uptime?: number; 'rx_bytes-r'?: number; 'tx_bytes-r'?: number; num_user?: number; xput_down?: number; xput_up?: number; speedtest_lastrun?: number };
+
+/** Fork: the Network app's health rows (stat/health) as one summary; nothing usable, undefined. */
+export function toUnifiHealth(rows: RawHealth[]): UnifiHealth | undefined {
+  const by = (s: string) => rows.find((r) => r.subsystem === s);
+  const wan = by('wan');
+  const www = by('www');
+  if (!wan && !www) return undefined;
+  const num = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? n : undefined);
+  const down = num(www?.xput_down);
+  const up = num(www?.xput_up);
+  return {
+    status: rows.filter((r) => r.subsystem && r.status).map((r) => ({ part: r.subsystem!, status: r.status! })),
+    wanIp: wan?.wan_ip,
+    isp: wan?.isp_name,
+    latencyMs: num(www?.latency),
+    uptimeSec: num(www?.uptime),
+    // The Network app reports WAN traffic seen from the gateway: rx is what comes in.
+    downBps: num(wan?.['rx_bytes-r']),
+    upBps: num(wan?.['tx_bytes-r']),
+    wlanClients: num(by('wlan')?.num_user),
+    lanClients: num(by('lan')?.num_user),
+    speedtest: down != null && up != null && (down > 0 || up > 0) ? { down, up, at: www?.speedtest_lastrun ? www.speedtest_lastrun * 1000 : undefined } : undefined,
+  };
 }
 
 export function unifiAdapter(): Adapter<UnifiData> {
@@ -32,7 +58,11 @@ export function unifiAdapter(): Adapter<UnifiData> {
         devices.push(...toUnifiDevices(d.data ?? [], s.name ?? 'Default'));
         clients += c.totalCount ?? 0;
       }
-      return { clients, devices, sites: sites.length, webUrl: url };
+      // Fork: the default site's health; the classic endpoint takes the same API key. Missing, no health.
+      const health = await fetchText(`${url}/proxy/network/api/s/default/stat/health`, { verifyTls, headers: { 'X-API-KEY': key, Accept: 'application/json' } })
+        .then((t) => toUnifiHealth((JSON.parse(t) as { data?: RawHealth[] }).data ?? []))
+        .catch(() => undefined);
+      return { clients, devices, sites: sites.length, webUrl: url, ...(health ? { health } : {}) };
     },
   };
 }

@@ -649,6 +649,7 @@ export function NetworkWidget({ now }: { now: number }) {
             </span>
             <span className="speed-unit">devices online</span>
           </p>
+          {unifi.data.health && <UnifiHealthRows h={unifi.data.health} now={now} />}
           {off.length > 0 && (
             <ul className="drive-list">
               {off.slice(0, limit).map((d) => (
@@ -688,6 +689,58 @@ export function NetworkWidget({ now }: { now: number }) {
         </div>
       )}
     </Section>
+  );
+}
+
+/** Fork: Internet, WAN and Wi-Fi at a glance from the gateway's health. */
+function UnifiHealthRows({ h, now }: { h: NonNullable<UnifiData['health']>; now: number }) {
+  const mbit = (bps?: number) => (bps == null ? '–' : `${(bps * 8) / 1e6 >= 10 ? Math.round((bps * 8) / 1e6) : ((bps * 8) / 1e6).toFixed(1)} Mbit/s`);
+  const www = h.status.find((s) => s.part === 'www')?.status;
+  const bad = h.status.filter((s) => s.status !== 'ok');
+  const NAMES: Record<string, string> = { www: 'Internet', wan: 'WAN', wlan: 'Wi-Fi', lan: 'LAN', vpn: 'VPN' };
+  return (
+    <dl className="ledger net-health">
+      <div className="ledger-row">
+        <dt>Internet</dt>
+        <dd className={www && www !== 'ok' ? 'crit-text' : undefined}>
+          {www === 'ok' ? 'Online' : (www ?? '–')}
+          {h.latencyMs != null && `, ${h.latencyMs} ms`}
+          {h.uptimeSec != null && `, up ${uptime(h.uptimeSec)}`}
+        </dd>
+      </div>
+      {(h.isp || h.wanIp) && (
+        <div className="ledger-row">
+          <dt>{h.isp ?? 'WAN'}</dt>
+          <dd className="mono">{h.wanIp ?? ''}</dd>
+        </div>
+      )}
+      <div className="ledger-row">
+        <dt>Now</dt>
+        <dd>↓ {mbit(h.downBps)} ↑ {mbit(h.upBps)}</dd>
+      </div>
+      {h.speedtest && (
+        <div className="ledger-row">
+          <dt>Speed test</dt>
+          <dd>
+            ↓ {Math.round(h.speedtest.down)} ↑ {Math.round(h.speedtest.up)} Mbit/s{h.speedtest.at ? `, ${ago(h.speedtest.at, now)} ago` : ''}
+          </dd>
+        </div>
+      )}
+      {(h.wlanClients != null || h.lanClients != null) && (
+        <div className="ledger-row">
+          <dt>Clients</dt>
+          <dd>
+            {h.wlanClients ?? 0} Wi-Fi, {h.lanClients ?? 0} LAN
+          </dd>
+        </div>
+      )}
+      {bad.length > 0 && (
+        <div className="ledger-row">
+          <dt>Status</dt>
+          <dd className="warn-text">{bad.map((s) => `${NAMES[s.part] ?? s.part}: ${s.status}`).join(', ')}</dd>
+        </div>
+      )}
+    </dl>
   );
 }
 

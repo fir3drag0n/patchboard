@@ -1228,6 +1228,25 @@ export interface UnifiData {
   devices: UnifiDevice[];
   sites: number;
   webUrl: string;
+  /** Fork: the gateway's health (Internet, WAN, Wi-Fi, LAN) from the Network app; missing when it gives none. */
+  health?: UnifiHealth;
+}
+
+export interface UnifiHealth {
+  /** ok, warning or error per part: wan, www (Internet), wlan, lan, vpn. */
+  status: { part: string; status: string }[];
+  wanIp?: string;
+  isp?: string;
+  latencyMs?: number;
+  /** Internet uptime in seconds. */
+  uptimeSec?: number;
+  /** Bytes per second through the WAN right now. */
+  downBps?: number;
+  upBps?: number;
+  wlanClients?: number;
+  lanClients?: number;
+  /** Last speed test in Mbit/s, and when (ms). */
+  speedtest?: { down: number; up: number; at?: number };
 }
 
 export interface TailnetDevice {
