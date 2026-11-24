@@ -349,7 +349,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
     sizes: ANY,
     removable: true,
     multiple: false,
-    options: { styles: [['', 'Now, 12 hours and three days'], ['display', 'Display: the day and the week, large']] },
+    options: { styles: [['', 'Now, 12 hours and three days'], ['display', 'Display: the day and the week, large'], ['drawing', 'Drawing: a sheet to match the car']] },
   },
   vitals: { name: 'Server', about: 'CPU, memory, storage and uptime, with the last 24 hours.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
   now: { name: 'Right now', about: 'Who is watching Plex, Jellyfin or Emby, and what is downloading.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 20] } },

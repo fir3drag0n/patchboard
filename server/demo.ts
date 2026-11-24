@@ -1184,6 +1184,13 @@ export function demoAdapters(): Adapter[] {
         feelsNow: Math.round(17 + 6 * Math.sin(((new Date().getHours() - 9) / 24) * 2 * Math.PI)) - 1,
         windNow: 14,
         humidityNow: 58,
+        windDirNow: 225,
+        dewNow: 9,
+        cloudNow: 30,
+        pressureNow: 1016,
+        lat: 33.95,
+        lon: -117.4,
+        elevation: 252,
         isDay: true,
         hours: Array.from({ length: 24 }, (_, i) => {
           const t = new Date(h0.getTime() + i * 3_600_000);

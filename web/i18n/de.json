@@ -1388,5 +1388,11 @@
  "No hourly forecast yet": "Noch keine Stundenvorhersage",
  "until {time}": "bis {time}",
  "UV": "UV",
- "Wind": "Wind"
+ "Wind": "Wind",
+ "Calm": "Windstill",
+ "Cloud cover": "Bewölkung",
+ "Dew point": "Taupunkt",
+ "Elevation": "Höhe",
+ "Pressure": "Luftdruck",
+ "Station": "Station"
 }

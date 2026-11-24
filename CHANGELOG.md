@@ -8,6 +8,13 @@
   sunrise and sunset marked, and the week with each day's low and high on
   one scale. Show it alone on a TV or wall tablet, or start a board from
   "Wall: weather".
+- **The weather as a drawing sheet:** the weather widget's Drawing style
+  matches the car's engineering drawing, with the same border, pen and
+  title block. It plots the conditions as a weather station does: cloud
+  cover in the circle, a barb for the wind, and temperature, dew point and
+  pressure called out at its corners. The next 24 hours sit on the grid,
+  and the week runs as dimension lines on one scale. On a screen too
+  narrow to read it, the Display style takes its place.
 - **Cameras from a TV remote:** on a wall screen, up and down mark a
   camera, the arrows move between them without turning the page, and the
   centre button opens it live. Back, or an arrow past the last camera,

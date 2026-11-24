@@ -29,7 +29,7 @@ function skyOf(code: number): Sky {
 const CLOUD = 'M15 35h19.5a7.5 7.5 0 0 0 .4-15 10.5 10.5 0 0 0-20.4 2.8A6.2 6.2 0 0 0 15 35z';
 
 /** A condition in drafting lines, in the text's own color. */
-export function SkyIcon({ code, night, className }: { code: number; night?: boolean; className?: string }) {
+export function SkyIcon({ code, night, className, at }: { code: number; night?: boolean; className?: string; at?: { x: number; y: number; size: number } }) {
   const sky = skyOf(code);
   const sun = (cx: number, cy: number, r: number) => (
     <g className="wd-sun">
@@ -42,7 +42,7 @@ export function SkyIcon({ code, night, className }: { code: number; night?: bool
   );
   const moon = (cx: number, cy: number, r: number) => <path className="wd-moon" d={`M${cx + r * 0.3} ${cy - r} a${r} ${r} 0 1 0 ${r * 0.7} ${r * 1.55} a${r * 0.8} ${r * 0.8} 0 0 1 ${-r * 0.7} ${-r * 1.55}z`} />;
   return (
-    <svg className={`wd-icon ${className ?? ''}`} viewBox="0 0 48 48" aria-hidden="true">
+    <svg className={`wd-icon ${className ?? ''}`} viewBox="0 0 48 48" aria-hidden="true" {...(at ? { x: at.x, y: at.y, width: at.size, height: at.size } : {})}>
       {sky === 'clear' && (night ? moon(24, 24, 11) : sun(24, 24, 8))}
       {sky === 'partly' && (
         <>

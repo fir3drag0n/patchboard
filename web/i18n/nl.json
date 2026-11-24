@@ -1388,5 +1388,11 @@
  "No hourly forecast yet": "Nog geen verwachting per uur",
  "until {time}": "tot {time}",
  "UV": "UV",
- "Wind": "Wind"
+ "Wind": "Wind",
+ "Calm": "Windstil",
+ "Cloud cover": "Bewolking",
+ "Dew point": "Dauwpunt",
+ "Elevation": "Hoogte",
+ "Pressure": "Luchtdruk",
+ "Station": "Station"
 }

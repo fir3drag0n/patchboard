@@ -150,7 +150,9 @@ day-by-day list.
 weather widget's Display style makes it an office display: the
 conditions now, large, the next 24 hours as one chart of temperature over
 the chance of rain, and the week on one scale. "Wall: weather" starts a
-board with it for a TV or a wall tablet.
+board with it for a TV or a wall tablet. The Drawing style matches the
+car's engineering drawing: a station plot of the wind, cloud and pressure,
+the next 24 hours on the grid, and the week as dimension lines.
 
 ![Weather](screenshots/weather.webp)
 

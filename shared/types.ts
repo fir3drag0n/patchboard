@@ -373,6 +373,18 @@ export interface WeatherData {
   /** km/h */
   windNow?: number;
   humidityNow?: number;
+  /** Degrees the wind blows from, 0 for north. */
+  windDirNow?: number;
+  /** °C */
+  dewNow?: number;
+  /** Percent of the sky covered. */
+  cloudNow?: number;
+  /** hPa, at sea level. */
+  pressureNow?: number;
+  /** The forecast point, to two decimals, and its height in metres. */
+  lat?: number;
+  lon?: number;
+  elevation?: number;
   isDay?: boolean;
   hours?: WeatherHour[];
   days: WeatherDay[];

@@ -366,7 +366,7 @@ const ICONS: Record<string, string> = {
   outside: 'M2.4 0.6 H3.6 V3.6 A1.4 1.4 0 1 1 2.4 3.6 Z M3 2 V4.4',
 };
 
-const W = 320;
+export const W = 320;
 /** The sheet's height in its own units: 16:9 on boards and wide screens, 4:3 as a poster on a squarer one. */
 const WIDE = 180;
 const TALL = 240;
@@ -1143,7 +1143,7 @@ function PartPanel({ sheet, pick, onClose, onDetail }: { sheet: CarSheet; pick: 
 
 /** A box on the sheet, placed over it in the sheet's own units. */
 /** The sheet itself: a faint grid, the outer border, and the zone border numbered 1 to 8 and lettered A to F. */
-function Frame({ id, H }: { id: string; H: number }) {
+export function Frame({ id, H }: { id: string; H: number }) {
   const cols = 8;
   const rows = 6;
   const zone = { x: 8, y: 8, w: W - 16, h: H - 16 };
