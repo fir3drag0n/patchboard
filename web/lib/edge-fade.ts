@@ -10,7 +10,10 @@ export function useEdgeFade(root: RefObject<HTMLElement | null>, selector?: stri
     if (!el) return;
     const rows = selector ? [...el.querySelectorAll<HTMLElement>(selector)] : [el];
     const mark = (r: HTMLElement) => {
-      if (r.scrollWidth - r.clientWidth - r.scrollLeft > 4) r.dataset.more = '';
+      // Only a row that scrolls: one that wraps can still measure wider, from
+      // a hover label hanging past its last item, and has nothing hidden.
+      const scrolls = /auto|scroll/.test(getComputedStyle(r).overflowX);
+      if (scrolls && r.scrollWidth - r.clientWidth - r.scrollLeft > 4) r.dataset.more = '';
       else delete r.dataset.more;
     };
     const onScroll = (e: Event) => mark(e.currentTarget as HTMLElement);

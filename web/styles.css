@@ -12836,13 +12836,6 @@ a.req-come:hover .req-title {
   font-size: 12px;
 }
 
-/* Phone app rows: the far edge fades, so a row that scrolls says so. */
-@media (max-width: 760px) {
-  .bay-jacks {
-    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-  }
-}
-
 /* A hold button shows a track under its label, a quarter lit, when you
    point at it or reach it by keyboard: the fill that sweeps across while you
    hold starts from it. At rest it would read as a stray underline; on touch
