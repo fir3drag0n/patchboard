@@ -14,6 +14,7 @@ import { useSource, useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 import { CustomizePage } from '../components/PageCustomize.tsx';
 import { RowUpdate } from '../components/Updater.tsx';
+import { CtrUpdateButton, useCtrUpdates } from '../components/UnraidUpdate.tsx';
 
 const LOOSE = 'Standalone';
 /** Its stack: the compose project, with the host's name when it's another machine's. */
@@ -46,6 +47,9 @@ export function Stacks() {
     if (!hash || !snap) return;
     document.getElementById(`stack-${decodeURIComponent(hash.slice(1))}`)?.scrollIntoView({ block: 'start' });
   }, [hash, !!snap]);
+
+  // Unraid containers with a mark update through the maintenance gate (fork). Before the early return: it's a hook.
+  const ctrUpd = useCtrUpdates(!!snap && !snap.readOnly && Object.keys(snap.updates ?? {}).some((n) => !n.includes('@')));
 
   if (!snap) return null;
   const all = [...containerMap(snap).values()];
@@ -199,8 +203,9 @@ export function Stacks() {
                 const load = s[c.name];
                 // Updating from the row, where the update is the reason the row is here.
                 const act = onlyUpdates && hasUpdate(c) && !snap.readOnly && !!snap.features?.includes('updates');
+                const unraidAct = !act && !c.host && !!snap.updates[c.name] && !snap.readOnly && ctrUpd.enabled;
                 return (
-                  <li key={c.name} className={act ? 'has-act' : undefined}>
+                  <li key={c.name} className={act || unraidAct ? 'has-act' : undefined}>
                     <Link to={`/c/${c.name}`} className="srow" data-state={st}>
                       <span className="srow-id">
                         <span className="srow-icon"><Icon name={svc?.name ?? c.name} icon={svc?.icon} size={18} /></span>
@@ -216,6 +221,11 @@ export function Stacks() {
                     {act && (
                       <span className="srow-act">
                         <RowUpdate name={c.name} />
+                      </span>
+                    )}
+                    {unraidAct && (
+                      <span className="srow-act">
+                        <CtrUpdateButton name={c.name} u={ctrUpd} />
                       </span>
                     )}
                   </li>

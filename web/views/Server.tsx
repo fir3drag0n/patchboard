@@ -20,6 +20,7 @@ import { locale } from '../lib/region.ts';
 import { t } from '../lib/i18n.ts';
 import { tabKeys } from '../lib/tabs.ts';
 import { serviceFor } from '../lib/services.ts';
+import { CtrUpdateButton, useCtrUpdates } from '../components/UnraidUpdate.tsx';
 
 const DAY = 86_400_000;
 
@@ -542,6 +543,9 @@ const CTR_SHOWN = 20;
 function HostContainers({ host, containers, error }: { host?: string; containers: import('../../shared/types.ts').Container[]; error?: string }) {
   const { snap } = useStore();
   const running = containers.filter((c) => c.state === 'running').length;
+  // Patchboard's own host (Unraid): marked containers get the update button (fork).
+  const marked = (c: { name: string }) => !host && !!snap?.updates[c.name] && !snap?.readOnly;
+  const ctrUpd = useCtrUpdates(containers.some(marked));
   // Stopped on purpose (Ignore, or expectStopped in the catalog): gray and last, so trouble leads.
   const quiet = (c: { name: string; state: string }) => c.state !== 'running' && ((snap?.ignored ?? []).includes(c.name) || !!serviceFor(snap, c.name)?.expectStopped);
   const sorted = [...containers].sort(
@@ -560,6 +564,7 @@ function HostContainers({ host, containers, error }: { host?: string; containers
         <Led state={led} label={c.state} />
         <Link to={`/c/${c.name}`} className="ident">{host ? c.name.replace(`@${host}`, '') : c.name}</Link>
         <span className={`ctr-status mono ${led === 'crit' ? 'crit-text' : led === 'warn' ? 'warn-text' : ''}`}>{short}</span>
+        {marked(c) && <CtrUpdateButton name={c.name} u={ctrUpd} />}
       </li>
     );
   };

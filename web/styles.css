@@ -10683,6 +10683,19 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
   white-space: nowrap;
 }
 
+/* Unraid container update button (fork): beside the row or the server's container line. */
+.ctr-update {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.ctr-update .button {
+  padding: 2px 10px;
+  font-size: 13px;
+  min-height: 0;
+}
+
 /* Downloads: a line per client, then one row per download. */
 .dl-client {
   display: flex;

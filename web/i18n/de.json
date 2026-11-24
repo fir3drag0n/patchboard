@@ -1303,5 +1303,13 @@
  "This server": "Dieser Server",
  "Not answering": "Antwortet nicht",
  "Containers": "Container",
- "Every Mailcow container and the mail queue join the Uptime widget. A stopped container, or a queue past MAILCOW_QUEUE_MAX, shows in Needs attention.": "Alle Mailcow-Container und die Mail-Warteschlange kommen ins Uptime-Widget. Ein gestoppter Container oder eine Warteschlange über MAILCOW_QUEUE_MAX erscheint unter „Needs attention“."
+ "Every Mailcow container and the mail queue join the Uptime widget. A stopped container, or a queue past MAILCOW_QUEUE_MAX, shows in Needs attention.": "Alle Mailcow-Container und die Mail-Warteschlange kommen ins Uptime-Widget. Ein gestoppter Container oder eine Warteschlange über MAILCOW_QUEUE_MAX erscheint unter „Needs attention“.",
+ "update in Unraid": "in Unraid aktualisieren",
+ "Updating (queued one after another)": "Wird aktualisiert (einer nach dem anderen)",
+ "Update {name} now? It stops for a few seconds.": "{name} jetzt aktualisieren? Er ist dabei einige Sekunden aus.",
+ "Try again": "Nochmal versuchen",
+ "Updating all containers": "Alle Container werden aktualisiert",
+ "Updating {name}": "{name} wird aktualisiert",
+ "Update all containers (one after another)": "Alle Container aktualisieren (nacheinander)",
+ "Update every Unraid container that has an update, one after another? Each stops for a few seconds; n8n is left out.": "Alle Unraid-Container mit Update nacheinander aktualisieren? Jeder ist dabei einige Sekunden aus; n8n bleibt außen vor."
 }
