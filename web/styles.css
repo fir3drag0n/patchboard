@@ -8109,8 +8109,8 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
    the sheet (the model, a part) is placed in its units, through --u. */
 .bp-stage {
   position: relative;
-  width: min(100%, calc((100dvh / var(--zoom) - 200px) * 16 / 9));
-  aspect-ratio: 320 / 180;
+  width: min(100%, calc((100dvh / var(--zoom) - 200px) * var(--ratio, 16 / 9)));
+  aspect-ratio: var(--ratio, 16 / 9);
   margin-inline: auto;
 }
 
@@ -15238,6 +15238,22 @@ html.wall-swipe .widget-page {
 
 .widget-page .widget-alone {
   min-width: 0;
+}
+
+/* The car's drawing sheet alone on a screen: a poster for a monitor or an
+   e-ink frame. The sheet takes the whole screen, centred; its title gives
+   way, unless it has a failure to report, and editing stays on the board. */
+.widget-page .widget-alone:has(.bp-stage) {
+  align-self: center;
+}
+
+.widget-page .section:has(.bp-stage) .section-head:not(:has(.section-stale)),
+.widget-page .car-views {
+  display: none;
+}
+
+.widget-page .bp-stage {
+  width: min(100%, calc((100dvh / var(--zoom) - 32px) * var(--ratio, 16 / 9)));
 }
 
 .widget-page .one-number {

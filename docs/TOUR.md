@@ -185,7 +185,9 @@ drawings: front, three-quarter, side, rear and top. Tap a door, the frunk,
 the trunk, the charge port, the glass or a tire, and that part opens beside
 it with what it can do, held to confirm: lock or unlock, open the frunk or
 trunk, start or stop charging, set the limit, climate, Sentry. A household
-device sees all of it but can't send a command. Status says where it's parked, by your name
+device sees all of it but can't send a command. Shown alone on a screen
+(Settings, Devices), the sheet becomes a poster that fills it, 4:3 on a
+squarer screen such as an e-ink frame. Status says where it's parked, by your name
 for the place or the town, and Range adds the last drive, the week's
 distance and the energy per mile. Settings,
 Alerts sets when a tire counts as soft, or turns the warning off. Patchboard records each reading Tessie

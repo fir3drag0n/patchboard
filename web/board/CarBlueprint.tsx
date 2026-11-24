@@ -82,8 +82,8 @@ export interface CarSheet {
   noControls: boolean;
 }
 
-/** Below this width the sheet's lettering is too small to read. */
-const MIN_WIDTH = 520;
+/** Below this width the sheet's smallest lettering drops under 7px; the regular layout reads better. */
+const MIN_WIDTH = 800;
 
 type Detail = 'tires' | 'charge' | 'range' | 'climate' | 'status';
 const DETAIL: Record<Detail, [string, string]> = {
@@ -109,6 +109,14 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
   const [editing, setEditing] = useState(false);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [big, setBig] = useState<CarView>('side');
+  // Alone on a screen (a poster) that's squarer than 16:9, the way most e-ink frames are, the sheet goes 4:3 and fills it.
+  const [tall, setTall] = useState(false);
+  useEffect(() => {
+    const fit = () => setTall(!!wrap.current?.closest('.widget-page') && innerWidth / innerHeight < 1.55);
+    fit();
+    addEventListener('resize', fit);
+    return () => removeEventListener('resize', fit);
+  }, []);
   // Escape leaves a detail sheet, as Back does.
   useEffect(() => {
     if (!detail) return;
@@ -124,7 +132,7 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
         <DetailSheet sheet={sheet} detail={detail} onBack={() => setDetail(null)} />
       ) : (
         <>
-          <Sheet sheet={sheet} pics={pics} open={setDetail} big={big} turn={setBig} />
+          <Sheet sheet={sheet} pics={pics} open={setDetail} big={big} turn={setBig} tall={tall} />
           {!sheet.ro && (
             <div className="car-views">
               <button type="button" className="text-button car-edit" onClick={() => setEditing(true)}>
@@ -329,7 +337,9 @@ const ICONS: Record<string, string> = {
 };
 
 const W = 320;
-const H = 180;
+/** The sheet's height in its own units: 16:9 on boards and wide screens, 4:3 as a poster on a squarer one. */
+const WIDE = 180;
+const TALL = 240;
 
 /** One view of the car, ready to place: its picture (none for the drawn side), framing, tires and port. */
 interface View {
@@ -347,13 +357,19 @@ function Sheet({
   open,
   big,
   turn,
+  tall,
 }: {
   sheet: CarSheet;
   pics: CarPicture[];
   open: (d: Detail) => void;
   big: CarView;
   turn: (v: CarView) => void;
+  tall: boolean;
 }) {
+  const H = tall ? TALL : WIDE;
+  // Where the extra height of a 4:3 sheet goes: a larger car, taller views, roomier rows and panels.
+  const rowStep = tall ? 22 : 15.4;
+  const rowPad = (rowStep - 15.4) / 2;
   const stage = useRef<HTMLDivElement>(null);
   const [u, setU] = useState(3);
   useEffect(() => {
@@ -451,7 +467,13 @@ function Sheet({
   const slotW = shown.length ? Math.min(66, 196 / shown.length) : 0;
 
   // The large view: in the middle, higher up when there's no row of small views above it.
-  const mainSlot = shown.length ? { x: 108, y: 64, w: 176, h: 52 } : { x: 104, y: 30, w: 184, h: 84 };
+  const mainSlot = tall
+    ? shown.length
+      ? { x: 104, y: 74, w: 184, h: 80 }
+      : { x: 104, y: 30, w: 184, h: 132 }
+    : shown.length
+      ? { x: 108, y: 64, w: 176, h: 52 }
+      : { x: 104, y: 30, w: 184, h: 84 };
   const side = large.framed ? place(large.framed, mainSlot) : null;
   const flippedOf = (view: View) => {
     const f = view.at.fl ?? view.at.fr;
@@ -479,11 +501,13 @@ function Sheet({
     ['outside', tr('Outside'), sheet.outside ?? BLANK, undefined, 'climate'],
   ];
   const full = sheet.battery > 0 ? Math.round((sheet.rangeMi / sheet.battery) * 100) : 0;
-  const panels = { y: 132, h: 36, w: 72, gap: 4 };
+  const panels = tall ? { y: 168, h: 61, w: 72, gap: 4 } : { y: 132, h: 36, w: 72, gap: 4 };
+  // A panel's rows of figures: where the first sits, and how far apart.
+  const cell = tall ? { first: 19, step: 10.5 } : { first: 14, step: 6.2 };
   const px = (i: number) => 12 + i * (panels.w + panels.gap);
 
   return (
-    <div ref={stage} className="bp-stage" style={{ '--u': `${u}px` } as CSSProperties}>
+    <div ref={stage} className="bp-stage" style={{ '--u': `${u}px`, '--ratio': W / H } as CSSProperties}>
     <svg className="bp-sheet" viewBox={`0 0 ${W} ${H}`} role="group" aria-label={`${sheet.model ?? sheet.name}: ${tr('engineering drawing')}`}>
       <defs>
         <pattern id={`${id}-hatch`} width="1.4" height="1.4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -522,40 +546,42 @@ function Sheet({
         </g>
       ))}
 
-      {/* Title, top left. */}
+      {/* Title, top left: shortened to the space the sheet gives it, the whole name kept for a reader and on hover. */}
       <text className="bp-title" x="13" y="22">
-        {sheet.model ?? sheet.name}
+        <title>{sheet.model ?? sheet.name}</title>
+        {clip(sheet.model ?? sheet.name, 11)}
       </text>
       <text className="bp-small" x="13.4" y="28">
-        {sheet.model ? `${sheet.name} · ` : ''}
+        <title>{sheet.model ? `${sheet.name} · ${tr('Vehicle status')}` : tr('Vehicle status')}</title>
+        {sheet.model ? `${clip(sheet.name, Math.max(8, 33 - tr('Vehicle status').length - 3))} · ` : ''}
         {tr('Vehicle status')}
       </text>
       <line className="bp-rule" x1="13" y1="31" x2="92" y2="31" />
 
       {/* Live metrics: a boxed list, each row opening its detail. */}
-      <rect className="bp-box" x="12" y="36" width="82" height="88" />
+      <rect className="bp-box" x="12" y="36" width="82" height={10 + rowStep * 5 + 1} />
       <text className="bp-row" x="16" y="42.5">
         {tr('Live metrics')}
       </text>
       <line className="bp-rule" x1="12" y1="45" x2="94" y2="45" />
       {metrics.map(([icon, label, value, sub, d, trouble], i) => {
-        const y = 47 + i * 15.4;
+        const y = 47 + i * rowStep;
         return (
           <Hit key={icon} label={`${label} ${value}${sub ? `, ${sub}` : ''}`} onOpen={() => open(d)}>
-            <rect className="bp-hit-area" x="12.5" y={y} width="81" height="15" />
-            <path className="bp-icon" d={ICONS[icon]} transform={`translate(15 ${y + 4.4})`} />
-            <text className="bp-row" x="24" y={y + 8.8}>
+            <rect className="bp-hit-area" x="12.5" y={y} width="81" height={rowStep - 0.4} />
+            <path className="bp-icon" d={ICONS[icon]} transform={`translate(15 ${y + rowPad + 4.4})`} />
+            <text className="bp-row" x="24" y={y + rowPad + 8.8}>
               {label}
             </text>
-            <text className={`bp-metric ${trouble ? 'is-soft' : ''}`} x="90" y={y + (sub ? 7.6 : 9.6)} textAnchor="end">
+            <text className={`bp-metric ${trouble ? 'is-soft' : ''}`} x="90" y={y + rowPad + (sub ? 7.6 : 9.6)} textAnchor="end">
               {value}
             </text>
             {sub && (
-              <text className="bp-tiny" x="90" y={y + 12.2} textAnchor="end">
+              <text className="bp-tiny" x="90" y={y + rowPad + 12.2} textAnchor="end">
                 {sub}
               </text>
             )}
-            {i < metrics.length - 1 && <line className="bp-rule-soft" x1="15" y1={y + 15.2} x2="91" y2={y + 15.2} />}
+            {i < metrics.length - 1 && <line className="bp-rule-soft" x1="15" y1={y + rowStep - 0.2} x2="91" y2={y + rowStep - 0.2} />}
           </Hit>
         );
       })}
@@ -564,7 +590,7 @@ function Sheet({
           A side or top view carries the length. */}
       {shown.map(({ v, pic, framed, label }, i) => {
         if (!framed) return null;
-        const slot = { x: 104 + i * (slotW + 4), y: 18, w: slotW, h: 30 };
+        const slot = { x: 104 + i * (slotW + 4), y: 18, w: slotW, h: tall ? 42 : 30 };
         const p = place(framed, slot);
         return (
           <g key={v}>
@@ -572,11 +598,12 @@ function Sheet({
             <ViewImage pic={pic} framed={framed} box={p.box} soft={soft} motion={leaving ? 'bp-row-in' : ''} />
             <Hit label={tr('Show the {view} large', { view: tr(label) })} onOpen={() => turn(v)}>
               <rect className="bp-hit-area" x={slot.x} y={slot.y - 2} width={slot.w} height={slot.h + 12} />
-              {(v === 'top' || v === 'side') && spec && <Dimension x0={p.ink.x0} y0={14} x1={p.ink.x1} y1={14} text={dim(spec.length, locale())} />}
-              <text className="bp-label-u" x={p.box.x + p.box.w / 2} y="55" textAnchor="middle">
+              {/* A small view carries the length while there's room; with a full row, the large view's dimensions say it. */}
+              {(v === 'top' || v === 'side') && spec && shown.length <= 3 && <Dimension x0={p.ink.x0} y0={14} x1={p.ink.x1} y1={14} text={dim(spec.length, locale())} />}
+              <text className="bp-label-u" x={p.box.x + p.box.w / 2} y={tall ? 67 : 55} textAnchor="middle">
                 {tr(label)}
               </text>
-              <line className="bp-rule" x1={p.box.x + p.box.w / 2 - 11} y1="56.4" x2={p.box.x + p.box.w / 2 + 11} y2="56.4" />
+              <line className="bp-rule" x1={p.box.x + p.box.w / 2 - 11} y1={tall ? 68.4 : 56.4} x2={p.box.x + p.box.w / 2 + 11} y2={tall ? 68.4 : 56.4} />
             </Hit>
           </g>
         );
@@ -596,8 +623,8 @@ function Sheet({
         );
       })()}
       {side && large.framed && (
+        // Kept in place as the car turns (never re-mounted), so keyboard focus stays on it from one view to the next.
         <g
-          key={large.v}
           className="bp-turntable"
           role="group"
           tabIndex={views.length > 1 ? 0 : undefined}
@@ -669,7 +696,7 @@ function Sheet({
             const ry = y1 - fy1 * (y1 - y0);
             const rh = (fy1 - fy0) * (y1 - y0);
             const opened = isOpen[part];
-            const word = tr(PICK_WORDS[part]);
+            const word = tr(REGION_WORDS[part] ?? PICK_WORDS[part]);
             return (
               <Hit key={part} label={`${word}${opened ? `: ${tr('Open')}` : ''}`} onOpen={() => setPick(part)}>
                 <g className={`bp-region ${opened ? 'is-open' : ''} ${pick === part ? 'is-on' : ''}`}>
@@ -684,7 +711,8 @@ function Sheet({
           {/* Tires on the view: a tap target over each tire that shows. */}
           {TIRES.map((t) => {
             const xy = sideAt[t];
-            if (!xy) return null;
+            // No reading yet (Tessie has none until the car measures after waking): no ring to tap.
+            if (!xy || !tire[t]) return null;
             const [cx, cy] = side.at(xy);
             return (
               <Hit key={t} label={`${tire[t].name} ${tire[t].value} ${sheet.unit}`} onOpen={() => setPick('tires')}>
@@ -692,6 +720,24 @@ function Sheet({
               </Hit>
             );
           })}
+          {/* The charge port, unplugged: a small mark to tap, so it can be opened from here. */}
+          {!sheet.plugged &&
+            portXY &&
+            (() => {
+              const [cx, cy] = side.at(portXY);
+              return (
+                <Hit label={tr('Charge port')} onOpen={() => setPick('port')}>
+                  {/* A finger-sized target around the small mark. */}
+                  <circle className="bp-hit-area" cx={cx} cy={cy} r="4.5" />
+                  <g className={`bp-region ${pick === 'port' ? 'is-on' : ''}`}>
+                    <circle className="bp-region-box" cx={cx} cy={cy} r="3" />
+                    <text className="bp-region-tag" x={cx - 3} y={cy - 4}>
+                      {tr('Charge port')}
+                    </text>
+                  </g>
+                </Hit>
+              );
+            })()}
           {/* The charge port, called out while it's plugged in: the leader rises
               up and back over the car, clear of the height dimension on the right. */}
           {sheet.plugged &&
@@ -731,7 +777,7 @@ function Sheet({
       )}
 
       {/* The row of panels along the bottom. */}
-      <Hit label={`${tr('Status')}: ${sheet.locked ? tr('Locked') : tr('Unlocked')}`} onOpen={() => open('status')}>
+      <Hit label={`${tr('Status')}: ${sheet.locked ? tr('Locked') : tr('Unlocked')}`} onOpen={() => setPick('body')}>
         <rect className="bp-box bp-hit-area" x={px(0)} y={panels.y} width={panels.w} height={panels.h} />
         <text className="bp-row" x={px(0) + 3} y={panels.y + 6}>
           {tr('Status')}
@@ -746,17 +792,17 @@ function Sheet({
           ] as [string, string, boolean?][]
         ).map(([k, v, trouble], i) => (
           <g key={k}>
-            <text className="bp-tiny" x={px(0) + 3} y={panels.y + 14 + i * 6.2}>
+            <text className="bp-tiny" x={px(0) + 3} y={panels.y + cell.first + i * cell.step}>
               {k}
             </text>
-            <text className={`bp-cell-s ${trouble ? 'is-soft' : ''}`} x={px(0) + panels.w - 3} y={panels.y + 14 + i * 6.2} textAnchor="end">
+            <text className={`bp-cell-s ${trouble ? 'is-soft' : ''}`} x={px(0) + panels.w - 3} y={panels.y + cell.first + i * cell.step} textAnchor="end">
               {v}
             </text>
           </g>
         ))}
       </Hit>
 
-      <Hit label={`${tr('Charging')}: ${tr(sheet.state)}`} onOpen={() => open('charge')}>
+      <Hit label={`${tr('Charging')}: ${tr(sheet.state)}`} onOpen={() => setPick('port')}>
         <rect className="bp-box bp-hit-area" x={px(1)} y={panels.y} width={panels.w} height={panels.h} />
         <text className="bp-row" x={px(1) + 3} y={panels.y + 6}>
           {tr('Charging')}
@@ -771,10 +817,10 @@ function Sheet({
           ] as [string, string][]
         ).map(([k, v], i) => (
           <g key={k}>
-            <text className="bp-tiny" x={px(1) + 3} y={panels.y + 14 + i * 6.2}>
+            <text className="bp-tiny" x={px(1) + 3} y={panels.y + cell.first + i * cell.step}>
               {k}
             </text>
-            <text className="bp-cell-s" x={px(1) + panels.w - 3} y={panels.y + 14 + i * 6.2} textAnchor="end">
+            <text className="bp-cell-s" x={px(1) + panels.w - 3} y={panels.y + cell.first + i * cell.step} textAnchor="end">
               {v}
             </text>
           </g>
@@ -789,7 +835,7 @@ function Sheet({
         </text>
         <line className="bp-rule" x1={px(2)} y1={panels.y + 8} x2={px(2) + panels.w} y2={panels.y + 8} />
         {(() => {
-          const g = { x: px(2) + 10, y: panels.y + 11, w: panels.w - 15, h: 18 };
+          const g = { x: px(2) + 10, y: panels.y + 11, w: panels.w - 15, h: panels.h - 18 };
           const at = (pct: number): [number, number] => [g.x + (g.w * pct) / 100, g.y + g.h - (g.h * pct) / 100];
           const now = at(sheet.battery);
           const lim = at(sheet.limit);
@@ -817,7 +863,7 @@ function Sheet({
       </Hit>
 
       {/* Tire pressure: the car from above, a pressure at each corner. */}
-      <Hit label={`${tr('Tire pressure')}: ${sheet.tires.map((t) => `${t.name} ${t.value}`).join(', ')} ${sheet.unit}`} onOpen={() => open('tires')}>
+      <Hit label={sheet.tires.length ? `${tr('Tire pressure')}: ${sheet.tires.map((t) => `${t.name} ${t.value}`).join(', ')} ${sheet.unit}` : `${tr('Tire pressure')}: ${tr('Not measured yet')}`} onOpen={() => open('tires')}>
         <rect className="bp-box bp-hit-area" x={px(3)} y={panels.y} width={panels.w} height={panels.h} />
         <text className="bp-row" x={px(3) + 3} y={panels.y + 6}>
           {tr('Tire pressure')}
@@ -825,7 +871,9 @@ function Sheet({
         <line className="bp-rule" x1={px(3)} y1={panels.y + 8} x2={px(3) + panels.w} y2={panels.y + 8} />
         {(() => {
           const cx = px(3) + panels.w / 2;
-          const car = { x: cx - 5, y: panels.y + 10.5, w: 10, h: 23 };
+          // The plan keeps a car's shape however tall the panel: centred in the room it has.
+          const planH = Math.min(panels.h - 13, 30);
+          const car = { x: cx - 5, y: panels.y + 10.5 + (panels.h - 13 - planH) / 2, w: 10, h: planH };
           const corner: Record<TirePos, [number, number, boolean]> = {
             fl: [car.x - 1, car.y + 5, true],
             fr: [car.x + car.w + 1, car.y + 5, false],
@@ -838,16 +886,16 @@ function Sheet({
               <path className="bp-plan" d={`M${car.x + 1.4} ${car.y + 7} Q${cx} ${car.y + 5.6} ${car.x + car.w - 1.4} ${car.y + 7} M${car.x + 1.4} ${car.y + car.h - 6} Q${cx} ${car.y + car.h - 4.8} ${car.x + car.w - 1.4} ${car.y + car.h - 6}`} />
               {TIRES.map((t) => {
                 const [x, y, left] = corner[t];
-                const r = tire[t];
+                const r = tire[t] as TireReading | undefined;
                 return (
-                  <g key={t} className={`bp-tire ${r.soft ? 'is-soft' : ''}`}>
+                  <g key={t} className={`bp-tire ${r?.soft ? 'is-soft' : ''}`}>
                     <rect className="bp-tread" x={left ? x - 1.2 : x} y={y - 2.6} width="1.2" height="5.2" rx="0.4" />
                     <line className="bp-lead" x1={left ? x - 1.6 : x + 1.6} y1={y} x2={left ? x - 8 : x + 8} y2={y} />
                     <text className="bp-tiny" x={left ? x - 9 : x + 9} y={y - 2.2} textAnchor={left ? 'end' : 'start'}>
                       {t.toUpperCase()}
                     </text>
                     <text className="bp-cell-s" x={left ? x - 9 : x + 9} y={y + 2.4} textAnchor={left ? 'end' : 'start'}>
-                      {r.value}
+                      {r?.value ?? BLANK}
                     </text>
                   </g>
                 );
@@ -864,7 +912,7 @@ function Sheet({
       )}
     </svg>
       {pick && (
-        <div className="bp-part" style={boxStyle({ x: 12, y: 36, w: 82, h: 88 })}>
+        <div className="bp-part" style={boxStyle({ x: 12, y: 36, w: 82, h: 10 + rowStep * 5 + 1 }, H)}>
           <PartPanel sheet={sheet} pick={pick} onClose={() => setPick(null)} onDetail={open} />
         </div>
       )}
@@ -886,7 +934,8 @@ const REGIONS: Partial<Record<CarView, [Pick, number, number, number, number][]>
     ['doors', 0.29, 0.72, 0.1, 0.65],
     ['glass', 0.27, 0.84, 0.67, 0.97],
     ['frunk', 0.04, 0.24, 0.44, 0.68],
-    ['trunk', 0.87, 0.99, 0.56, 0.76],
+    // The decklid, above the taillamp, where the charge port sits.
+    ['trunk', 0.86, 0.99, 0.7, 0.82],
   ],
   front: [
     ['frunk', 0.26, 0.74, 0.42, 0.62],
@@ -902,6 +951,12 @@ const REGIONS: Partial<Record<CarView, [Pick, number, number, number, number][]>
     ['trunk', 0.87, 0.98, 0.2, 0.8],
   ],
 };
+
+/** A part's name on the drawing itself, where the space is small. */
+const REGION_WORDS: Partial<Record<Pick, string>> = { doors: msg('Doors'), glass: msg('Cabin') };
+
+/** A name cut to fit its place on the sheet. */
+const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 
 const PICK_WORDS: Record<Pick, string> = {
   doors: msg('Doors and locks'),
@@ -960,7 +1015,8 @@ function PartPanel({ sheet, pick, onClose, onDetail }: { sheet: CarSheet; pick: 
               [tr('State'), tr(sheet.state)],
               [tr('Rate'), sheet.charging && sheet.kw ? sheet.kw : BLANK],
               [tr('Charge'), `${sheet.battery}%`],
-              [tr('Limit'), `${sheet.limit}%`],
+              // The limit's own stepper shows it when it can be changed here.
+              ...(sheet.noControls ? ([[tr('Limit'), `${sheet.limit}%`]] as [string, string][]) : []),
             ]
           : pick === 'glass'
             ? [
@@ -969,7 +1025,9 @@ function PartPanel({ sheet, pick, onClose, onDetail }: { sheet: CarSheet; pick: 
                 [tr('Climate'), sheet.climate ? tr('On') : tr('Off')],
               ]
             : pick === 'tires'
-              ? sheet.tires.map((t) => [t.name, `${t.value} ${sheet.unit}`, t.soft] as [string, string, boolean])
+              ? sheet.tires.length
+                ? sheet.tires.map((t) => [t.name, `${t.value} ${sheet.unit}`, t.soft] as [string, string, boolean])
+                : [[tr('Tire pressure'), tr('Not measured yet')]]
               : [
                   [tr('Sentry'), sheet.sentry ? tr('On') : tr('Off')],
                   [tr('Odometer'), sheet.odometer],
@@ -1061,7 +1119,7 @@ function PartPanel({ sheet, pick, onClose, onDetail }: { sheet: CarSheet; pick: 
 }
 
 /** A box on the sheet, placed over it in the sheet's own units. */
-function boxStyle(b: { x: number; y: number; w: number; h: number }): CSSProperties {
+function boxStyle(b: { x: number; y: number; w: number; h: number }, H: number): CSSProperties {
   return { left: `${(b.x / W) * 100}%`, top: `${(b.y / H) * 100}%`, width: `${(b.w / W) * 100}%`, height: `${(b.h / H) * 100}%` };
 }
 
@@ -1072,7 +1130,9 @@ function DetailSheet({ sheet, detail, onBack }: { sheet: CarSheet; detail: Detai
   useEffect(() => back.current?.focus(), []);
   const rows: [string, string, boolean?][] =
     detail === 'tires'
-      ? sheet.tires.map((t) => [t.name, `${t.value} ${sheet.unit}`, t.soft])
+      ? sheet.tires.length
+        ? sheet.tires.map((t) => [t.name, `${t.value} ${sheet.unit}`, t.soft])
+        : [[tr('Tire pressure'), tr('Not measured yet')]]
       : detail === 'charge'
         ? [
             [tr('Charge'), `${sheet.battery}%${sheet.usable != null ? `, ${tr('{n}% usable', { n: sheet.usable })}` : ''}`, sheet.low],

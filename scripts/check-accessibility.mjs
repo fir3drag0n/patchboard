@@ -141,5 +141,8 @@ try {
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.exitCode !== null ? resolve() : (server.once('exit', resolve), server.kill()));
-  rmSync(dir, { recursive: true, force: true });
+  // Windows can hold the server's files a moment after it stops: retry, and never fail a check that passed over a temp folder.
+  try {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  } catch {}
 }

@@ -58,7 +58,8 @@
   view is your own drawing, so every angle it rests on is exact. Pictures
   takes front and rear three-quarter views as well now.
 - **Control the car from the drawing:** tap the doors, the glass, the
-  frunk, the trunk, a tire or the charge port on a view; point at one and
+  frunk, the trunk, a tire or the charge port on a view, or the Status and
+  Charging panels below it; point at one and
   a dashed outline names it, as a drawing marks a detail, and one that
   stands open stays marked. The part opens in the place of the live
   metrics, with what it can do. Hold to lock or unlock, open the frunk
@@ -67,6 +68,11 @@
   command goes through Tessie and lands in the audit log; a household
   device and a read-only server see the car but never command it, and
   unlocking or opening it needs sign-in to be on.
+- **Your car as a poster:** set a screen in Settings, Devices to show the
+  car widget alone, and its drawing sheet fills the screen edge to edge,
+  from a 4K monitor to an e-ink frame. On a squarer screen, as most e-ink
+  frames are, the sheet goes 4:3: a larger front and rear view and roomier
+  panels, nothing left blank.
 - **Where the car is and where it's been:** the car shows where it's
   parked, by your name for the place in Tessie, such as Home, or else just
   the town, never the street. Range's detail adds the last drive, the
