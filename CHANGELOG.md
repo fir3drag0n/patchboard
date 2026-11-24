@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.18.0 (2026-11-23)
+
+- **Install it your platform's way:** paste examples/truenas.yml into
+  TrueNAS's Install via YAML, or add the Unraid template with the one
+  command in README.
+- **Every machine you run:**
+  - **A Server tab for each Docker host:** its containers, stopped ones
+    first, and with Beszel its CPU, memory, disks, CPU by hour and busiest
+    containers. Unraid, Synology and QNAP storage shows on Server too.
+  - **Mailcow:** its containers and the mail queue join the Uptime widget.
+    A stopped container, or a queue past the limit you set (20 by
+    default), shows in Needs attention.
+- **Ignore a container you stopped on purpose:** Needs attention and the
+  container's page get an Ignore button. It stays quiet until the
+  container runs again, so a later crash still shows.
+- **Easier to read and to hear:**
+  - **Every theme passes 4.5:1:** light themes' warning, problem and OK
+    colors, and the Teal and Blue accents, are a shade darker. On e-ink, a
+    count in a selected tab is no longer gray on black.
+  - **Screen readers** hear "40 minutes ago" instead of "40m", app groups
+    and Ad blocking's Pause buttons as groups, and a name on every search
+    field.
+- **Pull to refresh in a phone browser,** not only in the installed app.
+- **Fixes:** Reading shows in the navigation only when Miniflux is
+  connected. A locally built image on another Docker host gets the right
+  icon.
+
+Ignore, Mailcow, the Server tabs, pull to refresh and both fixes come from
+fir3drag0n's fork. Thank you.
+
 ## 1.17.0 (2026-11-18)
 
 - **Every app in one place:**

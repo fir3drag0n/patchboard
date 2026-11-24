@@ -550,7 +550,7 @@
  "Every catalog entry matches a container, and every running app is listed.": "Cada entrada do catálogo corresponde a um contêiner, e cada app rodando está listado.",
  "Every minute": "A cada minuto",
  "Every other device signs out. Locked out later? Set AUTH=none in the environment and restart.": "Os outros dispositivos são desconectados. Perdeu o acesso depois? Defina AUTH=none no ambiente e reinicie.",
- "Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.": "Cada sistema monitorado pelo Beszel entra no widget Hosts: CPU, memória, disco, rede e temperatura. Se um agente parar de responder ou um disco ultrapassar os limites de armazenamento, o problema aparece em Precisa de atenção.",
+ "Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. Another Docker host with the same name gets CPU by hour, its busiest containers and its disks on its Server tab. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.": "Cada sistema monitorado pelo Beszel entra no widget Hosts: CPU, memória, disco, rede e temperatura. Outro host Docker com o mesmo nome mostra a CPU por hora, os contêineres mais ativos e os discos na sua aba Servidor. Se um agente parar de responder ou um disco ultrapassar os limites de armazenamento, o problema aparece em Precisa de atenção.",
  "Every volume and drive in the Storage widget, with how full each volume is and each drive's health and temperature. A degraded or crashed volume, a failing drive, a full volume or a hot drive shows in Needs attention.": "Cada volume e disco no widget Armazenamento, com o espaço usado de cada volume e o estado e a temperatura de cada disco. Um volume degradado ou com falha, um disco com falha, um volume cheio ou um disco quente aparece em Precisa de atenção.",
  "Every volume and drive in the Storage widget, with how full each volume is and each drive's health and temperature. A full volume, a drive with abnormal health or a hot drive shows in Needs attention.": "Cada volume e disco no widget Armazenamento, com o espaço usado de cada volume e o estado e a temperatura de cada disco. Um volume cheio, um disco com estado anormal ou um disco quente aparece em Precisa de atenção.",
  "failed to sign in": "não conseguiu fazer login",
@@ -897,6 +897,7 @@
  "Yes": "Sim",
  "Your background, text and accent.": "Seu fundo, texto e destaque.",
  "Your cron jobs and backups join the Uptime widget. A job that misses its check-in shows in Needs attention.": "Suas tarefas cron e seus backups entram no widget Disponibilidade. Uma tarefa que deixar de confirmar a execução aparece em Precisa de atenção.",
+ "Every Mailcow container and the mail queue join the Uptime widget. A stopped container, or a queue longer than you allow, shows in Needs attention.": "Cada contêiner do Mailcow e a fila de e-mails entram no widget Disponibilidade. Um contêiner parado, ou uma fila acima do seu limite, aparece em Precisa de atenção.",
  "Your icon shows on every device.": "Seu ícone aparece em todos os dispositivos.",
  "Your own domains, comma-separated, e.g. example.com. Links on private and Tailscale addresses are always checked.": "Seus próprios domínios, separados por vírgula, ex.: example.com. Links em endereços privados e do Tailscale sempre são verificados.",
  "Your reverse proxy signs people in and passes their name along.": "Seu proxy reverso faz o login das pessoas e repassa o nome delas.",
@@ -1251,5 +1252,7 @@
  "Diun's webhook, with its token. Put it in Diun's DIUN_NOTIF_WEBHOOK_ENDPOINT:": "O webhook do Diun, com o token. Coloque-o em DIUN_NOTIF_WEBHOOK_ENDPOINT do Diun:",
  "Diun's webhook, with its token": "O webhook do Diun, com o token",
  "Selected: copy it": "Selecionado: copie",
- "This browser didn’t copy. Try again from another browser.": "Este navegador não copiou. Tente de novo em outro navegador."
+ "This browser didn’t copy. Try again from another browser.": "Este navegador não copiou. Tente de novo em outro navegador.",
+ "Containers": "Contêineres",
+ "This server": "Este servidor"
 }

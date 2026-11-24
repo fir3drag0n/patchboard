@@ -13,14 +13,13 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Running it anywhere
 
-- [ ] Unraid and TrueNAS app templates
+- [ ] Patchboard in the TrueNAS app catalog and Unraid's Community Applications
 - [ ] A Proxmox LXC script, and running from Node without Docker
 
 ### Polish
 
-- [ ] A walk-through of every color choice, screen by screen: each theme in light and dark, accents, e-ink and color e-ink, so all of it looks uniform and crafted
 - [ ] Accessibility audit: keyboard paths, screen-reader labels, contrast in every theme
-  - Covered: Home and editor keyboard paths, focus return, cancelled drafts, theme text contrast, accessible names, narrow reflow, forced-color graphics, actual Chromium zoom, Firefox text-only zoom, enlarged text, and phone tap targets and placeholders.
+  - Covered: Home and editor keyboard paths, focus return, cancelled drafts, contrast of every text in every theme and e-ink, accessible names, a read-through of every page's accessibility tree, narrow reflow, forced-color graphics, actual Chromium zoom, Firefox text-only zoom, enlarged text, and phone tap targets and placeholders.
   - Remaining: a spoken screen-reader walkthrough and native Windows contrast themes. See [Accessibility checks](ACCESSIBILITY.md).
 
 Open an issue if you want something here sooner or don't see it here.

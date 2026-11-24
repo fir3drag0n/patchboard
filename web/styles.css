@@ -94,9 +94,9 @@
   --ink-3: #626771;
   --head: #0b0c0e;
   --accent: #2563c9;
-  --ok: #1d7a45;
-  --warn: #9a5b00;
-  --crit: #c0362c;
+  --ok: #1c7643;
+  --warn: #965900;
+  --crit: #bd352b;
   --term-bg: #fbfbfc;
 
   --sq-up: color-mix(in srgb, var(--ink-3) 50%, var(--surface));
@@ -6579,7 +6579,25 @@ a.vw:hover {
   margin: 4px 0 6px;
 }
 
-/* Server, Unraid storage: each volume a bar with its share used. */
+/* Needs attention: Ignore sits after the alert, small, so the row stays one line. */
+.alert:has(.alert-ignore) {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.alert:has(.alert-ignore) > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-ignore {
+  font-size: 12px;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+/* Server, storage on Unraid, Synology, QNAP or another host: a bar per volume. */
 .nas-vols {
   display: grid;
   gap: 16px;
@@ -6619,24 +6637,6 @@ a.vw:hover {
   color: var(--ink-3);
 }
 
-/* Needs attention: Ignore sits after the alert, small, so the row stays one line. */
-.alert:has(.alert-ignore) {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.alert:has(.alert-ignore) > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-
-.alert-ignore {
-  font-size: 12px;
-  white-space: nowrap;
-  padding-top: 2px;
-}
-
 /* Server, another host: its containers one per line, two columns where there's room. */
 .host-ctrs {
   list-style: none;
@@ -6669,9 +6669,11 @@ a.vw:hover {
   white-space: nowrap;
 }
 
-/* Server: one tab per Docker host (DOCKER_HOSTS), this server first. */
-.server-hosts {
+/* Server: a tab per Docker host, this server first. */
+.server-hosts-bar {
   display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 4px 0 14px;
 }
 /* Fork: the tabs, and on the right two arrows that step through the machines. */
@@ -6686,6 +6688,13 @@ a.vw:hover {
 .vw-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
 .vw-dots i.is-on { background: var(--ok); }
 .vw-none { margin: 4px 0; }
+
+.server-hosts-bar .server-hosts {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+}
 
 /* ---------- Weather widget ---------- */
 
@@ -8858,6 +8867,11 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
 * {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--ink-3) 55%, transparent) transparent;
+}
+
+/* A short time's spoken form stays inside its own row, even one that scrolls sideways. */
+.ago {
+  position: relative;
 }
 
 .sr-only {
@@ -13736,6 +13750,11 @@ html[data-eink] :is(.seg button[aria-pressed='true'], .seg button[aria-selected=
   color: #fff;
 }
 
+/* A count in a selected tab is white on that black too, not quiet gray. */
+html[data-eink] :is(.seg button[aria-pressed='true'], .seg button[aria-selected='true'], .chip[aria-pressed='true'], .chip[aria-selected='true']) .dlp-count {
+  color: inherit;
+}
+
 /* The Monitor on e-ink: paper, ink, and the waffles in solid black. */
 .monitor.tint-eink {
   --bg: #fff;
@@ -15105,6 +15124,11 @@ html[data-eink][data-eink-color] .led[data-state='ok'] {
     width: 100%;
     margin-left: 0;
   }
+}
+
+/* Blocking's Pause buttons: a group for screen readers, no box of its own. */
+.dlp-pause {
+  display: contents;
 }
 
 .dlp-count {

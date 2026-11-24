@@ -470,7 +470,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'beszel',
     name: 'Beszel',
-    adds: 'Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.',
+    adds: 'Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. Another Docker host with the same name gets CPU by hour, its busiest containers and its disks on its Server tab. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.',
     env: ['BESZEL_URL', 'BESZEL_USERNAME', 'BESZEL_PASSWORD'],
     where: 'A Beszel user that can see your systems; make one with the read-only role in Beszel’s user settings. The address is the hub, port 8090.',
     source: true,
@@ -572,7 +572,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'mailcow',
     name: 'Mailcow',
-    adds: 'Every Mailcow container and the mail queue join the Uptime widget. A stopped container, or a queue past MAILCOW_QUEUE_MAX, shows in Needs attention.',
+    adds: 'Every Mailcow container and the mail queue join the Uptime widget. A stopped container, or a queue longer than you allow, shows in Needs attention.',
     env: ['MAILCOW_URL', 'MAILCOW_KEY'],
     optional: ['MAILCOW_QUEUE_MAX'],
     where: 'Mailcow: System, Configuration, Access, API, the read-only key, with the address Patchboard comes from as allowed IP.',

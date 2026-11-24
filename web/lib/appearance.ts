@@ -91,8 +91,8 @@ export const DEFAULTS: Appearance = {
 };
 
 export const ACCENTS: { id: string; name: string; dark: string; light: string }[] = [
-  { id: 'blue', name: 'Blue', dark: '#6ea8fe', light: '#2563c9' },
-  { id: 'teal', name: 'Teal', dark: '#5fd0c5', light: '#0f7d74' },
+  { id: 'blue', name: 'Blue', dark: '#6ea8fe', light: '#2461c5' },
+  { id: 'teal', name: 'Teal', dark: '#5fd0c5', light: '#0d7068' },
   // No green, red or amber: those mean ok, down and warning everywhere.
   { id: 'violet', name: 'Violet', dark: '#a99bff', light: '#5b4bd1' },
   { id: 'mono', name: 'None (white)', dark: '#f2f2f2', light: '#111111' },

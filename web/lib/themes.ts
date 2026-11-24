@@ -63,7 +63,7 @@ export const THEMES: ThemeDef[] = [
     light: {
       bg: '#f7f7f8', raised: '#efeff1', surface: '#e6e7ea', line: '#d3d5da', lineSoft: '#e4e5e9',
       ink: '#1f2328', ink2: '#454a52', ink3: '#626771', head: '#0b0c0e',
-      accent: '#2563c9', ok: '#1d7a45', warn: '#9a5b00', crit: '#c0362c', termBg: '#fbfbfc',
+      accent: '#2563c9', ok: '#1c7643', warn: '#965900', crit: '#bd352b', termBg: '#fbfbfc',
     },
   },
   {
@@ -79,7 +79,7 @@ export const THEMES: ThemeDef[] = [
     light: {
       bg: '#f4f6fb', raised: '#eceff7', surface: '#e1e6f1', line: '#cdd5e6', lineSoft: '#e1e6f1',
       ink: '#1a2233', ink2: '#3f4a62', ink3: '#5b6782', head: '#0b1220',
-      accent: '#3355cc', ok: '#1f7a55', warn: '#93600c', crit: '#bf3546', termBg: '#fafbfe',
+      accent: '#3355cc', ok: '#1d7451', warn: '#8d5c0c', crit: '#bb3445', termBg: '#fafbfe',
     },
   },
   {
@@ -95,7 +95,7 @@ export const THEMES: ThemeDef[] = [
     light: {
       bg: '#f4f7f3', raised: '#ecf1eb', surface: '#e1e9e0', line: '#cdd9cc', lineSoft: '#e0e8df',
       ink: '#1b241d', ink2: '#3f4c42', ink3: '#5a6a5e', head: '#0d140f',
-      accent: '#2a6b66', ok: '#4f7a12', warn: '#93600c', crit: '#b23a2a', termBg: '#fafcf9',
+      accent: '#2a6b66', ok: '#4a7211', warn: '#8e5d0c', crit: '#b23a2a', termBg: '#fafcf9',
     },
   },
   {
@@ -111,7 +111,7 @@ export const THEMES: ThemeDef[] = [
     light: {
       bg: '#f7f5fb', raised: '#f0edf6', surface: '#e7e2f1', line: '#d5cde6', lineSoft: '#e7e2f1',
       ink: '#221b2e', ink2: '#4a4058', ink3: '#685d7a', head: '#120c1c',
-      accent: '#6a4fd1', ok: '#2d7a5a', warn: '#94600c', crit: '#b8344a', termBg: '#fcfbfe',
+      accent: '#6a4fd1', ok: '#2a7254', warn: '#8d5b0b', crit: '#b8344a', termBg: '#fcfbfe',
     },
   },
   {
@@ -127,7 +127,7 @@ export const THEMES: ThemeDef[] = [
     light: {
       bg: '#fbf9f4', raised: '#f4f1ea', surface: '#ebe7dd', line: '#dad3c5', lineSoft: '#ebe6dc',
       ink: '#22201c', ink2: '#4c4840', ink3: '#69645a', head: '#12110e',
-      accent: '#2f5f7a', ok: '#3d7a55', warn: '#a35c00', crit: '#b0402f', termBg: '#fdfcf9',
+      accent: '#2f5f7a', ok: '#39724f', warn: '#9a5700', crit: '#b0402f', termBg: '#fdfcf9',
     },
   },
 ];
@@ -227,9 +227,9 @@ export function tokensFrom(c: CustomColors): Tokens {
     ink3: mix(c.ink, c.bg, 0.4),
     head: mix(c.ink, dark ? '#ffffff' : '#000000', 0.5),
     accent: c.accent,
-    ok: dark ? '#6fbf8a' : '#1d7a45',
-    warn: dark ? '#e3a253' : '#9a5b00',
-    crit: dark ? '#ef6b5e' : '#c0362c',
+    ok: dark ? '#6fbf8a' : '#1c7643',
+    warn: dark ? '#e3a253' : '#965900',
+    crit: dark ? '#ef6b5e' : '#bd352b',
     termBg: mix(c.bg, dark ? '#000000' : '#ffffff', 0.3),
   };
 }

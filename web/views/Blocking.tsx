@@ -165,14 +165,15 @@ function Status({ id, data, ro }: { id: Id; data: DnsData | null; ro: boolean })
       {!ro && (
         <span className="dlp-client-actions">
           {data.protecting ? (
-            <>
-              <span className="lib-total">{tr('Pause')}</span>
+            // A group, so a screen reader says "Pause" before "5 min".
+            <span className="dlp-pause" role="group" aria-label={tr('Pause')}>
+              <span className="lib-total" aria-hidden>{tr('Pause')}</span>
               {[5, 30, 60].map((m) => (
                 <button key={m} type="button" className="text-button" disabled={busy} onClick={() => void act(`pause-${m}`)}>
                   {m < 60 ? tr('{n} min', { n: m }) : tr('1 h')}
                 </button>
               ))}
-            </>
+            </span>
           ) : (
             <button type="button" className="text-button" disabled={busy} onClick={() => void act('resume')}>
               {tr('Turn back on')}

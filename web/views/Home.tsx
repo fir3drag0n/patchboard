@@ -26,10 +26,9 @@ import type {
 } from '../../shared/types.ts';
 import { Board, cachedWidgetTypes, Vitals } from '../board/Board.tsx';
 import { getAppearance, useAppearance } from '../lib/appearance.ts';
-import { Empty, Episode, Ident, Led, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
+import { Ago, Empty, Episode, Ident, Led, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
 import {
   count,
-  ago,
   agoLong,
   breakable,
   clock,
@@ -459,13 +458,13 @@ export function Inbox({ now }: { now: number }) {
                 <a href={webmail} target="_blank" rel="noreferrer" title={m.preview}>
                   <span className="mail-from">{m.from}</span>
                   <span className="mail-subject">{m.subject}</span>
-                  <time className="mail-time">{ago(m.receivedAt, now)}</time>
+                  <Ago at={m.receivedAt} now={now} className="mail-time" />
                 </a>
               ) : (
                 <div title={m.preview}>
                   <span className="mail-from">{m.from}</span>
                   <span className="mail-subject">{m.subject}</span>
-                  <time className="mail-time">{ago(m.receivedAt, now)}</time>
+                  <Ago at={m.receivedAt} now={now} className="mail-time" />
                 </div>
               )}
             </li>
@@ -503,7 +502,7 @@ export function FeedsBrief({ now }: { now: number }) {
                 <span className="feed-title">{e.title}</span>
                 <span className="feed-meta">
                   <span title={e.feed}>{e.feed}</span>
-                  <time>{ago(e.publishedAt, now)}</time>
+                  <Ago at={e.publishedAt} now={now} />
                 </span>
               </Link>
             </li>
@@ -856,7 +855,7 @@ export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number 
               <span className="change-text">
                 <Ident>{c.subject}</Ident> {c.kind === 'container.action' ? (actionText[c.detail ?? ''] ?? changeText[c.kind]) : c.kind === 'container.restarted' && c.detail === 'updated' ? 'updated' : changeText[c.kind]}
               </span>
-              <time>{ago(c.at, now)}</time>
+              <Ago at={c.at} now={now} />
             </Link>
           </li>
         ))}
@@ -945,7 +944,7 @@ function PosterShelf({ items, now, showServer, fit }: { items: MergedItem[]; now
               <span className="poster-title">{r.title}</span>
               <span className="poster-sub">
                 {r.subtitle && <Episode text={r.subtitle} />}
-                {now !== undefined && <time>{ago(r.addedAt, now)}</time>}
+                {now !== undefined && <Ago at={r.addedAt} now={now} />}
                 {showServer && <span className="poster-src">{(r.servers ?? [r.server]).map((s) => s.label).join(' + ')}</span>}
               </span>
             </>

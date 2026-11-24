@@ -76,6 +76,7 @@ import type { DnsDomains } from './adapters/dns.ts';
 import type { IndexerControl } from './adapters/indexers.ts';
 import type { SubtitleControl } from './adapters/subtitles.ts';
 import { MINUTE, SECOND } from './adapters/adapter.ts';
+import type { HostDetail } from './adapters/beszel.ts';
 import { DEPENDS, demoBackups, demoChecks, demoMem, demoStats, demoTruenas, hash, IMAGES, PROJECTS } from './demo-ops.ts';
 
 export { demoInspect, demoRunbook, demoSampleHistory } from './demo-ops.ts';
@@ -226,6 +227,28 @@ const DEMO_PI: Container[] = [
   { id: '9a1b2c3d4e5f', name: 'pihole@pi', host: 'pi', image: 'pihole/pihole:latest', state: 'running', status: 'Up 12 days (healthy)', health: 'healthy', project: 'dns', service: 'pihole', created: Date.now() - 12 * D },
   { id: '8b2c3d4e5f6a', name: 'homebridge@pi', host: 'pi', image: 'homebridge/homebridge:latest', state: 'running', status: 'Up 12 days', health: null, project: 'home', service: 'homebridge', created: Date.now() - 12 * D },
 ];
+
+/** The Pi's page on Server: a week of CPU by hour, its two containers and its disks, as Beszel gives them. */
+export function demoHostDetail(host: string): HostDetail | null {
+  if (host !== 'pi') return null;
+  const now = Date.now();
+  const series: [number, number][] = [];
+  for (let t = now - 7 * D; t < now; t += H) {
+    const hour = new Date(t).getHours();
+    series.push([t, 4 + (hour >= 2 && hour < 4 ? 30 : 0) + 3 * Math.abs(Math.sin(t / 7_000_000))]);
+  }
+  return {
+    series,
+    containers: [
+      { name: 'pihole', cpu: 1.8, memBytes: 96 * 1024 * 1024 },
+      { name: 'homebridge', cpu: 0.9, memBytes: 210 * 1024 * 1024 },
+    ],
+    volumes: [
+      { name: 'System', used: 12.1 * 1024 ** 3, total: 29.5 * 1024 ** 3 },
+      { name: 'usb-backup', used: 610 * 1024 ** 3, total: 932 * 1024 ** 3 },
+    ],
+  };
+}
 
 const sonarrUpcoming = (): ReleaseItem[] => [
   // Aired this morning and not downloaded yet: This week offers Search.
@@ -1314,6 +1337,7 @@ export function demoAdapters(): Adapter[] {
     // Beszel's systems join the Glances hosts in one widget.
     demo<GlancesData>('beszel', 'Beszel', 30 * SECOND, () => ({
       hosts: [
+        { url: 'http://beszel.local:8090/system/pi', ok: true, name: 'pi', os: 'Debian 12', cpuPct: 6 + 3 * Math.sin(Date.now() / 31_000), cores: 4, load: 0.3, memPct: 38, memUsed: 0, memTotal: 0, disks: [{ mount: '/', used: 0, size: 0, pct: 41 }], rx: 0.2e6, tx: 0, tempC: 51, uptime: '12d 2h' },
         { url: 'http://beszel.local:8090/system/office-pc', ok: true, name: 'office-pc', os: 'Linux 6.8', cpuPct: 9 + 4 * Math.sin(Date.now() / 28_000), cores: 12, load: 0.8, memPct: 47, memUsed: 0, memTotal: 0, disks: [{ mount: '/', used: 0, size: 0, pct: 54 }], rx: 0.8e6, tx: 0, tempC: 44, uptime: '3d 6h' },
       ],
     })),
@@ -1517,6 +1541,6 @@ export function demoFeedItems(): { items: import('../shared/types.ts').FeedItem[
 /** Demo Releases: plausible versions for whatever projects the widget lists. */
 export function demoReleases(repos: string[]): import('../shared/types.ts').ReleaseInfo[] {
   const now = Date.now();
-  const known: Record<string, string> = { 'immich-app/immich': 'v2.2.3', 'jellyfin/jellyfin': 'v10.11.2', 'sourpatchdad/patchboard': 'v1.17.0' };
+  const known: Record<string, string> = { 'immich-app/immich': 'v2.2.3', 'jellyfin/jellyfin': 'v10.11.2', 'sourpatchdad/patchboard': 'v1.18.0' };
   return repos.map((repo, i) => ({ repo, version: known[repo] ?? `v1.${(i * 7) % 12}.${i % 5}`, at: now - (i * 2 + 1) * 86_400_000, url: `https://github.com/${repo}/releases` }));
 }

@@ -11,13 +11,14 @@ import { useLanding } from '../lib/landing.ts';
 import type { BackupRun, BackupsData, DockerData, GlancesData, GlancesHost, NasSystem, Pool, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
 import { Spark, Split } from '../components/Spark.tsx';
 import { HourHeatmap } from '../components/Squares.tsx';
-import { Empty, Led, Meter, Section } from '../components/ui.tsx';
+import { Ago, Empty, Led, Meter, Section } from '../components/ui.tsx';
 import { useHistory } from '../lib/api.ts';
-import { ago, agoLong, duration, pct, plural, shortDate, size, speed, temp, uptime } from '../lib/format.ts';
+import { agoLong, duration, pct, plural, shortDate, size, speed, temp, uptime } from '../lib/format.ts';
 import { storageLevel, useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { locale } from '../lib/region.ts';
 import { t } from '../lib/i18n.ts';
+import { tabKeys } from '../lib/tabs.ts';
 
 const DAY = 86_400_000;
 
@@ -67,14 +68,14 @@ export function Server() {
   const others = (docker?.hosts ?? []).map((h) => h.name);
   const host = others.includes(params.get('host') ?? '') ? params.get('host')! : null;
   const nasSource = NAS_SOURCES.map((id) => snap.sources[id]).find(Boolean);
-  const localName = (nasSource?.data as NasSystem | null)?.name ?? nas?.hostname ?? 'This server';
-  // Fork: arrows on the right step through the machines, round and round.
+  const localName = nas?.hostname ?? (nasSource?.data as NasSystem | null)?.name ?? t('This server');
   const all = [null, ...others];
   const go = (h: string | null) => setParams(h ? { host: h } : {});
+  // Fork: arrows on the right step through the machines, round and round.
   const stepHost = (d: number) => go(all[(all.indexOf(host) + d + all.length) % all.length]);
   const picker = others.length > 0 && (
     <div className="server-hosts-bar">
-      <div className="seg server-hosts" role="tablist" aria-label="Server">
+      <div className="seg server-hosts" role="tablist" aria-label={t('Server')} onKeyDown={tabKeys}>
         {all.map((h) => (
           <button key={h ?? ''} type="button" role="tab" aria-selected={host === h} tabIndex={host === h ? 0 : -1} onClick={() => go(h)}>
             {h ?? localName}
@@ -301,7 +302,7 @@ function NasStorage({ nas, label }: { nas: NasSystem | null; label: string }) {
   );
 }
 
-/** Each volume a bar with its share used: Unraid's array and pools, an Oracle's disks. */
+/** Each volume a bar with its share used: Unraid's array and pools, another host's disks. */
 function VolumeBars({ volumes }: { volumes: { name: string; used: number; total: number; status?: string }[] }) {
   const limits = useLimits();
   return (
@@ -325,7 +326,7 @@ function VolumeBars({ volumes }: { volumes: { name: string; used: number; total:
   );
 }
 
-/** Beszel names a system as it likes ("Oracle 3"); Docker hosts are named in DOCKER_HOSTS ("oracle3"). */
+/** Beszel names a system as it likes ("Media Box"); Docker hosts are named in DOCKER_HOSTS ("mediabox"). */
 const sameHost = (a: string, b: string) => a.toLowerCase().replace(/[^a-z0-9]/g, '') === b.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 /** Another Docker host: its resources from Beszel, its containers, its backups and its links. */
@@ -352,11 +353,11 @@ function OtherServer({ host, picker, docker, now }: { host: string; picker: Reac
       <div className="detail-grid">
         <div className="detail-main">
           <HostContainers host={host} containers={containers} error={state && !state.ok ? state.error : undefined} />
-          {backups && (
+          {/* Backup jobs named after this host; none, no section. */}
+          {backups && (pick(backups.db).length > 0 || pick(backups.files).length > 0) && (
             <Section title="Backups" count="nightly" className="backups-sec" id="backups">
               <BackupSet title="Databases" runs={pick(backups.db)} now={now} />
               <BackupSet title="Files" runs={pick(backups.files)} now={now} />
-              {!pick(backups.db).length && !pick(backups.files).length && <Empty>No backup job is named {host}.</Empty>}
             </Section>
           )}
         </div>
@@ -756,7 +757,7 @@ function NasAlerts({ nas, now }: { nas: TruenasData; now: number }) {
               <Led state={LEVEL_TONE[a.level] === 'crit' ? 'crit' : LEVEL_TONE[a.level] === 'warn' ? 'warn' : 'idle'} />
               <span className="nas-level mono">{a.level.toLowerCase()}</span>
               <span className="nas-text">{a.text}</span>
-              {a.at && <time>{ago(a.at, now)}</time>}
+              {a.at && <Ago at={a.at} now={now} />}
             </li>
           ))}
         </ul>

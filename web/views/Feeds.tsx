@@ -11,8 +11,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { FeedEntry, FeedsResponse } from '../../shared/types.ts';
 import { CustomizePage } from '../components/PageCustomize.tsx';
-import { Empty } from '../components/ui.tsx';
-import { ago, count } from '../lib/format.ts';
+import { Ago, Empty } from '../components/ui.tsx';
+import { count } from '../lib/format.ts';
 import { useNow, useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 import { locale } from '../lib/region.ts';
@@ -383,7 +383,7 @@ export function Feeds() {
                 <span className="entry-title">{e.title}</span>
                 <span className="feed-meta">
                   <span>{e.feed}</span>
-                  <time>{ago(e.publishedAt, now)}</time>
+                  <Ago at={e.publishedAt} now={now} />
                   {e.readingTime > 0 && <span>{e.readingTime} min</span>}
                 </span>
                 <Thumb src={e.image} className="entry-thumb" />
@@ -495,7 +495,7 @@ function Edition(props: {
         <span className="edition-lead-text">
           <span className="feed-card-meta">
             <span>{lead.feed}</span>
-            <time>{ago(lead.publishedAt, now)}</time>
+            <Ago at={lead.publishedAt} now={now} />
           </span>
           <span className="edition-lead-title">{lead.title}</span>
           <span className="feed-card-text">{excerpt(lead.content, 280)}</span>
@@ -521,7 +521,7 @@ function Edition(props: {
                   <Thumb src={e.image} className="feed-card-img" />
                   <span className="feed-card-meta">
                     <span>{e.feed}</span>
-                    <time>{ago(e.publishedAt, now)}</time>
+                    <Ago at={e.publishedAt} now={now} />
                   </span>
                   <span className="feed-card-title">{e.title}</span>
                   <span className="feed-card-text">{excerpt(e.content, 140)}</span>
@@ -541,7 +541,7 @@ function Edition(props: {
                   <span className="entry-title">{e.title}</span>
                   <span className="feed-meta">
                     <span>{e.feed}</span>
-                    <time>{ago(e.publishedAt, now)}</time>
+                    <Ago at={e.publishedAt} now={now} />
                     {e.readingTime > 0 && <span>{e.readingTime} min</span>}
                   </span>
                 </button>

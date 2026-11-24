@@ -26,6 +26,7 @@ jobs:
       - run: npx playwright-core install --with-deps chromium firefox
       - run: node scripts/check-home.mjs
       - run: node scripts/check-accessibility.mjs
+      - run: node scripts/check-contrast.mjs
       - run: node scripts/check-zoom.mjs
       - run: node scripts/check-text-zoom.mjs
       - run: node scripts/check-fit.mjs

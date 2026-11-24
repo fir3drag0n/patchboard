@@ -165,8 +165,10 @@ lists any string the catalog is missing, any it no longer needs, and any `{value
 A theme is data: an entry in `web/lib/themes.ts` with dark and light color
 tokens and a type pairing. `web/lib/appearance.ts` turns it into CSS
 variables on `<html>`, and every rule in `web/styles.css` uses those tokens.
-Keep `ok`, `warn` and `crit` apart from `accent`, and quiet text (`ink3`) at
-4.5:1 or better on `bg`. No text goes below 11px: labels and `<small>`
+Keep `ok`, `warn` and `crit` apart from `accent`. All text colors, quiet
+text (`ink3`), the accent, every accent preset and the three status colors
+hold 4.5:1 or better on `bg`, `raised` and `surface`; `themes.test.ts`
+checks each pair. No text goes below 11px: labels and `<small>`
 shrink with their line down to that floor. The inline script in
 `web/index.html` paints the saved theme before the page loads; keep it in
 step with `appearance.ts`.

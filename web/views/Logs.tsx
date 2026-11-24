@@ -102,6 +102,7 @@ export function Logs() {
           className="field"
           type="search"
           placeholder="Filter containers"
+          aria-label="Filter containers"
           value={listFilter}
           onChange={(e) => setListFilter(e.target.value)}
         />
@@ -153,7 +154,7 @@ export function Logs() {
                 </span>
               </div>
               <div className="logs-tools">
-                <input className="field" type="search" placeholder="Filter lines" value={filter} onChange={(e) => setFilter(e.target.value)} />
+                <input className="field" type="search" placeholder="Filter lines" aria-label="Filter lines" value={filter} onChange={(e) => setFilter(e.target.value)} />
                 <label className="toggle">
                   <input type="checkbox" checked={follow} onChange={(e) => setFollow(e.target.checked)} /> Follow
                 </label>

@@ -52,12 +52,20 @@ as a card on this device, without changing its saved setting. Home always
 keeps it; another board, say one just for media, can remove it, and its
 status line then leads back to Home's list.
 
+A container you stopped on purpose gets **Ignore** beside it, and its page
+has the same button. It stays out of Needs attention until it runs again,
+so a later crash still shows.
+
 ## Pages
 
 **Server:** pools, datasets, backups, disks, CPU by hour, and when the pool
 fills at this rate. On a short landscape screen, such as a tablet on the
 wall, the page packs into three columns and fits without scrolling. Open it
 from a household link and the tablet can look but not change anything.
+Each of your other Docker hosts gets a tab: its containers, stopped ones
+first, and with Beszel connected its CPU, memory, disks, CPU by hour and
+busiest containers. Unraid, Synology and QNAP show their volumes and disks
+here too.
 
 **Monitor:** the server on one full screen, built for a tablet on the wall.
 Live lines for CPU, memory and network; CPU and memory as a hundred squares

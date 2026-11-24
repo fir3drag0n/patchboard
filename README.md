@@ -31,6 +31,19 @@ curl -fsSL $base/examples/docker-compose.yml -o docker-compose.yml
 docker compose up -d
 ```
 
+On TrueNAS SCALE, open Apps, Discover Apps, the three dots, Install via
+YAML, and paste [examples/truenas.yml](examples/truenas.yml) with your pool's
+name in place of `tank`.
+
+On Unraid, fetch the template in a terminal, then open Docker, Add
+Container, pick Patchboard and press Apply:
+
+```sh
+base=https://raw.githubusercontent.com/sourpatchdad/patchboard/main
+curl -fsSL $base/examples/unraid/patchboard.xml \
+  -o /boot/config/plugins/dockerMan/templates-user/my-Patchboard.xml
+```
+
 Sign-in is off by default, for a home network. Read [SECURITY.md](SECURITY.md)
 before you expose it anywhere: turn on a password in Settings, Connections,
 Sign-in and keys, or use `AUTH=forward` behind Authelia, Authentik or

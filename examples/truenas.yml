@@ -1,0 +1,21 @@
+# TrueNAS SCALE: Apps, Discover Apps, the three dots, Install via YAML.
+# Name it patchboard, paste this, change tank to your pool, and Save.
+# TrueNAS updates it from Apps; Patchboard leaves its own update to TrueNAS.
+
+services:
+  patchboard:
+    image: ghcr.io/sourpatchdad/patchboard:latest
+    container_name: patchboard
+    restart: unless-stopped
+    environment:
+      - TZ=America/New_York # your time zone
+    ports:
+      # Anyone who can reach this port can use Patchboard until you turn on
+      # a password (Settings, Connections, Sign-in and keys). Before a tunnel
+      # or a forwarded port, read SECURITY.md.
+      - "3200:3200"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Settings, boards, history and the encrypted keys, on your pool so
+      # TrueNAS snapshots and backs them up.
+      - /mnt/tank/apps/patchboard:/data

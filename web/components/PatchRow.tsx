@@ -2,6 +2,7 @@
 // with a scribble-strip label under each jack. The LED shows container state;
 // clicking a jack opens the service.
 
+import { useId } from 'react';
 import { Link } from 'react-router-dom';
 import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import { useStore } from '../lib/store.tsx';
@@ -14,6 +15,7 @@ import { alertLevelFor } from '../lib/attention.ts';
 export function PatchRow({ names = false, groups }: { names?: boolean; groups?: string[] }) {
   const { snap } = useStore();
   const nums = useAppNumbers();
+  const id = useId();
   if (!snap) return <div className="patchrow patchrow-loading" aria-hidden />;
   const containers = containerMap(snap);
   const shown = snap.catalog.groups.filter((g) => g.services.length && (!groups || groups.includes(g.name)));
@@ -22,9 +24,10 @@ export function PatchRow({ names = false, groups }: { names?: boolean; groups?: 
 
   return (
     <nav className={`patchrow ${names ? '' : 'icons-only'}`} aria-label="Services">
-      {shown.map((g) => (
-        <div className="bay" key={g.name}>
-          <span className="bay-name">{g.name}</span>
+      {shown.map((g, i) => (
+        // A group named by its bay label, so a screen reader says "Acquire" on the way in.
+        <div className="bay" key={g.name} role="group" aria-labelledby={`${id}-bay-${i}`}>
+          <span className="bay-name" id={`${id}-bay-${i}`}>{g.name}</span>
           <Roving className="bay-jacks">
             {g.services.map((s) => {
               const ck = checkFor(snap, s.name);
