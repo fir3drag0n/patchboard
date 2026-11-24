@@ -202,10 +202,11 @@ function Sheet({ w, id }: { w: WeatherData; id: string }) {
         <text className="bp-small" x="13.4" y="28">
           {[t('Weather'), ...place].join(' · ')}
         </text>
-        <text className="bp-small" x="307" y="19" textAnchor="end">
+        {/* Short of the sheet's top-right corner, where a TV can draw its own indicators over the page. */}
+        <text className="bp-small" x="288" y="19" textAnchor="end">
           {new Date(now).toLocaleDateString(locale(), { weekday: 'long', month: 'long', day: 'numeric' })}
         </text>
-        <text className="bp-head" x="307" y="27.5" textAnchor="end">
+        <text className="bp-head" x="288" y="27.5" textAnchor="end">
           {new Date(now).toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !clock24 })}
         </text>
 

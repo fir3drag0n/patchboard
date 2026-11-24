@@ -15,7 +15,8 @@
   temperature, dew point and pressure called out at its corners. The next
   24 hours sit on the grid, and the week runs as dimension lines on one
   scale. On a screen too narrow to read it, the Display style takes its
-  place.
+  place. The date and time keep clear of the top-right corner, where a
+  Fire TV draws its microphone indicator.
 - **Cameras from a TV remote:** on a wall screen, up and down mark a
   camera, the arrows move between them without turning the page, and the
   centre button opens it live. Back, or an arrow past the last camera,
