@@ -54,9 +54,10 @@ function Station({ cx, cy, r, cloud, dir, kmh, hatch }: { cx: number; cy: number
     const dx = Math.sin(a);
     const dy = -Math.cos(a);
     // Feathers lean off the staff to one side, as the convention draws them.
-    const fx = -dy * 7 + dx * 2.4;
-    const fy = dx * 7 + dy * 2.4;
-    const len = r + 24;
+    const fx = -dy * 6 + dx * 2.2;
+    const fy = dx * 6 + dy * 2.2;
+    // Short enough that a north or south wind's barb clears the panel's header and floor.
+    const len = r + 18;
     const at = (d: number) => [cx + dx * d, cy + dy * d] as const;
     const [sx, sy] = at(r);
     const [tx, ty] = at(len);

@@ -11,7 +11,8 @@
 - **The weather as a drawing sheet:** the weather widget's Drawing style
   matches the car's engineering drawing, with the same border, pen and
   title block. It plots the conditions as a weather station does: cloud
-  cover in the circle, a barb for the wind, and temperature, dew point and
+  cover in the circle, a barb for the wind's direction and speed, and
+  temperature, dew point and
   pressure called out at its corners. The next 24 hours sit on the grid,
   and the week runs as dimension lines on one scale. On a screen too
   narrow to read it, the Display style takes its place.
