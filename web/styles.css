@@ -17473,3 +17473,6 @@ html[data-eink] .wd-icon .wd-sun path {
 .wsh .wsh-alert.is-severe text {
   fill: var(--crit) !important;
 }
+
+/* Fork: Ignore under a header alert, small and right-aligned like the line. */
+.head-alert-ignore { display: flex; justify-content: flex-end; font-size: 12px; }

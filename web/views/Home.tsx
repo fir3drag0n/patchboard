@@ -255,6 +255,7 @@ function HeaderWeatherChart({ weather, clock24, unit }: { weather: WeatherData; 
  * worst first, each one a link to its fix. Three show; the rest open in place.
  */
 function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
+  const { snap } = useStore();
   const [all, setAll] = useState(false);
   // On a phone the why stays folded, like a tooltip: tap a line without a link to read it.
   const [told, setTold] = useState<string | null>(null);
@@ -330,6 +331,12 @@ function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
           </button>
         ) : (
           <span tabIndex={-1}>{body}</span>
+        )}
+        {/* Fork: an offline UniFi device can be ignored right here, too. */}
+        {!snap?.readOnly && a.id.startsWith('unifi-') && (
+          <div className="head-alert-ignore">
+            <AlertIgnoreButton id={a.id} ignored={false} />
+          </div>
         )}
       </li>
     );
