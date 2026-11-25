@@ -39,7 +39,7 @@ building, against a temporary demo database; it never uses your saved boards or 
 
 ## Contrast in every look
 
-`npm run test:contrast` opens 17 pages in all ten theme looks (five themes,
+`npm run test:contrast` opens 17 pages in all twelve theme looks (six themes,
 dark and light), e-ink and color e-ink. It measures each visible text
 against the color painted behind it and fails under 4.5:1, or 3:1 for large
 text. Text over a picture, disabled controls and faded (stopped) apps are

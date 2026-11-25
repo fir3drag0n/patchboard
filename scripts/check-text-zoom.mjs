@@ -131,5 +131,8 @@ try {
   browser.kill();
   server.kill();
   await new Promise((r) => setTimeout(r, 800));
-  rmSync(dir, { recursive: true, force: true });
+  // Windows can hold the server's files a moment after it stops: retry, and never fail a check that passed over a temp folder.
+  try {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  } catch {}
 }

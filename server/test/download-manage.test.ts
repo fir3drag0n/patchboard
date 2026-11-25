@@ -83,3 +83,10 @@ test('qBittorrent: remove keeps the files, delete takes them, and a link is adde
     server.close();
   }
 });
+
+test("qBittorrent: a torrent being checked shows its own share done, not the shared running total", () => {
+  const t = { hash: 'h', name: 'n', progress: 0.5, size: 1000, completed: 18_500_000_000, dlspeed: 0, upspeed: 0, eta: 8_640_000, ratio: 0, category: 'tv', added_on: 1_700_000_000, tracker: '' };
+  const checking = fromQbit({ ...t, state: 'checkingDL' });
+  assert.equal(checking.state, 'checking');
+  assert.equal(checking.done, 500);
+});

@@ -183,10 +183,59 @@ export async function eligibility(c: Container): Promise<UpdateEligibility> {
 
 const jobs = new Map<string, UpdateJob & { listeners: Set<(j: UpdateJob) => void>; oldImageId?: string; compose?: string[] }>();
 let running: string | null = null;
+/** Containers whose update is being set up (eligibility, inspect), so a double click makes one job. */
+const preparing = new Set<string>();
+/** Updates waiting their turn: one runs at a time, the next starts when it ends. */
+const queue: { j: Job; begin: () => Promise<void> }[] = [];
 
 function publicJob(j: UpdateJob): UpdateJob {
-  const { id, container, kind, status, steps, log, startedAt, finishedAt, from, to, error } = j;
-  return { id, container, kind, status, steps, log, startedAt, finishedAt, from, to, error };
+  const { id, container, kind, status, steps, log, startedAt, finishedAt, from, to, error, waitingFor } = j;
+  return { id, container, kind, status, steps, log, startedAt, finishedAt, from, to, error, waitingFor };
+}
+
+/** An update for this container that is running or waiting, if there is one. */
+function activeJobFor(container: string): Job | undefined {
+  return [...jobs.values()].find((j) => j.container === container && (j.status === 'running' || j.status === 'queued'));
+}
+
+/** The container whose job holds the slot now. */
+const holder = () => (running && running !== 'starting' ? (jobs.get(running)?.container ?? '') : '');
+
+/**
+ * Run `begin` now if nothing else runs, or queue it. A queued job says what it
+ * waits for, and starts on its own when the slot frees: `begin` must call
+ * `release()` when it ends, whether it worked or not.
+ */
+function schedule(j: Job, begin: () => Promise<void>): void {
+  if (!running) {
+    running = j.id;
+    void begin();
+    return;
+  }
+  j.status = 'queued';
+  j.waitingFor = holder() || queue[queue.length - 1]?.j.container;
+  for (const s of j.steps) s.status = 'waiting';
+  queue.push({ j, begin });
+  emit(j);
+}
+
+/** The running job ended: hand the slot to the next one in line. */
+function release(): void {
+  running = null;
+  const next = queue.shift();
+  if (!next) return;
+  running = next.j.id;
+  next.j.status = 'running';
+  next.j.waitingFor = undefined;
+  next.j.startedAt = Date.now();
+  next.j.steps[0].status = 'running';
+  emit(next.j);
+  // The rest of the line now waits for this one.
+  for (const q of queue) {
+    q.j.waitingFor = next.j.container;
+    emit(q.j);
+  }
+  void next.begin();
 }
 
 export function getJob(id: string): UpdateJob | undefined {
@@ -266,17 +315,18 @@ async function waitHealthy(name: string, isAnswering: () => Promise<boolean | nu
 type Job = UpdateJob & { listeners: Set<(j: UpdateJob) => void>; oldImageId?: string; compose?: string[] };
 
 export async function startUpdate(c: Container, isAnswering: () => Promise<boolean | null>, onDone: () => void): Promise<UpdateJob> {
-  if (running) throw new Error(`Another update is running (${jobs.get(running)?.container ?? 'starting'}).`);
-  // Claim the slot before the first await, so two quick clicks can't both start.
-  running = 'starting';
+  // Pressed again while it runs or waits: the same job, not a second one.
+  const active = activeJobFor(c.name);
+  if (active) return publicJob(active);
+  if (preparing.has(c.name)) throw new Error('This update is starting.');
+  preparing.add(c.name);
   let r: Inspect;
   try {
     const el = await eligibility(c);
     if (!el.ok) throw new Error(el.reason);
     r = await inspect(c.name);
-  } catch (err) {
-    running = null;
-    throw err;
+  } finally {
+    preparing.delete(c.name);
   }
   const labels = r.Config.Labels ?? {};
   const dir = labels['com.docker.compose.project.working_dir'];
@@ -303,9 +353,8 @@ export async function startUpdate(c: Container, isAnswering: () => Promise<boole
     compose,
   };
   jobs.set(j.id, j);
-  running = j.id;
 
-  void (async () => {
+  schedule(j, async () => {
     try {
       await run(j, [...compose, 'pull', service], dir);
       const fresh = await imageId(r.Config.Image);
@@ -344,11 +393,11 @@ export async function startUpdate(c: Container, isAnswering: () => Promise<boole
       j.status = 'failed';
     } finally {
       j.finishedAt = Date.now();
-      running = null;
       emit(j);
       onDone();
+      release();
     }
-  })();
+  });
   return publicJob(j);
 }
 
@@ -358,13 +407,14 @@ export async function startRollback(fromJobId: string, onDone: () => void): Prom
   if (!prev?.oldImageId || !prev.compose) throw new Error('Nothing to roll back to.');
   // Only after a recreate: a failed pull left the container on its old image.
   if (prev.steps.find((s) => s.key === 'recreate')?.status === 'waiting') throw new Error('Nothing changed, so there is nothing to roll back.');
-  if (running) throw new Error('Another update is running.');
+  // A rollback is urgent, so it doesn't wait in line: it asks you to wait instead.
+  if (running) throw new Error(holder() ? `${holder()} is updating. Roll back once it finishes.` : 'Another update is starting. Try again in a moment.');
   running = 'starting';
   let r: Inspect;
   try {
     r = await inspect(prev.container);
   } catch (err) {
-    running = null;
+    release();
     throw err;
   }
   const labels = r.Config.Labels ?? {};
@@ -421,9 +471,9 @@ export async function startRollback(fromJobId: string, onDone: () => void): Prom
       j.status = 'failed';
     } finally {
       j.finishedAt = Date.now();
-      running = null;
       emit(j);
       onDone();
+      release();
     }
   })();
   return publicJob(j);
@@ -476,6 +526,8 @@ export function startDemoRollback(fromJobId: string, onDone: () => void): Update
 
 /** Demo mode: the same job shape, with timed steps and no Docker. */
 export function startDemoUpdate(name: string, onDone: () => void): UpdateJob {
+  const active = activeJobFor(name);
+  if (active) return publicJob(active);
   const j: Job = {
     id: randomUUID(),
     container: name,
@@ -493,8 +545,10 @@ export function startDemoUpdate(name: string, onDone: () => void): UpdateJob {
   };
   jobs.set(j.id, j);
   const lines = ['latest: Pulling from linuxserver/' + name, 'Digest: sha256:9b1e…', 'Status: Downloaded newer image', ` Container ${name}  Recreate`, ` Container ${name}  Started`];
-  let i = 0;
-  const tick = setInterval(() => {
+  // It waits in line like a real update, so the demo shows the queue too.
+  schedule(j, async () => {
+    let i = 0;
+    const tick = setInterval(() => {
     if (i < lines.length) j.log.push(lines[i]);
     if (i === 2) {
       j.to = '8c41e07ab2d9';
@@ -512,9 +566,13 @@ export function startDemoUpdate(name: string, onDone: () => void): UpdateJob {
       clearUpdate(name);
       recordEvent('container.action', name, 'update');
       onDone();
+      emit(j);
+      release();
+      return;
     }
     emit(j);
     i++;
   }, 900);
+  });
   return publicJob(j);
 }

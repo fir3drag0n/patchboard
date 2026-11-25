@@ -20,8 +20,29 @@ export async function request(url: string, init: RequestInit = {}, timeoutMs = 8
     if ((err as Error).name === 'TimeoutError') throw new Error(`Timed out after ${timeoutMs / 1000}s`);
     throw new Error(cause ? `Unreachable (${cause})` : 'Unreachable');
   }
-  if (!res.ok) throw new HttpError(res.status, res.statusText);
+  if (!res.ok) {
+    const err = new HttpError(res.status, res.statusText);
+    const why = await reasonIn(res);
+    if (why) err.message += `: ${why}`;
+    throw err;
+  }
   return res;
+}
+
+/**
+ * The reason an app gives in an error's JSON body ({"reason": "Daily API
+ * request limit exceeded"}), short, with any address masked: the message
+ * reaches the browser, and some apps put keys in URLs.
+ */
+export async function reasonIn(res: Response): Promise<string> {
+  try {
+    if (!(res.headers.get('content-type') ?? '').includes('json')) return '';
+    const body = (await res.json()) as Record<string, unknown>;
+    const why = [body.reason, body.message, body.error, body.detail].find((x): x is string => typeof x === 'string' && x.trim().length > 0);
+    return why ? why.replace(/\b[a-z][a-z0-9+.-]*:\/\/\S+/gi, '(address)').replace(/\s+/g, ' ').trim().slice(0, 140) : '';
+  } catch {
+    return '';
+  }
 }
 
 export async function getJson<T>(url: string, init: RequestInit = {}, timeoutMs?: number): Promise<T> {

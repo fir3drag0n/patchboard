@@ -201,7 +201,7 @@ your current apps as a starting file.
 | `name` | Shown on the tile, in Apps and in Jump to. |
 | `label` | A short name for under the icon, when the Apps widget shows names. |
 | `href` | Where the tile goes. |
-| `icon` | A [dashboard icons](https://dashboardicons.com) name such as `plex.png` (Patchboard fetches it once and serves its own copy), a URL, or a site path. |
+| `icon` | A [dashboard icons](https://dashboardicons.com) name such as `plex.png`, a URL, or a site path. Patchboard fetches a name or a URL once and serves its own copy, so a plain-HTTP icon on your network still shows on an HTTPS address. |
 | `container` | The Docker container. Gives the tile its status and a container page. |
 | `expectStopped` | `true` for one-shot jobs, so their exit raises no alert. |
 | `check` | `false` skips the reachability check; a URL checks that address instead of `href`. |

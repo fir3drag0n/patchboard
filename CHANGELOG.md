@@ -1,5 +1,111 @@
 # Changelog
 
+## Unreleased
+
+- **The car with a TV remote:** closing a part or a detail sheet marks
+  the panel you opened it from again, so the next press carries on from
+  there instead of starting over at the top.
+
+## 1.20.0 (2026-11-24)
+
+- **The weather as an office display:** the weather widget's Display
+  style fills a screen with what it's doing now, large, the next 24 hours
+  as one chart of temperature over the chance of rain with night shaded and
+  sunrise and sunset marked, and the week with each day's low and high on
+  one scale. Show it alone on a TV or wall tablet, or start a board from
+  "Wall: weather".
+- **The weather as a drawing sheet:** the weather widget's Drawing style
+  matches the car's engineering drawing, with the same border, pen and
+  title block. It plots the conditions as a weather station does: cloud
+  cover in the circle, a barb for the wind's direction and speed, and
+  temperature, dew point and pressure called out at its corners. The next
+  24 hours sit on the grid, and the week runs as dimension lines on one
+  scale. On a screen too narrow to read it, the Display style takes its
+  place. The date and time keep clear of the top-right corner, where a
+  Fire TV draws its microphone indicator.
+- **Cameras from a TV remote:** on a wall screen, up and down mark a
+  camera, the arrows move between them without turning the page, and the
+  centre button opens it live. Back, or an arrow past the last camera,
+  lets go, so left and right turn the page again. In the live view, the
+  arrows or the new previous and next buttons go camera to camera, and
+  Back closes it.
+- **Fixes:** on a computer, the last app in a group no longer fades as if
+  the row scrolled on past it. On a phone, the app rows and Reading's
+  categories fade at their edge only while more waits past it. The live
+  camera view's name reads in light mode.
+
+## 1.19.0 (2026-11-24)
+
+- **Your car as a live engineering drawing:** the car widget's Dashboard
+  style turns the card into a drawing sheet for a wall screen, a TV or an
+  e-ink frame.
+  - **The sheet:** front, rear and top views across the top, the side view
+    in the middle with its real dimensions in millimetres, live charge,
+    range, power and temperatures beside it, and panels for status,
+    charging, range by charge and the four tires. The title block gives the
+    odometer, and a callout at the charge port gives the rate while it
+    charges.
+  - **Turn it:** swipe across the car, press an arrow key or tap the marks
+    either side to step through your drawings: front, three-quarter, side,
+    rear and top.
+  - **Open any part:** each metric, panel and tire opens a detail sheet as
+    large as the first, with the part drawn and its week or day of history
+    on ruled axes. Drag along the history, or use the arrow keys, to read
+    every line at one moment.
+  - **Control the car:** tap a door, the frunk, the trunk, the glass, a tire
+    or the charge port, and hold to lock or unlock, open the frunk or
+    trunk, start or stop charging, set the limit, or switch climate or
+    Sentry. Each command goes through Tessie into the audit log. A
+    household device never commands the car, and unlocking or opening it
+    needs sign-in.
+  - **A poster for any screen:** show the car widget alone on a device and
+    the sheet fills the screen, 4:3 on a squarer e-ink frame. On a TV the
+    remote drives it: up and down move between the metrics, the car and
+    the panels, the centre button opens one, and Back closes it. Left and
+    right turn the car once it's marked.
+  - **Where it's been:** where the car is parked, by your name for the
+    place in Tessie or else the town, never the street; the last drive,
+    the week's distance and the energy per mile.
+  - **Your own drawings:** Pictures takes a side, front, rear, top or
+    three-quarter view. Box the part of a sheet to use and tap its tires
+    and charge port. "Wall: car" sets up a board, and demo mode shows a
+    Tesla drawn from every side.
+- **A TV remote turns a wall screen's pages:** left and right, or rewind
+  and fast-forward, move between a device's pages, so a Fire TV can show
+  the same car, Monitor, weather and cameras as a wall tablet.
+- **A Blueprint theme:** drafting blue with white lines on a faint grid, or
+  a pale whiteprint in light.
+- **Update several containers at once:** hold Update on one row after
+  another. They run one at a time, and each row says what it's doing
+  ("Pulling 0:42") or what it waits for. When an update can't start, the
+  row says why.
+- **Fewer false alarms:**
+  - **A failed integration retries** in 30 seconds, then a minute, then
+    two, so one hiccup from the weather service clears in seconds instead
+    of 15 minutes.
+  - **Weather, calendars, books, feeds and mail** stay a note in the list
+    when they can't be reached, and Home's headline still says "All quiet".
+  - **A container must fail its health check for three minutes** before it
+    shows in Changes, the Monitor feed or Needs attention.
+  - **Errors give the app's reason** when it sends one, as in "HTTP 503:
+    Too many requests".
+- **Tighter on a phone and a tablet:**
+  - **App icons wrap** onto a second line on a phone, and Weather's next
+    24 hours and the rows of named apps fade at the edge while more wait
+    past it.
+  - **Downloads name what's downloading** ("iCarly S06") and show how far
+    along a stalled one is, not "0 KB/s".
+  - **Right now keeps a long title readable,** and Upcoming's Search sits
+    under a poster's title.
+  - **Requests opens on what's moving** when nothing waits for approval.
+- **Fixes:** Home stops flickering on a smaller screen where the board
+  trims its lists to fit. A wall screen's page dots count each page once.
+  Setting one browser to e-ink no longer makes new browsers start as e-ink.
+  Icons from an address on your network load over HTTPS and a tunnel. The
+  moon shows its lit side pale on a light page and e-ink. Weather's high
+  and low wrap after a comma, and an hour with no rain chance shows an
+  empty track.
+
 ## 1.18.0 (2026-11-23)
 
 - **Install it your platform's way:** paste examples/truenas.yml into

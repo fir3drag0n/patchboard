@@ -32,7 +32,8 @@ export function WallPages() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const h = snap?.household;
-  const list = h?.opens ? [h.opens, ...(h.pages ?? [])] : [];
+  // The page it opens on, then its pages, each once: a page set as both is one page, not two.
+  const list = h?.opens ? [...new Set([h.opens, ...(h.pages ?? [])])] : [];
   const at = list.indexOf(pathname);
   const [lit, setLit] = useState(false);
 
@@ -99,11 +100,15 @@ export function WallPages() {
       }
     };
     const menu = (e: Event) => e.preventDefault();
+    // A TV remote's fast-forward and rewind always turn the page. Left and right do too, unless the
+    // page took them first: the car turning while it's highlighted, a chart being read along.
     const key = (e: KeyboardEvent) => {
       touchedAt = Date.now();
       if (e.altKey || e.ctrlKey || e.metaKey || (e.target as Element)?.matches?.('input, textarea, select')) return;
-      if (e.key === 'ArrowRight') goRef.current(1);
-      if (e.key === 'ArrowLeft') goRef.current(-1);
+      const step = { MediaFastForward: 1, MediaTrackNext: 1, MediaRewind: -1, MediaTrackPrevious: -1 }[e.key] ?? (e.defaultPrevented ? 0 : { ArrowRight: 1, ArrowLeft: -1 }[e.key] ?? 0);
+      if (!step) return;
+      e.preventDefault();
+      goRef.current(step);
     };
     const cancel = () => {
       start = null;

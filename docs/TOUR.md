@@ -78,7 +78,7 @@ device in Settings, Devices and set it to open the Monitor: change that, the
 color, the night hours it dims through, or its theme, density, units and
 language from your desk, and the tablet follows within a second. A tap
 brightens a dimmed screen for two minutes. Give it more pages, the Monitor, wall boards,
-Server or Weather, and a swipe moves between them, with dots at the bottom
+Server or Weather, and a swipe or a TV remote's left and right moves between them, with dots at the bottom
 to show where it is; it can also turn them by itself every half minute to
 ten minutes, waiting three minutes after anyone touches it. Set its Screen
 to E-ink for an e-ink reader or panel: black on white, no motion, problems
@@ -134,6 +134,9 @@ memory. Each stack folds to its header with Hide, and Hide all or Show all
 folds or opens every one; on a phone the healthy ones start folded. Containers on your other machines, added under Other
 Docker hosts in Settings, show as their own stacks ("dns on pi") and are
 named like pihole@pi, with logs, history, start, stop and restart.
+With image updates showing, hold Update on as many rows as you like:
+one runs at a time, its row shows the step and a clock, and the rest say
+which update they wait for and start on their own.
 
 ![Stacks](screenshots/stacks.webp)
 
@@ -143,7 +146,13 @@ day-by-day list.
 
 ![Upcoming](screenshots/upcoming.webp)
 
-**Weather:** the next 24 hours, the week, sunrise and sunset, US alerts.
+**Weather:** the next 24 hours, the week, sunrise and sunset, US alerts. The
+weather widget's Display style makes it an office display: the
+conditions now, large, the next 24 hours as one chart of temperature over
+the chance of rain, and the week on one scale. "Wall: weather" starts a
+board with it for a TV or a wall tablet. The Drawing style matches the
+car's engineering drawing: a station plot of the wind, cloud and pressure,
+the next 24 hours on the grid, and the week as dimension lines.
 
 ![Weather](screenshots/weather.webp)
 
@@ -166,12 +175,36 @@ right there; Escape, Close or switching tabs ends it.
 
 **The car:** through Tessie, the charge and range with a line of the last
 week, what it's doing (charging, full in an hour, at 11 kW), the inside and
-outside temperatures with a line of the last day, and the four tires around
-the car, with a soft one named. Settings, Alerts sets when a tire counts as
-soft, or turns the warning off. Patchboard records each reading Tessie
-has, without waking the car, so the lines fill in from the day you
-set it up. Set the widget to One number for the battery, the range or the
-lowest tire.
+outside temperatures, and the four tires on a blueprint of the car with a
+soft one marked. Pictures puts the tires on your own drawings of your car:
+add a side, front, rear, top or three-quarter view, box the part of a sheet
+to use, and tap its tires and charge port.
+
+Its Dashboard style makes the card a live engineering drawing. The views
+run across the top, the side view sits in the middle dimensioned in
+millimetres, the live figures and the odometer sit beside it, and panels
+for status, charging, range and tires run along the bottom. Swipe across the
+car or press an arrow key to turn it through your drawings. Tap a metric, a
+panel or a tire for its detail, a sheet of its own with the part drawn and
+its history on ruled axes you can drag along. Tap a door, the frunk, the
+trunk, the glass or the charge port, and hold to lock or unlock, open it,
+start or stop charging, set the limit, or switch climate or Sentry. A
+household device sees all of it and sends no command.
+
+Shown alone on a screen (Settings, Devices), the sheet becomes a poster that
+fills it, 4:3 on a squarer e-ink frame. On a TV the remote drives it: up
+and down move between the metrics, the car and the panels, the centre
+button opens one and Back closes it. Left and right turn the car once it's
+marked, and otherwise turn the TV's pages, as rewind and fast-forward do. Status says where it's
+parked, by your name for the place or the town, and Range adds the last
+drive, the week's distance and the energy per mile. Settings, Alerts sets
+when a tire counts as soft. Patchboard records each reading Tessie has,
+without waking the car, so the lines fill in from the day you set it up.
+One number shows the battery, the range or the lowest tire.
+
+![The car as a live engineering drawing, alone on a TV](screenshots/car-sheet.webp)
+
+![The tire pressure detail: the car from above and a week of pressures](screenshots/car-detail.webp)
 
 ![Home Assistant, the car, Cameras and Wake on the board](screenshots/house.webp)
 
@@ -336,8 +369,9 @@ keep their full length, the page scrolls, and Arrange board reports how far
 it runs over. Fit recalculates when the window width or header height
 changes. New board, at the foot of any board, adds another with its own
 name, starting empty or from a layout; tabs over the board switch between
-them. Five layouts are made for a screen on the wall: clock and weather,
-markets, house, cameras, and media. A board set For a wall screen shows one
+them. Six layouts are made for a screen on the wall: clock and weather,
+markets, house, cameras, media, and the car, large with its tires beside
+its battery, range, charging and locks. A board set For a wall screen shows one
 status line instead of the header, and no tabs, and it stays off Home's
 tabs; Settings, Devices lists each one to edit.
 
@@ -409,10 +443,11 @@ with a warning and an alarm level for each, for every device at once.
 |---|---|
 | ![Graphite, light](screenshots/theme-graphite-light.webp) Graphite, light | ![Midnight](screenshots/theme-midnight-dark.webp) Midnight |
 | ![Forest](screenshots/theme-forest-dark.webp) Forest | ![Dusk](screenshots/theme-dusk-dark.webp) Dusk |
-| ![Paper](screenshots/theme-paper-light.webp) Paper | |
+| ![Paper](screenshots/theme-paper-light.webp) Paper | ![Blueprint](screenshots/theme-blueprint-dark.webp) Blueprint |
 
-Every theme comes in dark and light. A Custom theme starts from three
-colors.
+Every theme comes in dark and light. Blueprint is drafting blue with white
+lines on a faint grid, or a pale whiteprint in light. A Custom theme starts
+from three colors.
 
 ## On a phone
 

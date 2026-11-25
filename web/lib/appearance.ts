@@ -369,11 +369,20 @@ media?.addEventListener('change', () => {
 
 let pushTimer: ReturnType<typeof setTimeout> | undefined;
 
+/**
+ * What kind of screen this is belongs to this device alone: an e-ink reader
+ * set to e-ink must not turn every new browser into one.
+ */
+function shared(a: Partial<Appearance>): Partial<Appearance> {
+  const { eink: _eink, einkColor: _einkColor, ...rest } = a;
+  return rest;
+}
+
 /** Save the look on the server too, so a new browser or home-screen app starts from it. */
 function pushToServer(): void {
   clearTimeout(pushTimer);
   pushTimer = setTimeout(() => {
-    void fetch('/api/appearance', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-patchboard': 'action' }, body: JSON.stringify(current) }).catch(() => {});
+    void fetch('/api/appearance', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-patchboard': 'action' }, body: JSON.stringify(shared(current)) }).catch(() => {});
   }, 800);
 }
 
@@ -432,7 +441,8 @@ export function initAppearance(): void {
   void fetch('/api/appearance')
     .then((r) => (r.ok ? r.json() : null))
     .then((j: { appearance?: Partial<Appearance> | null } | null) => {
-      if (j?.appearance && !hadSaved) setAppearance(withDefaults(j.appearance), { push: false });
+      // The look, not the screen type: an e-ink look saved before stays on its device.
+      if (j?.appearance && !hadSaved) setAppearance(withDefaults(shared(j.appearance)), { push: false });
     })
     .catch(() => {});
 }

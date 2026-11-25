@@ -105,13 +105,13 @@ hide what you don't use, upload icons. Paste an API key and a tile shows
 **Boards.** Home is a board of widgets on 2 to 6 columns. Start from a
 layout, drag to move, drag an edge to resize, and turn on Fit the window to
 trim lists to one screen. Add more boards: one for the TV, one for the rack.
-Five themes come in dark and light, or build a Custom one from three colors.
+Six themes come in dark and light, Blueprint among them, or build a Custom one from three colors.
 
 **Wall screens.** Hang a tablet, an e-ink reader or an e-paper panel and
 set it up from your desk in Settings, Devices: its pages, theme, density,
 units and language change there, and the device follows within a second.
 A household device gets its own pages to swipe between (the Monitor, wall
-boards for the clock and weather, markets, the house, cameras or media),
+boards for the clock and weather, markets, the house, cameras, media or the car),
 turns them by itself if you like, and dims at night. Set its screen to
 E-ink for black on white with a redraw a minute.
 
@@ -127,9 +127,12 @@ and add to, the thermostat with minus and plus, blinds and shades, who's
 home, and each room's last day of temperature as a strip. Chores counts the
 days since the plants were watered or the filter changed. The car shows its
 charge over the week, the cabin and outside temperatures, and the four tires
-with a soft one named. Miners covers BitAxe and other AxeOS miners. A
-kitchen tablet can tick the list and mark chores done; locks and garage
-doors stay read-only for everyone.
+with a soft one named; its Dashboard style is a live drawing sheet you can
+swipe to turn the car and tap part by part, holding to lock it, open the
+frunk or start charging. Miners covers BitAxe and other AxeOS miners. A
+kitchen tablet can tick the list and mark chores done; Home Assistant's
+locks and garage doors stay read-only for everyone, and the car's controls
+never reach a household device.
 
 ![Shopping list, thermostat, shades, people and chores on one board](docs/screenshots/family.webp)
 

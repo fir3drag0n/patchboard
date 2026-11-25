@@ -11,7 +11,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { type Context, Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import type { Adapter } from './adapters/adapter.ts';
-import type { ArrData, ContainerDetail, HaEntity, ProxmoxData, QbitData } from '../shared/types.ts';
+import type { ArrData, CarData, ContainerDetail, HaEntity, ProxmoxData, QbitData } from '../shared/types.ts';
 import { cleanBrand } from '../shared/brand.ts';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { appIconFor, clearAppIcon, saveAppIcon } from './appicon.ts';
@@ -27,7 +27,8 @@ import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/
 import { qbitClient } from './adapters/qbit.ts';
 import { haCall, haEntity, haEntityList, haHistory, haPrinterCover, haTodoChange, haTodoItems, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
 import { boardList, exportExtras, getBoard, importExtras, putBoard, removeBoard, saveExtras, saveHome, sealSavedBoards } from './boards.ts';
-import { tessieAdapter } from './adapters/tessie.ts';
+import { tessieAdapter, tessieCommand } from './adapters/tessie.ts';
+import { checkLimit, isCarCommand, OPENS_CAR } from '../shared/car-commands.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
 import { speedtestAdapter } from './adapters/speedtest.ts';
 import { immichAdapter } from './adapters/immich.ts';
@@ -78,8 +79,9 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction, demoHostDetail, DEMO_PRINT_SVG } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction, demoHostDetail, demoCarCommand, DEMO_PRINT_SVG } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
+import { seedDemoCar } from './demo-car.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -113,7 +115,8 @@ import { adoptYaml, type AppOrder, validateOrder } from '../shared/order.ts';
 import { fromHomepage } from './homepage.ts';
 import { redact } from './redact.ts';
 import { auditCatalog, draftYaml, visitorHost } from './catalog-audit.ts';
-import { iconCache } from './icon-cache.ts';
+import { iconCache, urlIconCache } from './icon-cache.ts';
+import { type CarPicture, checkPictures } from '../shared/car-pictures.ts';
 import { feedPicture } from './feed-images.ts';
 
 /** Pause and resume for each configured download client. */
@@ -236,6 +239,7 @@ loadSavedSettings();
 if (config.demo) {
   seedDemoHistory();
   seedDemoSamples();
+  seedDemoCar();
 }
 const adapters = config.demo ? demoAdapters() : realAdapters();
 const hub = new Hub(adapters);
@@ -2066,7 +2070,7 @@ app.get('/api/jobs/:id', (c) => {
     let finished = false;
     const stop = watchJob(id, (j) => {
       void stream.writeSSE({ data: JSON.stringify(j) });
-      if (j.status !== 'running') finished = true;
+      if (j.status === 'done' || j.status === 'failed') finished = true;
     });
     await new Promise<void>((resolve) => {
       const t = setInterval(() => finished && resolve(), 500);
@@ -2449,6 +2453,53 @@ app.post('/api/icons', async (c) => {
   return c.json({ icon: `/api/icons/${name}` });
 });
 
+// Ask the car to do something: lock, open the frunk, start charging. Only a
+// car Tessie listed in its last poll, only from a full session (household
+// devices never reach here), and every command is audited.
+app.post('/api/car/:vin/command/:cmd', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.readOnly) return c.json({ error: 'Read-only' }, 403);
+  const vin = c.req.param('vin');
+  const cmd = c.req.param('cmd');
+  if (!isCarCommand(cmd)) return c.json({ error: 'Unknown command' }, 400);
+  // Unlocking or opening the car needs sign-in: an address anyone can reach never opens it.
+  if (OPENS_CAR.includes(cmd) && config.auth.mode === 'none') return c.json({ error: 'Turn on sign-in to unlock or open the car from here' }, 403);
+  const cars = (hub.snapshot().sources.tessie?.data as CarData | null)?.cars ?? [];
+  if (!cars.some((x) => x.vin === vin)) return c.json({ error: 'No such car' }, 404);
+  let percent: number | undefined;
+  if (cmd === 'limit') {
+    const body = (await c.req.json().catch(() => null)) as { percent?: unknown } | null;
+    const p = checkLimit(body?.percent);
+    if (p == null) return c.json({ error: 'A charge limit is 50 to 100%' }, 400);
+    percent = p;
+  }
+  try {
+    await (config.demo ? demoCarCommand(cmd, percent) : tessieCommand(vin, cmd, percent));
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), `car.${cmd}`, percent != null ? `${vin}: ${percent}%` : vin);
+  void hub.pollNow('tessie');
+  return c.json({ ok: true });
+});
+
+// Your own pictures of each car, with where its tires sit (shared/car-pictures.ts).
+app.get('/api/car-pictures', (c) => c.json(kvGet<Record<string, CarPicture[]>>('car-pictures') ?? {}));
+app.put('/api/car-pictures/:vin', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.readOnly) return c.json({ error: 'Read-only' }, 403);
+  const vin = c.req.param('vin');
+  if (!/^[A-Za-z0-9-]{1,40}$/.test(vin)) return c.json({ error: 'Bad car' }, 400);
+  const checked = checkPictures(await c.req.json().catch(() => null));
+  if (!checked.ok) return c.json({ error: checked.error }, 400);
+  const all = kvGet<Record<string, CarPicture[]>>('car-pictures') ?? {};
+  if (checked.pictures.length) all[vin] = checked.pictures;
+  else delete all[vin];
+  kvSet('car-pictures', all);
+  recordAudit(who(c), 'car.pictures', `${vin}: ${checked.pictures.length}`);
+  return c.json({ ok: true, pictures: checked.pictures });
+});
+
 app.get('/api/icons/:file', (c) => {
   const m = /^([a-f0-9]{16})\.(png|jpg|webp|svg|gif|ico)$/.exec(c.req.param('file'));
   if (!m) return c.json({ error: 'No such icon' }, 404);
@@ -2486,6 +2537,36 @@ app.get('/api/icon/:kind/:file', async (c) => {
   return c.body(got.body, 200, {
     'Content-Type': got.type,
     'Cache-Control': 'private, max-age=604800',
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+  });
+});
+
+// An icon given as a full address, fetched and served by Patchboard: a
+// plain-HTTP LAN image can't load into a page served over HTTPS, and the
+// browser never calls another site. Only addresses an app, link or hidden
+// app in the catalog uses as its icon, so this can't fetch anything else.
+const urlIcons = urlIconCache(join(config.dataDir, 'icon-cache', 'url'));
+function catalogIconUrls(): Set<string> {
+  const out = new Set<string>();
+  const walk = (v: unknown): void => {
+    if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === 'object')
+      for (const [k, x] of Object.entries(v)) {
+        if (k === 'icon' && typeof x === 'string' && /^https?:\/\//.test(x)) out.add(x);
+        else walk(x);
+      }
+  };
+  walk(getCatalog());
+  return out;
+}
+app.get('/api/icon-url', async (c) => {
+  const url = c.req.query('u') ?? '';
+  if (!catalogIconUrls().has(url)) return c.json({ error: 'No such icon' }, 404);
+  const got = await urlIcons.get(url);
+  if (!got) return c.json({ error: 'No such icon' }, 404);
+  return c.body(got.body, 200, {
+    'Content-Type': got.type,
+    'Cache-Control': 'private, max-age=86400',
     'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
   });
 });

@@ -9,12 +9,19 @@ import { getJson } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
 
 interface OpenMeteo {
+  latitude?: number;
+  longitude?: number;
+  elevation?: number;
   current: {
     temperature_2m: number;
     apparent_temperature: number;
     weather_code: number;
     wind_speed_10m: number;
     relative_humidity_2m: number;
+    wind_direction_10m?: number;
+    dew_point_2m?: number;
+    cloud_cover?: number;
+    pressure_msl?: number;
     is_day: number;
   };
   hourly: { time: string[]; temperature_2m: number[]; precipitation_probability: number[]; weather_code: number[] };
@@ -40,7 +47,7 @@ export function weatherAdapter(): Adapter<WeatherData> {
   const url =
     'https://api.open-meteo.com/v1/forecast' +
     `?latitude=${w.lat}&longitude=${w.lon}` +
-    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,is_day' +
+    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,wind_direction_10m,dew_point_2m,cloud_cover,pressure_msl,is_day' +
     '&hourly=temperature_2m,precipitation_probability,weather_code&forecast_hours=24' +
     '&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max' +
     '&temperature_unit=celsius&wind_speed_unit=kmh&timezone=auto&forecast_days=7';
@@ -57,6 +64,13 @@ export function weatherAdapter(): Adapter<WeatherData> {
         feelsNow: Math.round(r.current.apparent_temperature),
         windNow: Math.round(r.current.wind_speed_10m),
         humidityNow: Math.round(r.current.relative_humidity_2m),
+        windDirNow: r.current.wind_direction_10m,
+        dewNow: r.current.dew_point_2m != null ? Math.round(r.current.dew_point_2m) : undefined,
+        cloudNow: r.current.cloud_cover,
+        pressureNow: r.current.pressure_msl != null ? Math.round(r.current.pressure_msl) : undefined,
+        lat: r.latitude != null ? Math.round(r.latitude * 100) / 100 : undefined,
+        lon: r.longitude != null ? Math.round(r.longitude * 100) / 100 : undefined,
+        elevation: r.elevation != null ? Math.round(r.elevation) : undefined,
         isDay: r.current.is_day === 1,
         hours: (r.hourly?.time ?? []).map((time, i) => ({
           time,

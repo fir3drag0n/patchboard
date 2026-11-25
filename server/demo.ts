@@ -54,6 +54,7 @@ import type {
   ChecksData,
   StatsData,
   SystemData,
+  Car,
   CarData,
   DownloadClientId,
   FeedsResponse,
@@ -68,6 +69,7 @@ import type {
   QueueItem,
   Printer,
 } from '../shared/types.ts';
+import { type CarCommand } from '../shared/car-commands.ts';
 import type { Adapter } from './adapters/adapter.ts';
 import type { DownloadManager } from './adapters/downloads.ts';
 import type { SeerrClient } from './adapters/seerr.ts';
@@ -876,12 +878,46 @@ export const DEMO_PRINT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="
   .map((i) => `<g transform="translate(${95 + i * 55} ${150 + i * 18})"><path d="M-22 10v-24a22 22 0 0 1 44 0v24h-11v-24a11 11 0 0 0-22 0v24Z" fill="#00ae42"/><path d="M-22 10h11v8h-11zM11 10h11v8h-11z" fill="#008a35"/></g>`)
   .join('')}</svg>`;
 
+/** What the demo car has been asked to do since the server started. */
+const demoCarNow: Partial<Car> = {};
+
+/** The demo car does as it's told, after a moment, as a real one would. */
+export async function demoCarCommand(cmd: CarCommand, percent?: number): Promise<void> {
+  await new Promise((r) => setTimeout(r, 1200));
+  const open = { fl: false, fr: false, rl: false, rr: false, frunk: false, trunk: false, ...demoCarNow.open };
+  const set: Partial<Car> = {
+    lock: { locked: true },
+    unlock: { locked: false },
+    frunk: { open: { ...open, frunk: true } },
+    trunk: { open: { ...open, trunk: !open.trunk } },
+    'port-open': { portOpen: true },
+    'port-close': { portOpen: false },
+    'charge-start': { charging: 'Charging' },
+    'charge-stop': { charging: 'Stopped' },
+    'climate-on': { climateOn: true },
+    'climate-off': { climateOn: false },
+    'sentry-on': { sentry: true },
+    'sentry-off': { sentry: false },
+    limit: percent != null ? { limit: percent } : {},
+    flash: {},
+    honk: {},
+  }[cmd];
+  Object.assign(demoCarNow, set);
+}
+
 function demoCar(): CarData {
-  return {
-    cars: [
+  const car = demoCarBase();
+  const now = { ...car, ...demoCarNow };
+  // Stopped charging: no power flowing, no time to full.
+  if (now.charging !== 'Charging') Object.assign(now, { chargeKw: undefined, volts: undefined, amps: undefined, minutesToFull: undefined });
+  return { cars: [now] };
+}
+
+function demoCarBase(): Car {
+  return (
       {
         vin: 'DEMO',
-        name: 'Model Y',
+        name: 'sudo ./drive',
         battery: Math.min(90, 72 + Math.floor((Date.now() / 600_000) % 18)),
         rangeMi: 231,
         charging: 'Charging',
@@ -899,9 +935,31 @@ function demoCar(): CarData {
         updatedAt: Date.now() - 4 * 60_000,
         setC: 21,
         tires: { fl: 2.9, fr: 2.9, rl: 2.86, rr: 2.62 },
-      },
-    ],
-  };
+        model: 'Model 3',
+        trim: '50',
+        usable: 72,
+        addedKwh: 12.4,
+        volts: 240,
+        amps: 46,
+        cable: true,
+        portOpen: true,
+        open: { fl: false, fr: false, rl: false, rr: false, frunk: false, trunk: false },
+        parked: 'Home',
+        // A week of errands and a commute, newest first: hours ago, miles, kWh, minutes.
+        drives: (
+          [
+            [3, 12.4, 3.1, 24],
+            [7, 11.8, 2.9, 22],
+            [27, 4.2, 1.2, 11],
+            [31, 4.4, 1.1, 12],
+            [52, 23.6, 5.6, 34],
+            [75, 12.1, 3.0, 23],
+            [79, 12.3, 3.2, 25],
+            [122, 61.5, 15.1, 58],
+          ] as const
+        ).map(([h, mi, kwh, min]) => ({ start: Date.now() - h * 3_600_000 - min * 60_000, end: Date.now() - h * 3_600_000, mi, kwh })),
+      }
+  );
 }
 
 /** Demo pause and resume: flips a flag the demo clients read. */
@@ -1126,6 +1184,13 @@ export function demoAdapters(): Adapter[] {
         feelsNow: Math.round(17 + 6 * Math.sin(((new Date().getHours() - 9) / 24) * 2 * Math.PI)) - 1,
         windNow: 14,
         humidityNow: 58,
+        windDirNow: 225,
+        dewNow: 9,
+        cloudNow: 30,
+        pressureNow: 1016,
+        lat: 33.95,
+        lon: -117.4,
+        elevation: 252,
         isDay: true,
         hours: Array.from({ length: 24 }, (_, i) => {
           const t = new Date(h0.getTime() + i * 3_600_000);
@@ -1541,6 +1606,6 @@ export function demoFeedItems(): { items: import('../shared/types.ts').FeedItem[
 /** Demo Releases: plausible versions for whatever projects the widget lists. */
 export function demoReleases(repos: string[]): import('../shared/types.ts').ReleaseInfo[] {
   const now = Date.now();
-  const known: Record<string, string> = { 'immich-app/immich': 'v2.2.3', 'jellyfin/jellyfin': 'v10.11.2', 'sourpatchdad/patchboard': 'v1.18.0' };
+  const known: Record<string, string> = { 'immich-app/immich': 'v2.2.3', 'jellyfin/jellyfin': 'v10.11.2', 'sourpatchdad/patchboard': 'v1.20.0' };
   return repos.map((repo, i) => ({ repo, version: known[repo] ?? `v1.${(i * 7) % 12}.${i % 5}`, at: now - (i * 2 + 1) * 86_400_000, url: `https://github.com/${repo}/releases` }));
 }

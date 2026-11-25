@@ -3,7 +3,7 @@ import { createSocket } from 'node:dgram';
 import { test } from 'node:test';
 import { validateBoard } from '../../shared/board.ts';
 import { haActionFor, haService, parseEntities, pinnedEntities } from '../../shared/ha.ts';
-import { toCar } from '../adapters/tessie.ts';
+import { placeName, toCar, toDrive } from '../adapters/tessie.ts';
 import { magicPacket, parseDevices, sendWake } from '../wake.ts';
 
 test('Home Assistant: lights toggle, scenes run, locks and garage doors never change', () => {
@@ -153,4 +153,34 @@ test('an edge or dev build carries its commit; a release is the plain version', 
   // An edge build of 1.13 is not behind 1.13.0, and 1.14.0 is newer than it.
   assert.equal(compareVersions('1.13.0', '1.13.0+edge.4f2c1a9'), 0);
   assert.equal(compareVersions('1.14.0', '1.13.0+edge.4f2c1a9'), 1);
+});
+
+test('Tessie: the model, this session, the cable and what stands open', () => {
+  const car = toCar({
+    vin: 'V3',
+    last_state: {
+      state: 'online',
+      charge_state: { battery_level: 70, battery_range: 210, charging_state: 'Charging', charger_power: 11, usable_battery_level: 68, charge_energy_added: 12.4, charger_voltage: 240, charger_actual_current: 48, conn_charge_cable: 'SAE', charge_port_door_open: true, timestamp: 1 },
+      vehicle_state: { locked: true, df: 0, dr: 0, pf: 1, pr: 0, ft: 0, rt: 1 },
+      vehicle_config: { car_type: 'model3', trim_badging: '50' },
+    },
+  });
+  assert.equal(car!.model, 'Model 3');
+  assert.equal(car!.trim, '50');
+  assert.deepEqual([car!.usable, car!.addedKwh, car!.volts, car!.amps, car!.cable, car!.portOpen], [68, 12.4, 240, 48, true, true]);
+  assert.deepEqual(car!.open, { fl: false, rl: false, fr: true, rr: false, frunk: false, trunk: true });
+  const parked = toCar({ vin: 'V4', last_state: { charge_state: { battery_level: 50, conn_charge_cable: '<invalid>' } } });
+  assert.equal(parked!.cable, false);
+  assert.equal(parked!.open, undefined, 'unknown, not shut');
+});
+
+test('Tessie: drives in milliseconds and tenths, and a place fit for a wall', () => {
+  const d = toDrive({ started_at: 1628960959, ended_at: 1628970656, odometer_distance: 185.94, energy_used: 73.284, starting_battery: 97, ending_battery: 21 });
+  assert.deepEqual(d, { start: 1628960959000, end: 1628970656000, mi: 185.9, kwh: 73.28, battery: [97, 21] });
+  assert.equal(toDrive({ started_at: 1, ended_at: 2, odometer_distance: 0.04 }), null, 'a blip in the driveway');
+  assert.equal(toDrive({ started_at: 1, ended_at: 2, odometer_distance: 3, energy_used: 0 })!.kwh, undefined);
+  assert.equal(placeName({ saved_location: 'Home', address: '1 Main St, Springfield, Illinois 62701, United States' }), 'Home');
+  assert.equal(placeName({ saved_location: '', address: '8055 Dean Martin Drive, Las Vegas, Nevada 89139, United States' }), 'Las Vegas');
+  assert.equal(placeName({ address: 'Rue de Rivoli, Paris' }), 'Paris');
+  assert.equal(placeName({}), undefined);
 });

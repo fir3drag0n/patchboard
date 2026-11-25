@@ -141,6 +141,20 @@ try {
     await shoot(wp, 'monitor');
     await wall.close();
   }
+  // The car as a live engineering drawing, alone on a 16:9 screen as a TV
+  // shows it, and one part opened onto its own sheet. Demo mode seeds the
+  // drawings and the Car board.
+  {
+    const tv = await context(browser, { viewport: { width: 1920, height: 1080 }, colorScheme: 'light' }, { theme: 'graphite', scheme: 'light' });
+    const tp = await tv.newPage();
+    await tp.goto(demo.base + '/w/car/car');
+    await settle(tp, 3500);
+    await shoot(tp, 'car-sheet');
+    await tp.getByRole('button', { name: /^Tire pressure:/ }).first().dispatchEvent('click');
+    await settle(tp, 1200);
+    await shoot(tp, 'car-detail');
+    await tv.close();
+  }
   // Wall boards, as a household tablet sees them: no navigation, one status
   // line, dots for the pages it swipes between.
   {
@@ -408,6 +422,7 @@ try {
     ['forest', 'dark'],
     ['dusk', 'dark'],
     ['paper', 'light'],
+    ['blueprint', 'dark'],
   ];
   for (const [theme, scheme] of themes) {
     const ctx = await context(browser, { viewport: DESKTOP, colorScheme: scheme }, { theme, scheme });

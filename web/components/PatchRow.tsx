@@ -2,7 +2,8 @@
 // with a scribble-strip label under each jack. The LED shows container state;
 // clicking a jack opens the service.
 
-import { useId } from 'react';
+import { useId, useRef } from 'react';
+import { useEdgeFade } from '../lib/edge-fade.ts';
 import { Link } from 'react-router-dom';
 import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import { useStore } from '../lib/store.tsx';
@@ -16,6 +17,9 @@ export function PatchRow({ names = false, groups }: { names?: boolean; groups?: 
   const { snap } = useStore();
   const nums = useAppNumbers();
   const id = useId();
+  const nav = useRef<HTMLElement>(null);
+  // A row that swipes sideways (a phone) fades at its edge while more waits.
+  useEdgeFade(nav, '.bay-jacks');
   if (!snap) return <div className="patchrow patchrow-loading" aria-hidden />;
   const containers = containerMap(snap);
   const shown = snap.catalog.groups.filter((g) => g.services.length && (!groups || groups.includes(g.name)));
@@ -23,7 +27,7 @@ export function PatchRow({ names = false, groups }: { names?: boolean; groups?: 
   if (!shown.length) return null;
 
   return (
-    <nav className={`patchrow ${names ? '' : 'icons-only'}`} aria-label="Services">
+    <nav ref={nav} className={`patchrow ${names ? '' : 'icons-only'}`} aria-label="Services">
       {shown.map((g, i) => (
         // A group named by its bay label, so a screen reader says "Acquire" on the way in.
         <div className="bay" key={g.name} role="group" aria-labelledby={`${id}-bay-${i}`}>

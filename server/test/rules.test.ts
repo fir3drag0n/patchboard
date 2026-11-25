@@ -1,6 +1,8 @@
 // The decisions Patchboard makes on its own: what raises an alert, which
 // links get checked, and how Diun notices map to containers.
 
+import { nextPollIn } from '../hub.ts';
+import { reasonIn } from '../http.ts';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Catalog, Container, SourceId, SourceState } from '../../shared/types.ts';
@@ -422,4 +424,17 @@ test("an integration that can't be reached links to its own settings, not the to
   assert.equal(alerts.find((a) => a.id === 'src-sonarr')?.href, '/settings?tab=connections&setup=sonarr');
   // Patchboard's own sources have no settings row to open.
   assert.equal(alerts.find((a) => a.id === 'src-stats')?.href, '/settings?tab=connections');
+});
+
+test('a failed poll retries sooner, never faster than the source polls anyway', () => {
+  assert.equal(nextPollIn(15 * 60_000, 0), 15 * 60_000);
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map((n) => nextPollIn(15 * 60_000, n) / 1000), [30, 60, 120, 240, 480, 900]);
+  assert.equal(nextPollIn(5_000, 1), 5_000, 'a fast source keeps its own pace');
+});
+
+test("an app's error reason joins the message, with any address masked", async () => {
+  const json = (body: unknown) => new Response(JSON.stringify(body), { status: 503, headers: { 'content-type': 'application/json' } });
+  assert.equal(await reasonIn(json({ error: true, reason: 'Too many requests, see https://x.example/a?apikey=SECRET' })), 'Too many requests, see (address)');
+  assert.equal(await reasonIn(json({ message: 'Invalid API key' })), 'Invalid API key');
+  assert.equal(await reasonIn(new Response('<html>busy</html>', { status: 503, headers: { 'content-type': 'text/html' } })), '');
 });

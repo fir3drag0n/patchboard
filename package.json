@@ -1,6 +1,6 @@
 {
   "name": "patchboard",
-  "version": "1.18.0",
+  "version": "1.20.0",
   "private": true,
   "description": "A self-hosted homelab dashboard and start page: what needs you, live numbers, and the fix one click away.",
   "license": "AGPL-3.0-only",
@@ -47,6 +47,7 @@
     "@fontsource-variable/dm-sans": "^5.3.0",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource/barlow": "^5.2.8",
     "@fontsource/dm-mono": "^5.3.0",
     "@fontsource/dm-serif-display": "^5.3.0",
     "@types/node": "^26.6.6",

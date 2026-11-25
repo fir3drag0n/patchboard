@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import type { Container } from '../../shared/types.ts';
-import { emptyTrack, settle, settling, STOP_GRACE_MS } from '../transitions.ts';
+import { emptyTrack, HEALTH_GRACE_MS, settle, settling, sickening, STOP_GRACE_MS } from '../transitions.ts';
 
 const ctr = (name: string, state: string, imageId = 'aaa', health?: string): Container =>
   ({ id: name, name, image: `x/${name}`, imageId, state, status: state === 'running' ? 'Up 1 second' : 'Exited (0)', health }) as unknown as Container;
@@ -58,4 +58,24 @@ test('Created seen while it was running, then running again on the same image: r
   assert.deepEqual(r.events, []);
   r = settle(r.track, [ctr('acme', 'running', 'v1')], T + 9_000);
   assert.deepEqual(r.events, [], 'it never left running as far as we can tell');
+});
+
+test('a health check that fails once under load and passes again leaves no line', () => {
+  const { track } = settle(emptyTrack(), [ctr('linkding', 'running', 'a', 'healthy')], T);
+  const sick = settle(track, [ctr('linkding', 'running', 'a', 'unhealthy')], T + 30_000);
+  assert.deepEqual(sick.events, []);
+  assert.ok(sickening(sick.track, 'linkding'), 'held: no alert yet');
+  const well = settle(sick.track, [ctr('linkding', 'running', 'a', 'healthy')], T + 90_000);
+  assert.deepEqual(well.events, [], 'no "failing" and no "recovered"');
+  assert.ok(!sickening(well.track, 'linkding'));
+});
+
+test('a health check failing past its grace is reported from when it began, then recovers', () => {
+  const { track } = settle(emptyTrack(), [ctr('linkding', 'running', 'a', 'healthy')], T);
+  const sick = settle(track, [ctr('linkding', 'running', 'a', 'unhealthy')], T + 10_000);
+  const still = settle(sick.track, [ctr('linkding', 'running', 'a', 'unhealthy')], T + 10_000 + HEALTH_GRACE_MS);
+  assert.deepEqual(still.events.map((e) => [e.kind, e.at]), [['container.unhealthy', T + 10_000]]);
+  assert.ok(!sickening(still.track, 'linkding'), 'now an alert');
+  const well = settle(still.track, [ctr('linkding', 'running', 'a', 'healthy')], T + 600_000);
+  assert.deepEqual(well.events.map((e) => e.kind), ['container.recovered']);
 });

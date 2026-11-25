@@ -191,7 +191,7 @@ function Masthead({ now, weatherOnBoard, attentionCard, attentionOff, slim }: { 
               <span className="weather-text">
                 <strong>{weather.label}</strong>
                 <span>{weatherText(weather.codeNow)}</span>
-                <small><span className="keep-together">High {deg(weather.days[0]?.high ?? weather.tempNow, unit)}°</span> · <span className="keep-together">Low {deg(weather.days[0]?.low ?? weather.tempNow, unit)}°</span></small>
+                <small><span className="keep-together">High {deg(weather.days[0]?.high ?? weather.tempNow, unit)}°,</span> <span className="keep-together">low {deg(weather.days[0]?.low ?? weather.tempNow, unit)}°</span></small>
                 {(weather.alerts ?? []).length > 0 && <span className="masthead-alert">{weather.alerts![0].event}</span>}
               </span>
             </div>
@@ -380,8 +380,15 @@ function Overnight({ now }: { now: number }) {
  * Integrations Patchboard can't reach, as a sentence, or null. "All quiet"
  * would be a guess while one is down, so the quiet lines say this instead.
  */
+/**
+ * Sources that tell you about your day, not your server: losing one is a note
+ * in the list, not a reason to stop saying "All quiet". Losing Sonarr or
+ * TrueNAS is different: then Patchboard can't vouch for what it watches.
+ */
+const NOT_WATCHING = new Set(['weather', 'calendar', 'books', 'trakt', 'miniflux', 'fastmail']);
+
 function blindSpot(snap: NonNullable<ReturnType<typeof useStore>['snap']>): string | null {
-  const down = snap.alerts.filter((a) => a.id.startsWith('src-')).map((a) => snap.sources[a.source as keyof typeof snap.sources]?.label ?? a.source);
+  const down = snap.alerts.filter((a) => a.id.startsWith('src-') && !NOT_WATCHING.has(a.source ?? '')).map((a) => snap.sources[a.source as keyof typeof snap.sources]?.label ?? a.source);
   if (!down.length) return null;
   return down.length === 1 ? t("Can't reach {name}.", { name: down[0] }) : t("Can't reach {n} integrations.", { n: count(down.length) });
 }

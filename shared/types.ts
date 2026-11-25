@@ -236,7 +236,10 @@ export interface UpdateJob {
   id: string;
   container: string;
   kind: 'update' | 'rollback';
-  status: 'running' | 'done' | 'failed';
+  /** `queued`: another update holds the slot; this one starts on its own when it ends. */
+  status: 'queued' | 'running' | 'done' | 'failed';
+  /** While queued: the container whose update runs first. */
+  waitingFor?: string;
   steps: UpdateStep[];
   log: string[];
   startedAt: number;
@@ -370,6 +373,18 @@ export interface WeatherData {
   /** km/h */
   windNow?: number;
   humidityNow?: number;
+  /** Degrees the wind blows from, 0 for north. */
+  windDirNow?: number;
+  /** °C */
+  dewNow?: number;
+  /** Percent of the sky covered. */
+  cloudNow?: number;
+  /** hPa, at sea level. */
+  pressureNow?: number;
+  /** The forecast point, to two decimals, and its height in metres. */
+  lat?: number;
+  lon?: number;
+  elevation?: number;
   isDay?: boolean;
   hours?: WeatherHour[];
   days: WeatherDay[];
@@ -835,6 +850,34 @@ export interface Car {
   setC?: number;
   /** Tire pressures in bar, front left to rear right. */
   tires?: Record<TirePos, number>;
+  /** "Model 3", from the car's own configuration. */
+  model?: string;
+  /** Tesla's trim badge, e.g. "50" or "74d". */
+  trim?: string;
+  /** Charge that can be used now, which reads lower than `battery` in the cold. */
+  usable?: number;
+  /** This charging session: energy added, and the charger's volts and amps. */
+  addedKwh?: number;
+  volts?: number;
+  amps?: number;
+  /** A cable is in the port. */
+  cable?: boolean;
+  portOpen?: boolean;
+  /** What stands open: doors, the frunk and the trunk. */
+  open?: Partial<Record<'fl' | 'fr' | 'rl' | 'rr' | 'frunk' | 'trunk', boolean>>;
+  /** Where it's parked: your saved name for the place, or the town. Never the street. */
+  parked?: string;
+  /** The last week's drives, newest first. */
+  drives?: Drive[];
+}
+
+/** One drive: when, how far (miles), the energy it took (kWh), and the charge before and after. */
+export interface Drive {
+  start: number;
+  end: number;
+  mi: number;
+  kwh?: number;
+  battery?: [number, number];
 }
 
 export type TirePos = 'fl' | 'fr' | 'rl' | 'rr';

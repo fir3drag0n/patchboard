@@ -130,6 +130,22 @@ export const THEMES: ThemeDef[] = [
       accent: '#2f5f7a', ok: '#39724f', warn: '#9a5700', crit: '#b0402f', termBg: '#fdfcf9',
     },
   },
+  {
+    id: 'blueprint',
+    name: 'Blueprint',
+    note: msg('Drafting blue, white lines, on a faint grid.'),
+    fonts: 'mono',
+    dark: {
+      bg: '#0c2a4a', raised: '#10335a', surface: '#153d69', line: '#3b6a98', lineSoft: '#1b4775',
+      ink: '#eaf3fc', ink2: '#c4d9ee', ink3: '#a7c3e0', head: '#ffffff',
+      accent: '#9fdcff', ok: '#a6e8bf', warn: '#ffd27a', crit: '#ffa3a3', termBg: '#09223d',
+    },
+    light: {
+      bg: '#f3f7fb', raised: '#e9f0f7', surface: '#dee8f2', line: '#b6c9dc', lineSoft: '#d3e0ec',
+      ink: '#11304f', ink2: '#2b4a6b', ink3: '#465f7b', head: '#08203a',
+      accent: '#1c5aa0', ok: '#1d6640', warn: '#7f4f00', crit: '#a82d28', termBg: '#f8fbfd',
+    },
+  },
 ];
 
 export const FONTS: Record<FontSet, { label: string; display: string; body: string; mono: string; weight: number; tracking: string; clock: number }> = {

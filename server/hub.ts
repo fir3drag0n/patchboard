@@ -238,10 +238,15 @@ export class Hub {
     if (a) await this.poll(a);
   }
 
+  /** Polls in a row that failed, per source, for the retry below. */
+  private misses = new Map<string, number>();
+
   private async loop(a: Adapter, gen = this.generation): Promise<void> {
     if (gen !== this.generation && !CORE.has(a.id)) return;
     await this.poll(a);
-    setTimeout(() => void this.loop(a, gen), a.intervalMs).unref();
+    const missed = this.sources[a.id]?.ok === false ? (this.misses.get(a.id) ?? 0) + 1 : 0;
+    this.misses.set(a.id, missed);
+    setTimeout(() => void this.loop(a, gen), nextPollIn(a.intervalMs, missed)).unref();
   }
 
   private async poll(a: Adapter): Promise<void> {
@@ -442,4 +447,16 @@ export function seedDemoSamples(): void {
   if (kvGet('demo-samples-seeded')) return;
   demoSampleHistory(demoContainers(), recordSamples);
   kvSet('demo-samples-seeded', true);
+}
+
+/**
+ * When to poll again. A failed poll tries again sooner, 30 s and then double
+ * each time, so a brief outage (a 503 from the weather service) clears in
+ * seconds instead of waiting out a 15-minute interval. Never more often than
+ * the source's own interval, so a fast one keeps its pace and a login is
+ * never hammered.
+ */
+export function nextPollIn(intervalMs: number, missed: number): number {
+  if (missed <= 0) return intervalMs;
+  return Math.min(intervalMs, 30_000 * 2 ** (missed - 1));
 }

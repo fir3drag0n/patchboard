@@ -129,7 +129,7 @@ function settled(first: UpdateJob): Promise<UpdateJob> {
   return new Promise((ok, fail) => {
     const t = setTimeout(() => fail(new Error(`job still ${first.status}`)), 5000);
     const off = watchJob(first.id, (j) => {
-      if (j.status === 'running') return;
+      if (j.status === 'running' || j.status === 'queued') return;
       clearTimeout(t);
       queueMicrotask(() => off());
       ok(j);
@@ -150,6 +150,23 @@ test('an update pulls, recreates, waits for healthy, and says what changed', asy
     ['pull sonarr', 'up -d --no-deps --pull never sonarr'],
     'only this service, with the image just pulled',
   );
+});
+
+test('a second update waits for the first, says what for, and starts on its own', async () => {
+  containers.radarr = { Name: '/radarr', Image: OLD, Config: { Image: REF, Labels: labels('radarr') }, State: { Status: 'running', Health: { Status: 'healthy' } } };
+  plan.slowUp = 150;
+  const first = await docker(() => startUpdate(ctr('sonarr'), async () => true, () => {}));
+  const second = await docker(() => startUpdate(ctr('radarr'), async () => true, () => {}));
+  assert.equal(first.status, 'running');
+  assert.equal(second.status, 'queued');
+  assert.equal(second.waitingFor, 'sonarr');
+  const again = await docker(() => startUpdate(ctr('radarr'), async () => true, () => {}));
+  assert.equal(again.id, second.id, 'pressing Update again follows the same job');
+  const [a, b] = await Promise.all([settled(first), settled(second)]);
+  assert.equal(a.status, 'done', a.error ?? '');
+  assert.equal(b.status, 'done', b.error ?? '');
+  assert.ok(b.startedAt >= (a.finishedAt ?? 0), 'one at a time');
+  assert.equal(containers.radarr.Image, NEW);
 });
 
 test('a re-published tag: the pull finds nothing new, nothing restarts, and the update mark clears', async () => {
@@ -213,7 +230,7 @@ test('two clicks at once start one update', async () => {
   const [a, b] = await docker(() => Promise.allSettled([startUpdate(ctr('sonarr'), async () => true, () => {}), startUpdate(ctr('sonarr'), async () => true, () => {})]));
   assert.equal([a, b].filter((r) => r.status === 'fulfilled').length, 1);
   const rejected = [a, b].find((r) => r.status === 'rejected') as PromiseRejectedResult;
-  assert.match(String(rejected.reason), /Another update is running/);
+  assert.match(String(rejected.reason), /This update is starting/);
   await settled((a.status === 'fulfilled' ? a : b as PromiseFulfilledResult<UpdateJob>).value);
 });
 

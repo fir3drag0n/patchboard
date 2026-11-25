@@ -11,7 +11,10 @@ const ICONS = '/api/icon';
  */
 export function iconUrl(icon?: string): string | undefined {
   if (!icon) return undefined;
-  if (/^(https?:)?\/\//.test(icon) || icon.startsWith('/')) return icon;
+  // A full address goes through Patchboard: the browser never calls another
+  // site, and a plain-HTTP LAN icon still loads on an HTTPS page.
+  if (/^https?:\/\//.test(icon)) return `/api/icon-url?u=${encodeURIComponent(icon)}`;
+  if (/^\/\//.test(icon) || icon.startsWith('/')) return icon;
   const m = /^(.+)\.(png|svg|webp)$/.exec(icon);
   if (m) return `${ICONS}/${m[2]}/${m[1]}.${m[2]}`;
   if (/^(si|mdi)-/.test(icon)) return undefined;

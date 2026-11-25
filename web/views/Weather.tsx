@@ -2,7 +2,9 @@
 // the next 24 hours as a strip, and the week as temperature ranges on one
 // shared scale so warm and cold days compare at a glance.
 
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useEdgeFade } from '../lib/edge-fade.ts';
 import type { WeatherData } from '../../shared/types.ts';
 import { Empty, Led, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -17,6 +19,8 @@ export function Weather() {
   const { state, data: w } = useSource<WeatherData>('weather');
   const { temp: unit, clock24 } = useAppearance();
   const now = useNow(60_000);
+  const hoursRef = useRef<HTMLDivElement>(null);
+  useEdgeFade(hoursRef);
   if (!state) {
     return (
       <div className="page">
@@ -121,7 +125,7 @@ export function Weather() {
 
       {hours.length > 0 && (
         <Section title="Next 24 hours">
-          <div className="hours" role="list">
+          <div className="hours" role="list" ref={hoursRef}>
             {hours.map((h, i) => {
               const t = new Date(h.time);
               const lift = ((h.temp - hMin) / Math.max(1, hMax - hMin)) * 28;

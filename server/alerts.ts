@@ -42,7 +42,7 @@ import { config } from './config.ts';
 import { NAS_SOURCES } from '../shared/types.ts';
 import { INTEGRATIONS } from '../shared/integrations.ts';
 import { kvGet, kvSet, lastEventAt } from './db.ts';
-import { settling, type Track } from './transitions.ts';
+import { settling, sickening, type Track } from './transitions.ts';
 import { hookTurnedAway, openToInternetAt } from './security.ts';
 
 type Sources = Partial<Record<SourceId, SourceState>>;
@@ -163,7 +163,8 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         href: logs,
         source: 'docker',
       });
-    } else if (c.health === 'unhealthy') {
+    } else if (c.health === 'unhealthy' && !sickening(track ?? undefined, c.name)) {
+      // Held for its grace first (transitions.ts), so one slow check under load isn't an alert.
       alerts.push({
         id: `ctr-unhealthy-${c.name}`,
         subject: c.name,
