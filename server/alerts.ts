@@ -331,8 +331,14 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
 
   // UniFi: a device that drops off. Tailscale: keys expiring or expired.
   const unifi = data<UnifiData>(sources, 'unifi');
+  // Ignored by hand (fork): an offline device stays quiet until it is seen online again.
+  const ignoredAlerts = kvGet<string[]>('ignored-alerts') ?? [];
+  if (unifi) {
+    const kept = ignoredAlerts.filter((id) => !id.startsWith('unifi-') || unifi.devices.some((d) => `unifi-${d.id}` === id && !d.online));
+    if (kept.length !== ignoredAlerts.length) kvSet('ignored-alerts', kept);
+  }
   for (const d of unifi?.devices ?? []) {
-    if (!d.online) alerts.push({ id: `unifi-${d.id}`, level: 'warn', subject: d.name, ...say('{name} is offline', { name: d.name }), detail: [d.model, unifi!.sites > 1 ? d.site : undefined].filter(Boolean).join(', ') || undefined, href: unifi!.webUrl, source: 'unifi' });
+    if (!d.online && !ignoredAlerts.includes(`unifi-${d.id}`)) alerts.push({ id: `unifi-${d.id}`, level: 'warn', subject: d.name, ...say('{name} is offline', { name: d.name }), detail: [d.model, unifi!.sites > 1 ? d.site : undefined].filter(Boolean).join(', ') || undefined, href: unifi!.webUrl, source: 'unifi' });
   }
   for (const d of data<TailnetData>(sources, 'tailscale')?.devices ?? []) {
     if (d.keyExpires == null) continue;

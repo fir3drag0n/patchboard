@@ -1663,6 +1663,8 @@ export interface Snapshot {
   readOnly: boolean;
   /** Stopped containers left out of Needs attention until they run again. */
   ignored?: string[];
+  /** Fork: alert ids ignored by hand (UniFi offline). */
+  ignoredAlerts?: string[];
   /** This browser is a household device: it views, and may switch pinned lights and scenes when `lights` is true. */
   household?: { id: string; name: string; lights: boolean } & DeviceView;
   /** Settings, Alerts thresholds, so meters turn amber and red where alerts do. */
@@ -1688,7 +1690,7 @@ export interface Snapshot {
 export type ServerEvent =
   | { type: 'source'; state: SourceState }
   | { type: 'sources'; sources: Snapshot['sources'] }
-  | { type: 'alerts'; alerts: Alert[]; ignored?: string[] }
+  | { type: 'alerts'; alerts: Alert[]; ignored?: string[]; ignoredAlerts?: string[] }
   | { type: 'changes'; changes: ChangeEvent[] }
   | { type: 'updates'; updates: Record<string, ImageUpdate> }
   | { type: 'catalog'; catalog: Catalog }

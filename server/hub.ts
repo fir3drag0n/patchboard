@@ -345,7 +345,7 @@ export class Hub {
     const next = [...computeAlerts(this.sources, getCatalog(), pendingUpdates()), ...maintenanceAlerts()];
     if (force || JSON.stringify(next) !== JSON.stringify(this.alerts)) {
       this.alerts = next;
-      this.emit({ type: 'alerts', alerts: next, ignored: kvGet<string[]>('ignored') ?? [] });
+      this.emit({ type: 'alerts', alerts: next, ignored: kvGet<string[]>('ignored') ?? [], ignoredAlerts: kvGet<string[]>('ignored-alerts') ?? [] });
     }
     void notifyAlerts(this.alerts);
   }
@@ -361,6 +361,7 @@ export class Hub {
       updates: pendingUpdates(),
       readOnly: config.readOnly,
       ignored: kvGet<string[]>('ignored') ?? [],
+      ignoredAlerts: kvGet<string[]>('ignored-alerts') ?? [],
       self: { version: APP_VERSION, container: config.demo ? 'patchboard' : selfContainer, ...(config.demo ? { check: { at: Date.now(), state: 'current' as const } } : selfCheckStatus() ? { check: selfCheckStatus() } : {}) },
       limits: { poolWarnPct: config.poolWarnPct, poolCritPct: config.poolCritPct, diskWarnC: config.diskWarnC, diskCritC: config.diskCritC, tireLowPsi: config.tireLowPsi, tireSpreadPsi: config.tireSpreadPsi },
       pages: kvGet('pages') ?? {},

@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { HoldButton } from './Hold.tsx';
+import { t } from '../lib/i18n.ts';
 
 export type Action = 'start' | 'stop' | 'restart';
 
@@ -60,6 +61,43 @@ export function ContainerActions({ name, running, self, onSent, locked }: { name
       )}
       {result && <span className={`ctr-actions-result ${result.ok ? '' : 'crit-text'}`}>{result.text}</span>}
     </div>
+  );
+}
+
+/** Fork: leave an offline UniFi device out of Needs attention until it is online again, or take it back. */
+export function AlertIgnoreButton({ id, ignored, label }: { id: string; ignored: boolean; label?: string }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const send = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/alerts/${encodeURIComponent(id)}/ignore`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' },
+        body: JSON.stringify({ ignore: !ignored }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <button
+        type="button"
+        className="text-button alert-ignore"
+        disabled={busy}
+        title={ignored ? t('Report it again when it is offline') : t('No alert until it is online again')}
+        onClick={() => void send()}
+      >
+        {label ?? (ignored ? t('Stop ignoring') : t('Ignore'))}
+      </button>
+      {error && <span className="ctr-actions-result crit-text">{error}</span>}
+    </>
   );
 }
 

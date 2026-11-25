@@ -752,6 +752,24 @@ app.post('/api/containers/:name/ignore', async (c) => {
   return c.json({ ok: true });
 });
 
+// Ignore an alert (fork; UniFi devices that are offline): it stays out of Needs
+// attention until the device is online again (server/alerts.ts).
+app.post('/api/alerts/:id/ignore', async (c) => {
+  const id = c.req.param('id');
+  if (!/^unifi-[\w.:-]{1,120}$/.test(id)) return c.json({ error: 'This alert cannot be ignored' }, 400);
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.readOnly) return c.json({ error: 'Read-only' }, 403);
+  const { ignore } = await c.req.json<{ ignore?: boolean }>().catch(() => ({ ignore: undefined }));
+  if (typeof ignore !== 'boolean') return c.json({ error: 'Say ignore: true or false' }, 400);
+  const list = new Set(kvGet<string[]>('ignored-alerts') ?? []);
+  if (ignore) list.add(id);
+  else list.delete(id);
+  kvSet('ignored-alerts', [...list]);
+  recordAudit(who(c), ignore ? 'alert.ignore' : 'alert.unignore', id);
+  hub.refreshAlerts(true);
+  return c.json({ ok: true });
+});
+
 // Start, stop or restart. The custom header can't be sent by a cross-site form
 // or a plain link, so another page can't trigger this through the browser.
 app.post('/api/containers/:name/action', async (c) => {

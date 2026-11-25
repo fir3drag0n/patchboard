@@ -1450,5 +1450,12 @@
  "Dew point": "Taupunkt",
  "Elevation": "Höhe",
  "Pressure": "Luftdruck",
- "Station": "Station"
+ "Station": "Station",
+ "Ignore": "Ignorieren",
+ "Stop ignoring": "Nicht mehr ignorieren",
+ "Report again": "wieder melden",
+ "Report it again when it is offline": "Wieder melden, wenn es offline ist",
+ "No alert until it is online again": "Keine Meldung, bis es wieder online ist",
+ "One offline device ignored.": "Ein Gerät offline, ignoriert.",
+ "{n} offline devices ignored.": "{n} Geräte offline, ignoriert."
 }

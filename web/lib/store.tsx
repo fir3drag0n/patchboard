@@ -21,7 +21,7 @@ function apply(prev: Snapshot, e: ServerEvent): Snapshot {
     case 'sources':
       return { ...prev, sources: e.sources };
     case 'alerts':
-      return { ...prev, alerts: e.alerts, ...(e.ignored ? { ignored: e.ignored } : {}) };
+      return { ...prev, alerts: e.alerts, ...(e.ignored ? { ignored: e.ignored } : {}), ...(e.ignoredAlerts ? { ignoredAlerts: e.ignoredAlerts } : {}) };
     case 'changes':
       return { ...prev, changes: e.changes };
     case 'updates':

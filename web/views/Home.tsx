@@ -2,7 +2,7 @@
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
 import { useChartTip } from '../components/ChartTip.tsx';
-import { IgnoreButton } from '../components/Actions.tsx';
+import { AlertIgnoreButton, IgnoreButton } from '../components/Actions.tsx';
 import { HeaderServer } from '../components/HeaderServer.tsx';
 import { StreamRow } from '../components/StreamRow.tsx';
 import { HOME_ID } from '../../shared/board.ts';
@@ -435,10 +435,17 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
               )}
               {/* A stopped container you switched off on purpose: one click and it stays quiet until it runs again. */}
               {!snap?.readOnly && a.subject && /^ctr-(down|parked)-/.test(a.id) && <IgnoreButton name={a.subject} ignored={false} compact />}
+              {!snap?.readOnly && a.id.startsWith('unifi-') && <AlertIgnoreButton id={a.id} ignored={false} />}
             </li>
           );
         })}
       </ul>
+      {!snap?.readOnly && (snap?.ignoredAlerts ?? []).length > 0 && (
+        <p className="alert-ignored-note">
+          {tn((snap?.ignoredAlerts ?? []).length, 'One offline device ignored.', '{n} offline devices ignored.')}{' '}
+          {(snap?.ignoredAlerts ?? []).map((id) => <AlertIgnoreButton key={id} id={id} ignored label={t('Report again')} />)}
+        </p>
+      )}
     </Section>
   );
 }
