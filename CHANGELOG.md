@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.20.0 (2026-11-24)
 
 - **The weather as an office display:** the weather widget's Display
   style fills a screen with what it's doing now, large, the next 24 hours
@@ -23,10 +23,10 @@
   lets go, so left and right turn the page again. In the live view, the
   arrows or the new previous and next buttons go camera to camera, and
   Back closes it.
-- **Fades only where there's more:** on a computer, the last app in a
-  group no longer fades as if the row scrolled on past it. On a phone, the
-  app rows and Reading's categories fade at their edge only while more
-  waits past it, and not once you've scrolled to the end.
+- **Fixes:** on a computer, the last app in a group no longer fades as if
+  the row scrolled on past it. On a phone, the app rows and Reading's
+  categories fade at their edge only while more waits past it. The live
+  camera view's name reads in light mode.
 
 ## 1.19.0 (2026-11-24)
 
