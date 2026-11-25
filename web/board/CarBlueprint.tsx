@@ -122,8 +122,19 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
     addEventListener('popstate', pop);
     return () => removeEventListener('popstate', pop);
   }, []);
+  // The marked stop a layer opened from, by its place on the sheet: closing the layer marks it
+  // again, so a remote carries on from there instead of from the top.
+  const openedFrom = useRef(-1);
+  const stopsOnSheet = () => [...(wrap.current?.querySelectorAll<HTMLElement | SVGElement>('.bp-stop, .bp-turntable[tabindex]') ?? [])];
+  useEffect(() => {
+    if (layer || openedFrom.current < 0) return;
+    const on = document.activeElement;
+    if (!on || on === document.body) stopsOnSheet()[openedFrom.current]?.focus({ preventScroll: true });
+    openedFrom.current = -1;
+  }, [layer]);
   const setLayer = (next: Layer | null) => {
     const had = !!history.state?.bpLayer;
+    if (next && !had) openedFrom.current = stopsOnSheet().indexOf(document.activeElement as HTMLElement);
     if (!next) {
       if (had) history.back();
       else setLayerNow(null);

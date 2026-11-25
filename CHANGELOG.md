@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **The car with a TV remote:** closing a part or a detail sheet marks
+  the panel you opened it from again, so the next press carries on from
+  there instead of starting over at the top.
+
 ## 1.20.0 (2026-11-24)
 
 - **The weather as an office display:** the weather widget's Display
